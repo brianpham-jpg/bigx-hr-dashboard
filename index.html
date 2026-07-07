@@ -1,0 +1,1702 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>BigX HR Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Be Vietnam Pro',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;display:flex;height:100vh;background:#f8fafc;overflow:hidden;color:#1e293b;}
+
+/* SIDEBAR */
+#sidebar{width:214px;background:#fff;border-right:1px solid #e2e8f0;display:flex;flex-direction:column;flex-shrink:0;height:100vh;overflow-y:auto;}
+.sb-header{padding:16px;border-bottom:1px solid #f1f5f9;}
+.sb-logo{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.logo-box{width:34px;height:34px;background:#5b21b6;border-radius:8px;display:flex;align-items:center;justify-content:center;}
+.logo-box i{font-size:18px;color:#fff;}
+.logo-name{font-size:13px;font-weight:600;color:#1e293b;line-height:1.2;}
+.logo-sub{font-size:10px;color:#94a3b8;}
+.live-badge{font-size:10px;background:#dcfce7;color:#16a34a;padding:3px 9px;border-radius:20px;display:inline-flex;align-items:center;gap:5px;}
+.live-dot{width:5px;height:5px;background:#22c55e;border-radius:50%;display:inline-block;}
+
+nav{flex:1;padding:8px 0;}
+.nav-item{padding:8px 12px;cursor:pointer;display:flex;align-items:center;gap:8px;font-size:12px;color:#64748b;border-radius:6px;margin:1px 8px;transition:background 0.1s;}
+.nav-item:hover{background:#f1f5f9;color:#334155;}
+.nav-item.active{background:#ede9fe;color:#5b21b6;font-weight:500;}
+.nav-item i{font-size:16px;flex-shrink:0;}
+.nav-sub{padding:5px 12px 5px 36px;cursor:pointer;display:flex;align-items:center;gap:7px;font-size:11px;color:#94a3b8;border-radius:6px;margin:1px 8px;}
+.nav-sub:hover{background:#f8fafc;color:#64748b;}
+.nav-sub i{font-size:13px;}
+
+.sb-footer{padding:12px 14px;border-top:1px solid #f1f5f9;display:flex;align-items:center;gap:9px;flex-shrink:0;}
+.avatar{width:30px;height:30px;background:#ede9fe;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#5b21b6;flex-shrink:0;}
+
+/* MAIN */
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.topbar{background:#fff;border-bottom:1px solid #e2e8f0;padding:10px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.topbar-left{display:flex;align-items:center;gap:9px;font-size:14px;font-weight:600;}
+.topbar-left i{font-size:18px;color:#5b21b6;}
+.live-tag{font-size:10px;background:#f0fdf4;color:#16a34a;padding:2px 8px;border-radius:20px;border:1px solid #bbf7d0;font-weight:400;}
+.topbar-right{display:flex;align-items:center;gap:8px;}
+.update-time{font-size:11px;color:#94a3b8;}
+.btn-refresh{font-size:11px;padding:5px 12px;border-radius:6px;border:1px solid #e2e8f0;background:#fff;cursor:pointer;color:#64748b;display:flex;align-items:center;gap:5px;}
+.btn-refresh:hover{border-color:#5b21b6;color:#5b21b6;}
+.btn-refresh i{font-size:14px;}
+
+.filter-bar.hidden{display:none;}
+.filter-bar{background:#fff;border-bottom:1px solid #f1f5f9;padding:7px 20px;display:flex;align-items:center;gap:5px;flex-wrap:wrap;flex-shrink:0;}
+.fb{font-size:10px;padding:4px 11px;border-radius:20px;border:1px solid #e2e8f0;background:#fff;cursor:pointer;color:#64748b;}
+.fb:hover{border-color:#5b21b6;color:#5b21b6;}
+.fb.active{border-color:#5b21b6;background:#ede9fe;color:#5b21b6;font-weight:500;}
+.fb-sep{color:#e2e8f0;font-size:16px;margin:0 2px;}
+.fb-date{font-size:10px;padding:4px 9px;border-radius:20px;border:1px solid #e2e8f0;color:#64748b;background:#fff;}
+
+.content{flex:1;overflow-y:auto;padding:16px 20px;}
+
+/* STATES */
+.loading{display:flex;align-items:center;justify-content:center;height:60vh;color:#94a3b8;font-size:13px;flex-direction:column;gap:10px;}
+.loading i{font-size:32px;color:#e2e8f0;}
+.coming{display:flex;align-items:center;justify-content:center;height:60vh;color:#94a3b8;font-size:13px;flex-direction:column;gap:10px;}
+.coming i{font-size:40px;color:#e2e8f0;}
+.error-msg{display:flex;align-items:center;justify-content:center;height:60vh;color:#ef4444;font-size:13px;flex-direction:column;gap:8px;}
+
+/* ─── SƠ ĐỒ TỔ CHỨC ─── */
+.org-wrap{padding:24px 16px;overflow-x:auto;display:flex;justify-content:center;}
+.org-tree,.org-tree ul{list-style:none;margin:0;padding:0;}
+.org-tree{display:inline-flex;flex-direction:column;align-items:center;}
+.org-tree ul{display:flex;padding-top:20px;position:relative;}
+.org-tree ul::before{content:'';position:absolute;top:0;left:50%;border-left:2px solid #e2e8f0;width:0;height:20px;}
+.org-tree li{float:left;text-align:center;list-style-type:none;position:relative;padding:20px 6px 0 6px;}
+.org-tree li::before,.org-tree li::after{content:'';position:absolute;top:0;right:50%;width:50%;height:20px;border-top:2px solid #e2e8f0;}
+.org-tree li::after{right:auto;left:50%;border-left:2px solid #e2e8f0;}
+.org-tree li:only-child::after,.org-tree li:only-child::before{display:none;}
+.org-tree li:first-child::before,.org-tree li:last-child::after{border:0 none;}
+.org-tree li:last-child::before{border-right:2px solid #e2e8f0;border-radius:0 5px 0 0;}
+.org-tree li:first-child::after{border-radius:5px 0 0 0;}
+.org-tn{display:inline-block;border:1.5px solid #e2e8f0;border-radius:10px;padding:9px 13px;background:#fff;text-align:center;transition:border-color 0.15s,box-shadow 0.15s;cursor:default;}
+.org-tn:hover{border-color:#5b21b6;box-shadow:0 2px 8px rgba(91,33,182,0.1);}
+.org-tn-badge{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px;}
+.org-tn-name{font-size:12px;font-weight:600;color:#1e293b;white-space:nowrap;}
+.org-tn-role{font-size:10px;color:#64748b;margin-top:1px;white-space:nowrap;}
+.org-ceo{background:#5b21b6;border-color:#4c1d95;min-width:200px;}
+.org-ceo .org-tn-badge{color:#c4b5fd;}
+.org-ceo .org-tn-name{color:#fff;font-size:13px;}
+.org-ceo .org-tn-role{color:#ddd6fe;}
+.org-coo{background:#1d4ed8;border-color:#1e3a8a;min-width:180px;}
+.org-coo .org-tn-badge{color:#93c5fd;}
+.org-coo .org-tn-name{color:#fff;}
+.org-coo .org-tn-role{color:#bfdbfe;}
+.org-cgo{background:#16a34a;border-color:#166534;min-width:170px;}
+.org-cgo .org-tn-badge{color:#86efac;}
+.org-cgo .org-tn-name{color:#fff;}
+.org-cgo .org-tn-role{color:#bbf7d0;}
+.org-hr{background:#fff7ed;border-color:#fed7aa;}
+.org-hr .org-tn-name{color:#9a3412;font-size:11px;}
+.org-acc{background:#fefce8;border-color:#fde68a;}
+.org-acc .org-tn-name{color:#854d0e;font-size:11px;}
+.org-team .org-tn-name{font-size:11px;}
+.org-sub{background:#f8fafc;border:1px dashed #cbd5e1;}
+.org-sub .org-tn-name{font-size:10px;color:#64748b;font-weight:400;}
+
+/* ─── ORG CHART V4 ─── */
+.oc-page{padding:16px;height:calc(100vh - 52px);overflow:hidden;display:flex;align-items:flex-start;justify-content:center;position:relative;}
+.oc-wrap{display:inline-flex;flex-direction:column;align-items:center;transform-origin:top center;}
+.oc-card{display:flex;align-items:center;gap:10px;padding:9px 14px;border-radius:12px;border:2px solid;}
+.oc-ci{width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:rgba(255,255,255,0.2);}
+.oc-ci i{font-size:20px;color:#fff;}
+.oc-cx-badge{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;}
+.oc-cx-name{font-size:13px;font-weight:700;white-space:nowrap;}
+.oc-cx-role{font-size:10px;opacity:0.8;white-space:nowrap;}
+.oc-ceo{background:#f97316;border-color:#ea580c;color:#fff;}
+.oc-coo{background:#2563eb;border-color:#1d4ed8;color:#fff;}
+.oc-cgo{background:#16a34a;border-color:#15803d;color:#fff;}
+.oc-team{border-radius:10px;border:2px solid;padding:8px 10px;text-align:center;width:130px;}
+.oc-ti{width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;margin:0 auto 5px;}
+.oc-ti i{font-size:16px;color:#fff;}
+.oc-tn{font-size:10px;font-weight:600;line-height:1.3;}
+.oc-tr{font-size:9px;margin-top:1px;opacity:0.65;}
+.oc-tts{background:#f0fdfa;border-color:#14b8a6;}.oc-tts .oc-ti{background:#14b8a6;}.oc-tts .oc-tn{color:#0f766e;}
+.oc-mkt{background:#eff6ff;border-color:#3b82f6;}.oc-mkt .oc-ti{background:#3b82f6;}.oc-mkt .oc-tn{color:#1d4ed8;}
+.oc-acct{background:#faf5ff;border-color:#a855f7;}.oc-acct .oc-ti{background:#a855f7;}.oc-acct .oc-tn{color:#7e22ce;}
+.oc-ecom{background:#f5f3ff;border-color:#8b5cf6;}.oc-ecom .oc-ti{background:#8b5cf6;}.oc-ecom .oc-tn{color:#6d28d9;}
+.oc-thr{background:#fff7ed;border-color:#fb923c;}.oc-thr .oc-ti{background:#fb923c;}.oc-thr .oc-tn{color:#c2410c;}
+.oc-tacc{background:#fefce8;border-color:#eab308;}.oc-tacc .oc-ti{background:#eab308;}.oc-tacc .oc-tn{color:#a16207;}
+.oc-biz{background:#f0fdf4;border-color:#22c55e;}.oc-biz .oc-ti{background:#22c55e;}.oc-biz .oc-tn{color:#15803d;}
+.oc-sub{display:flex;align-items:center;gap:6px;padding:5px 8px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:7px;white-space:nowrap;}
+.oc-si{width:20px;height:20px;background:#e2e8f0;border-radius:4px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.oc-si i{font-size:11px;color:#64748b;}
+.oc-sn{font-size:9px;font-weight:500;color:#475569;}
+.oc-subitems{margin-top:8px;display:flex;flex-direction:column;gap:4px;position:relative;padding-left:12px;}
+.oc-subitems::before{content:'';position:absolute;top:0;bottom:0;left:4px;width:2px;background:#e2e8f0;border-radius:2px;}
+.oc-tree,.oc-tree ul{list-style:none;margin:0;padding:0;}
+.oc-tree{display:inline-flex;flex-direction:column;align-items:center;}
+.oc-tree ul{display:flex;padding-top:20px;position:relative;}
+.oc-tree ul::before{content:'';position:absolute;top:0;left:50%;border-left:2px solid #94a3b8;width:0;height:20px;}
+.oc-tree li{float:left;text-align:center;list-style-type:none;position:relative;padding:20px 8px 0 8px;}
+.oc-tree li::before,.oc-tree li::after{content:'';position:absolute;top:0;right:50%;width:50%;height:20px;border-top:2px solid #94a3b8;}
+.oc-tree li::after{right:auto;left:50%;border-left:2px solid #94a3b8;}
+.oc-tree li:only-child::after,.oc-tree li:only-child::before{display:none;}
+.oc-tree li:first-child::before,.oc-tree li:last-child::after{border:0 none;}
+.oc-tree li:last-child::before{border-right:2px solid #94a3b8;border-radius:0 5px 0 0;}
+.oc-tree li:first-child::after{border-radius:5px 0 0 0;}
+.oc-ul-or::before{border-left-color:#f97316 !important;}
+.oc-ul-bl::before{border-left-color:#3b82f6 !important;}
+.oc-ul-gr::before{border-left-color:#22c55e !important;}
+.oc-li-or::before,.oc-li-or::after{border-color:#f97316 !important;}
+.oc-li-or:last-child::before{border-right-color:#f97316 !important;}
+.oc-li-bl::before,.oc-li-bl::after{border-color:#3b82f6 !important;}
+.oc-li-bl:last-child::before{border-right-color:#3b82f6 !important;}
+.oc-li-gr::before,.oc-li-gr::after{border-color:#22c55e !important;}
+.oc-li-gr:last-child::before{border-right-color:#22c55e !important;}
+.oc-bigx{position:absolute;bottom:16px;right:20px;font-size:18px;font-weight:800;color:#1e293b;opacity:0.5;}
+.oc-bigx b{color:#f97316;}
+
+/* ─── TUYỂN DỤNG REDESIGN ─── */
+.td-kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px;}
+.td-kpi{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:14px 16px;}
+.td-kpi-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.td-kpi-lbl{font-size:9px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;}
+.td-kpi-icon{width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;}
+.td-kpi-icon i{font-size:16px;}
+.td-kpi-val{font-size:26px;font-weight:600;line-height:1;margin-bottom:6px;color:#1e293b;}
+.td-kpi-footer{display:flex;align-items:center;justify-content:space-between;}
+.td-kpi-prev{font-size:10px;color:#475569;}
+.badge-up{display:inline-flex;align-items:center;gap:2px;font-size:10px;font-weight:500;color:#0F6E56;background:#E1F5EE;padding:2px 7px;border-radius:20px;}
+.badge-down{display:inline-flex;align-items:center;gap:2px;font-size:10px;font-weight:500;color:#993C1D;background:#FAECE7;padding:2px 7px;border-radius:20px;}
+.badge-neutral{display:inline-flex;align-items:center;gap:2px;font-size:10px;font-weight:500;color:#475569;background:#e2e8f0;padding:2px 7px;border-radius:20px;}
+.badge-up i,.badge-down i,.badge-neutral i{font-size:11px;}
+
+.td-row-charts{display:grid;grid-template-columns:1.3fr 1fr;gap:10px;margin-bottom:10px;}
+.td-row-bottom{display:grid;grid-template-columns:1fr 1.4fr;gap:10px;}
+
+.td-card{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:14px 16px;}
+.td-card-title{font-size:11px;font-weight:600;color:#334155;margin-bottom:12px;display:flex;align-items:center;gap:6px;}
+.td-card-title i{font-size:14px;color:#5b21b6;}
+.td-card-title-right{font-size:10px;color:#94a3b8;}
+
+.td-chart-wrap{position:relative;width:100%;height:190px;}
+.td-legend{display:flex;gap:12px;margin-bottom:10px;flex-wrap:wrap;}
+.td-leg{display:flex;align-items:center;gap:4px;font-size:10px;color:#475569;}
+.td-leg-sq{width:8px;height:8px;border-radius:2px;display:inline-block;flex-shrink:0;}
+
+/* Pipeline bars */
+.td-bar-row{margin-bottom:8px;}
+.td-bar-lbl{display:flex;justify-content:space-between;margin-bottom:3px;}
+.td-bar-lbl span:first-child{font-size:10px;color:#334155;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.td-bar-lbl span:last-child{font-size:10px;color:#94a3b8;}
+.td-bar-track{height:7px;background:#f1f5f9;border-radius:4px;overflow:hidden;position:relative;}
+.td-bar-fill{position:absolute;left:0;top:0;height:100%;border-radius:4px;}
+
+/* Tables */
+.td-table{width:100%;border-collapse:collapse;}
+.td-table th{font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:0.4px;padding:0 8px 8px 0;text-align:left;border-bottom:1px solid #f1f5f9;white-space:nowrap;}
+.td-table td{font-size:11px;color:#334155;padding:7px 8px 7px 0;border-bottom:1px solid #f1f5f9;vertical-align:middle;}
+.td-table tr:last-child td{border-bottom:none;}
+.td-table tr:hover td{background:#fafafa;}
+.tag-open{display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:500;color:#0F6E56;background:#E1F5EE;padding:2px 8px;border-radius:20px;}
+.tag-open::before{content:'';width:4px;height:4px;border-radius:50%;background:#0F6E56;display:inline-block;}
+.tag-closed{display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:500;color:#64748b;background:#f1f5f9;padding:2px 8px;border-radius:20px;}
+.tag-closed::before{content:'';width:4px;height:4px;border-radius:50%;background:#94a3b8;display:inline-block;}
+.tag-hire{display:inline-block;font-size:9px;font-weight:500;color:#0F6E56;background:#E1F5EE;padding:2px 9px;border-radius:20px;}
+.qty-badge{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:4px;font-size:10px;font-weight:600;background:#ede9fe;color:#5b21b6;}
+.td-av{width:24px;height:24px;border-radius:6px;background:#ede9fe;display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;color:#5b21b6;margin-right:7px;vertical-align:middle;flex-shrink:0;}
+.td-count-badge{font-size:10px;background:#ede9fe;color:#5b21b6;padding:2px 9px;border-radius:20px;}
+.td-muted{color:#475569;}
+
+/* ─── CÔNG VIỆC NHÂN SỰ ─── */
+.cv-layout{display:grid;grid-template-columns:222px 1fr;gap:12px;align-items:start;}
+.cv-left{display:flex;flex-direction:column;gap:10px;}
+.cv-right{display:flex;flex-direction:column;gap:10px;}
+
+/* Calendar */
+.cv-cal{background:#fff;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;user-select:none;}
+.cv-cal-hdr{display:flex;align-items:center;justify-content:space-between;padding:11px 14px 9px;border-bottom:1px solid #f1f5f9;}
+.cv-cal-title{font-size:13px;font-weight:600;color:#1e293b;}
+.cv-cal-nav{display:flex;gap:2px;}
+.cv-cal-nav button{background:none;border:none;cursor:pointer;color:#94a3b8;padding:4px 6px;border-radius:6px;font-size:13px;line-height:1;}
+.cv-cal-nav button:hover{background:#f1f5f9;color:#334155;}
+.cv-cal-grid{padding:8px 10px 10px;}
+.cv-cal-dow{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:3px;}
+.cv-cal-dow span{text-align:center;font-size:10px;font-weight:500;color:#94a3b8;padding:3px 0;}
+.cv-cal-days{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;}
+.cv-day{text-align:center;font-size:11.5px;padding:4px 2px;border-radius:6px;cursor:pointer;color:#334155;position:relative;}
+.cv-day:hover{background:#f1f5f9;}
+.cv-day.other{color:#cbd5e1;}
+.cv-day.today{background:#5b21b6;color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;margin:0 auto;font-size:11px;}
+.cv-day.has-task::after{content:'';position:absolute;bottom:1px;left:50%;transform:translateX(-50%);width:3px;height:3px;border-radius:50%;background:#5b21b6;}
+.cv-day.today.has-task::after{background:#fff;}
+.cv-cal-leg{padding:7px 14px 9px;border-top:1px solid #f1f5f9;display:flex;flex-direction:column;gap:4px;}
+.cv-cal-leg-row{display:flex;align-items:center;gap:6px;font-size:10px;color:#64748b;}
+.cv-ldot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+
+/* Range selection */
+.cv-day.range-s,.cv-day.range-e{background:#5b21b6!important;color:#fff!important;border-radius:50%;}
+.cv-day.in-range{background:#ede9fe;border-radius:0;color:#3730a3;}
+.cv-day.range-s.in-range{border-radius:50% 0 0 50%;}
+.cv-day.range-e.in-range{border-radius:0 50% 50% 0;}
+.cv-day.today.range-s,.cv-day.today.range-e{background:#5b21b6!important;}
+.cv-range-bar{padding:8px 14px;border-top:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;min-height:34px;}
+.cv-range-txt{font-size:11px;color:#334155;display:flex;align-items:center;gap:5px;}
+.cv-range-txt i{font-size:13px;color:#5b21b6;}
+.cv-range-hint{font-size:10px;color:#94a3b8;}
+.cv-range-clear{font-size:10px;color:#94a3b8;cursor:pointer;padding:2px 7px;border-radius:5px;border:1px solid #e2e8f0;}
+.cv-range-clear:hover{color:#5b21b6;border-color:#5b21b6;}
+
+/* Mini year chart */
+.cv-mini-chart{display:flex;flex-direction:column;gap:6px;}
+.cv-mc-row{display:flex;align-items:center;gap:7px;}
+.cv-mc-label{font-size:10px;color:#94a3b8;width:18px;text-align:right;flex-shrink:0;}
+.cv-mc-track{flex:1;height:6px;background:#f1f5f9;border-radius:3px;overflow:hidden;}
+.cv-mc-fill{height:100%;border-radius:3px;background:#c4b5fd;transition:width .3s;}
+.cv-mc-fill.cur{background:#5b21b6;}
+.cv-mc-count{font-size:10px;width:16px;text-align:right;flex-shrink:0;color:#64748b;}
+.cv-mc-count.cur{color:#5b21b6;font-weight:600;}
+
+/* Chart card */
+.cv-chart-card{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:13px 14px;}
+.cv-chart-title{font-size:10px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;display:flex;align-items:center;gap:5px;}
+.cv-chart-title i{font-size:13px;color:#5b21b6;}
+
+/* KPI strip */
+.cv-kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.cv-kpi{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:11px 13px;position:relative;overflow:hidden;}
+.cv-kpi-accent{position:absolute;top:0;left:0;width:3px;height:100%;border-radius:2px 0 0 2px;}
+.cv-kpi-lbl{font-size:9px;color:#94a3b8;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px;}
+.cv-kpi-val{font-size:22px;font-weight:600;color:#1e293b;line-height:1;}
+.cv-kpi-tag{display:inline-block;font-size:10px;padding:2px 7px;border-radius:20px;margin-top:4px;}
+.cv-tag-g{background:#f0fdf4;color:#16a34a;}
+.cv-tag-a{background:#fff7ed;color:#c2410c;}
+.cv-tag-r{background:#fef2f2;color:#dc2626;}
+.cv-tag-n{background:#f8fafc;color:#64748b;}
+
+/* Tables */
+.cv-tbl-card{background:#fff;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;}
+.cv-tbl-hdr{padding:9px 14px;border-bottom:1px solid #f1f5f9;background:#fafafa;display:flex;align-items:center;justify-content:space-between;}
+.cv-tbl-hdr-left{display:flex;align-items:center;gap:7px;font-size:11px;font-weight:600;color:#334155;}
+.cv-tbl-hdr-left i{font-size:14px;color:#5b21b6;}
+.cv-tbl-hdr-right{font-size:10px;color:#94a3b8;}
+.cv-count{font-size:10px;padding:2px 8px;border-radius:20px;background:#ede9fe;color:#5b21b6;font-weight:500;}
+.cv-filter-row{display:flex;gap:6px;padding:8px 12px;border-bottom:1px solid #f1f5f9;background:#fff;}
+.cv-filter-row select,.cv-filter-row input{font-size:11px;padding:4px 8px;border-radius:6px;border:1px solid #e2e8f0;background:#fff;color:#334155;height:28px;}
+.cv-filter-row input{flex:1;}
+.cv-table{width:100%;border-collapse:collapse;}
+.cv-table th{font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:.4px;padding:6px 10px 6px 10px;border-bottom:1px solid #f1f5f9;text-align:left;white-space:nowrap;}
+.cv-table td{font-size:11.5px;color:#334155;padding:8px 10px;border-bottom:1px solid #f1f5f9;vertical-align:middle;}
+.cv-table tr:last-child td{border-bottom:none;}
+.cv-table tr:hover td{background:#fafafa;}
+.cv-badge{display:inline-block;font-size:9px;padding:2px 7px;border-radius:20px;font-weight:500;white-space:nowrap;}
+.cv-b-tuyen{background:#eff6ff;color:#1d4ed8;}
+.cv-b-cb{background:#fff7ed;color:#c2410c;}
+.cv-b-vh{background:#f0fdf4;color:#15803d;}
+.cv-b-dt{background:#fdf4ff;color:#7e22ce;}
+.cv-b-cao{background:#fef2f2;color:#b91c1c;}
+.cv-b-tb{background:#fff7ed;color:#b45309;}
+.cv-b-thap{background:#f8fafc;color:#475569;}
+.cv-check{width:15px;height:15px;border-radius:50%;border:1.5px solid #22c55e;background:#f0fdf4;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;}
+.cv-check i{font-size:9px;color:#22c55e;}
+.cv-dl-done{color:#22c55e;font-size:10px;font-weight:500;}
+.cv-dl-norm{color:#94a3b8;font-size:10px;}
+.cv-dl-over{color:#ef4444;font-size:10px;font-weight:500;}
+.cv-prog-wrap{display:flex;align-items:center;gap:5px;}
+.cv-prog-bar{flex:1;height:4px;background:#f1f5f9;border-radius:3px;overflow:hidden;min-width:30px;}
+.cv-prog-fill{height:100%;border-radius:3px;}
+.cv-prog-pct{font-size:10px;color:#64748b;min-width:26px;text-align:right;}
+
+/* Fixed list */
+.cv-fixed-row{display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid #f1f5f9;font-size:12px;color:#334155;}
+.cv-fixed-row:last-child{border-bottom:none;}
+.cv-fixed-row:hover{background:#fafafa;}
+.cv-fixed-row i.fi{font-size:14px;color:#94a3b8;flex-shrink:0;}
+.cv-always{font-size:9px;padding:2px 7px;border-radius:20px;background:#f0fdf4;color:#15803d;font-weight:500;margin-left:auto;flex-shrink:0;}
+
+/* ─── QUY TRÌNH ─── */
+.qt-search-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
+.qt-search-box{display:flex;align-items:center;gap:7px;flex:1;min-width:160px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:7px 11px;}
+.qt-search-box i{font-size:14px;color:#94a3b8;}
+.qt-search-box input{border:none;background:none;font-size:12px;color:#334155;outline:none;flex:1;font-family:inherit;}
+.qt-search-box input::placeholder{color:#94a3b8;}
+.qt-filters{display:flex;gap:5px;flex-wrap:wrap;}
+.qt-fb{font-size:11px;padding:4px 12px;border-radius:20px;border:1px solid #e2e8f0;background:#fff;cursor:pointer;color:#64748b;}
+.qt-fb.active{border-color:#5b21b6;background:#ede9fe;color:#5b21b6;font-weight:500;}
+.qt-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.qt-card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px;cursor:pointer;transition:border-color .15s;}
+.qt-card:hover{border-color:#5b21b6;}
+.qt-card-top{display:flex;align-items:center;gap:9px;margin-bottom:8px;}
+.qt-card-icon{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.qt-card-icon i{font-size:16px;}
+.qt-card-name{font-size:12px;font-weight:600;color:#1e293b;}
+.qt-card-sub{font-size:10px;color:#94a3b8;}
+.qt-card-tag{font-size:9px;padding:2px 8px;border-radius:20px;font-weight:500;display:inline-block;}
+.qt-card-prog{margin-top:8px;}
+.qt-card-prog-bar{height:3px;background:#f1f5f9;border-radius:2px;overflow:hidden;margin-bottom:3px;}
+.qt-card-prog-fill{height:100%;border-radius:2px;}
+.qt-card-prog-txt{font-size:10px;color:#94a3b8;}
+.qt-add{border:1px dashed #e2e8f0;display:flex;align-items:center;justify-content:center;gap:7px;min-height:90px;cursor:pointer;color:#94a3b8;font-size:12px;border-radius:12px;background:#fff;}
+.qt-add:hover{border-color:#5b21b6;color:#5b21b6;}
+.qt-back{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:#64748b;cursor:pointer;margin-bottom:14px;}
+.qt-back:hover{color:#5b21b6;}
+.qt-detail-title{font-size:15px;font-weight:600;color:#1e293b;margin-bottom:2px;}
+.qt-detail-sub{font-size:11px;color:#94a3b8;margin-bottom:16px;}
+.qt-step-row{display:flex;align-items:stretch;}
+.qt-step-line-col{display:flex;flex-direction:column;align-items:center;width:38px;flex-shrink:0;}
+.qt-step-circle{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500;flex-shrink:0;border:2px solid;}
+.qt-step-vline{width:2px;flex:1;margin-top:4px;min-height:10px;}
+.qt-step-content{flex:1;padding:0 0 10px 10px;}
+.qt-step-card{background:#fff;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;}
+.qt-step-hdr{display:flex;align-items:center;justify-content:space-between;padding:9px 13px;cursor:pointer;}
+.qt-step-hdr:hover{background:#fafafa;}
+.qt-step-hdr-left{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.qt-step-badge{font-size:9px;font-weight:500;padding:2px 8px;border-radius:20px;}
+.qt-step-name{font-size:12.5px;color:#1e293b;}
+.qt-step-cond{font-size:9px;background:#fff7ed;color:#c2410c;padding:2px 7px;border-radius:20px;font-weight:500;}
+.qt-step-body{border-top:1px solid #f1f5f9;padding:10px 13px;background:#fafafa;}
+.qt-step-desc{font-size:11.5px;color:#475569;margin-bottom:8px;line-height:1.6;}
+.qt-check-item{display:flex;align-items:flex-start;gap:7px;font-size:11px;color:#334155;margin-bottom:4px;line-height:1.5;}
+.qt-check-item i{font-size:13px;color:#22c55e;flex-shrink:0;margin-top:1px;}
+
+/* ─── QUY ĐỊNH ─── */
+.qd-meta{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;padding:10px 16px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;align-items:center;}
+.qd-meta-lbl{font-size:11px;color:#94a3b8;}
+.qd-meta-val{font-size:11px;font-weight:500;color:#334155;background:#f8fafc;border:1px solid #e2e8f0;padding:2px 10px;border-radius:20px;}
+.qd-meta-sep{color:#e2e8f0;font-size:14px;}
+.qd-card{background:#fff;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;margin-bottom:8px;}
+.qd-hdr{display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;user-select:none;transition:background .1s;}
+.qd-hdr:hover{background:#fafafa;}
+.qd-ico{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.qd-ico i{font-size:15px;}
+.qd-num{font-size:10px;color:#94a3b8;min-width:20px;}
+.qd-title{font-size:12.5px;font-weight:600;color:#1e293b;flex:1;}
+.qd-badge{font-size:9px;font-weight:500;padding:2px 8px;border-radius:20px;display:inline-block;}
+.qd-chev{font-size:14px;color:#94a3b8;}
+.qd-body{display:none;border-top:1px solid #f1f5f9;padding:12px 14px 14px;background:#fafafa;}
+.qd-body.open{display:block;}
+.qd-item{display:flex;align-items:flex-start;gap:8px;font-size:11.5px;color:#475569;line-height:1.6;margin-bottom:7px;}
+.qd-item:last-child{margin-bottom:0;}
+.qd-dot{width:5px;height:5px;border-radius:50%;background:#5b21b6;flex-shrink:0;margin-top:7px;}
+.qd-divider{font-size:11px;font-weight:600;color:#334155;margin:10px 0 7px;padding-top:8px;border-top:1px solid #f1f5f9;}
+.qd-divider:first-of-type{margin-top:0;border-top:none;padding-top:0;}
+.qd-tbl{width:100%;border-collapse:collapse;margin-top:6px;background:#fff;border-radius:8px;overflow:hidden;border:1px solid #e2e8f0;}
+.qd-tbl th{font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:.4px;padding:7px 10px;text-align:left;border-bottom:1px solid #e2e8f0;background:#fafafa;}
+.qd-tbl td{font-size:11.5px;color:#334155;padding:7px 10px;border-bottom:1px solid #f1f5f9;}
+.qd-tbl tr:last-child td{border-bottom:none;}
+.qd-fine{font-size:11px;font-weight:500;color:#c2410c;background:#fff7ed;padding:2px 9px;border-radius:20px;display:inline-block;}
+.qd-warn{font-size:11px;font-weight:500;color:#b91c1c;background:#fef2f2;padding:2px 9px;border-radius:20px;display:inline-block;}
+.qd-formula{background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:12px 16px;margin:6px 0;text-align:center;line-height:1.8;}
+.qd-formula-num{font-size:12px;color:#1e293b;}
+.qd-formula-bar{border-top:1.5px solid #334155;padding-top:4px;margin-top:4px;font-size:11px;color:#64748b;}
+</style>
+</head>
+<body>
+
+<div id="sidebar">
+  <div class="sb-header">
+    <div class="sb-logo">
+      <div class="logo-box"><i class="ti ti-building"></i></div>
+      <div>
+        <div class="logo-name">BigX Agency</div>
+        <div class="logo-sub">HR Dashboard</div>
+      </div>
+    </div>
+    <span class="live-badge"><span class="live-dot"></span>Live Data</span>
+  </div>
+
+  <nav>
+    <div class="nav-item" onclick="nav('overview')"><i class="ti ti-layout-dashboard"></i>Tổng quan</div>
+    <div class="nav-item" onclick="nav('coming')"><i class="ti ti-id-badge"></i>Hồ sơ nhân sự</div>
+    <div class="nav-item" onclick="nav('so-do')"><i class="ti ti-sitemap"></i>Sơ đồ & quy trình</div>
+    <div class="nav-sub" id="nav-so-do" onclick="nav('so-do')"><i class="ti ti-chart-dots"></i>Sơ đồ tổ chức</div>
+    <div class="nav-sub" id="nav-qd" onclick="nav('quy-dinh')"><i class="ti ti-book"></i>Quy định</div>
+    <div class="nav-sub" id="nav-qt" onclick="nav('quy-trinh')"><i class="ti ti-arrow-guide"></i>Quy trình</div>
+    <div class="nav-item active" id="nav-td" onclick="nav('tuyen-dung')"><i class="ti ti-file-description"></i>Tuyển dụng</div>
+    <div class="nav-item" onclick="nav('coming')"><i class="ti ti-file-certificate"></i>Hợp đồng nhân sự</div>
+    <div class="nav-sub" onclick="nav('coming')"><i class="ti ti-template"></i>Form mẫu HĐ BigX</div>
+    <div class="nav-item" id="nav-cv" onclick="nav('cong-viec')"><i class="ti ti-checklist"></i>Công việc nhân sự</div>
+    <div class="nav-item" onclick="nav('coming')"><i class="ti ti-mail"></i>Mail</div>
+    <div class="nav-item" onclick="nav('coming')"><i class="ti ti-calendar"></i>Calendar</div>
+  </nav>
+
+  <div class="sb-footer">
+    <div class="avatar">BP</div>
+    <div>
+      <div style="font-size:11px;font-weight:500;color:#334155;">Brian Pham</div>
+      <div style="font-size:10px;color:#94a3b8;">HR Specialist</div>
+    </div>
+  </div>
+</div>
+
+<div id="main">
+  <div class="topbar">
+    <div class="topbar-left" id="topbar-left">
+      <i class="ti ti-file-description"></i>
+      Tuyển dụng
+      <span class="live-tag">● Live</span>
+    </div>
+    <div class="topbar-right">
+      <span class="update-time" id="uptime">--</span>
+      <button class="btn-refresh" onclick="loadData()"><i class="ti ti-refresh"></i>Làm mới</button>
+    </div>
+  </div>
+
+  <div class="filter-bar" id="filter-bar">
+    <button class="fb" onclick="setFilter('week')">Tuần này</button>
+    <button class="fb" onclick="setFilter('last-week')">Tuần trước</button>
+    <button class="fb active" onclick="setFilter('month')">Tháng này</button>
+    <button class="fb" onclick="setFilter('last-month')">Tháng trước</button>
+    <button class="fb" onclick="setFilter('year')">Năm nay</button>
+    <button class="fb" onclick="setFilter('all')">Tất cả</button>
+    <span class="fb-sep">|</span>
+    <input type="date" id="df" class="fb-date">
+    <span style="font-size:11px;color:#94a3b8;">→</span>
+    <input type="date" id="dt" class="fb-date">
+    <button class="fb" onclick="applyRange()">Áp dụng</button>
+  </div>
+
+  <div class="content" id="content">
+    <div class="loading"><i class="ti ti-loader"></i>Đang tải dữ liệu...</div>
+  </div>
+</div>
+
+<script>
+const API = 'https://script.google.com/a/macros/bigx.vn/s/AKfycbxtgC9Cwclhb8z5_e3QzLGnLTbXNlA8IMys1df_Bzg5oVRVMMzPGOHArgjOkvTDSwPj/exec?action=data';
+let rawData = null, filter = 'month', dfrom = null, dto = null;
+let chartTrend = null, chartPipeline = null;
+
+/* ─── DATE HELPERS ─── */
+function parseDate(s){
+  if(!s) return null;
+  const p = String(s).split('/');
+  if(p.length!==3) return null;
+  const d = new Date(+p[2], +p[1]-1, +p[0]);
+  return isNaN(d) ? null : d;
+}
+function fmtDate(s){ return s ? String(s) : '—'; }
+function weekOf(d){
+  const day=d.getDay()||7;
+  const mon=new Date(d); mon.setDate(d.getDate()-day+1); mon.setHours(0,0,0,0);
+  const sun=new Date(mon); sun.setDate(mon.getDate()+6); sun.setHours(23,59,59,999);
+  return [mon,sun];
+}
+function getRange(f){
+  const now=new Date();
+  if(f==='week') return weekOf(now);
+  if(f==='last-week'){ const lw=new Date(now); lw.setDate(now.getDate()-7); return weekOf(lw); }
+  if(f==='month') return [new Date(now.getFullYear(),now.getMonth(),1), new Date(now.getFullYear(),now.getMonth()+1,0,23,59,59)];
+  if(f==='last-month') return [new Date(now.getFullYear(),now.getMonth()-1,1), new Date(now.getFullYear(),now.getMonth(),0,23,59,59)];
+  if(f==='year') return [new Date(now.getFullYear(),0,1), new Date(now.getFullYear(),11,31,23,59,59)];
+  return null;
+}
+function getPrevRange(f){
+  const now=new Date();
+  if(f==='week'){ const pw=new Date(now); pw.setDate(now.getDate()-7); return weekOf(pw); }
+  if(f==='last-week'){ const pw=new Date(now); pw.setDate(now.getDate()-14); return weekOf(pw); }
+  if(f==='month') return [new Date(now.getFullYear(),now.getMonth()-1,1), new Date(now.getFullYear(),now.getMonth(),0,23,59,59)];
+  if(f==='last-month') return [new Date(now.getFullYear(),now.getMonth()-2,1), new Date(now.getFullYear(),now.getMonth()-1,0,23,59,59)];
+  if(f==='year') return [new Date(now.getFullYear()-1,0,1), new Date(now.getFullYear()-1,11,31,23,59,59)];
+  return null;
+}
+
+/* ─── FILTER LOGIC ─── */
+function filterCVs(cvs, range){
+  if(!range) return cvs;
+  const [a,b]=range;
+  return cvs.filter(c=>{ const d=parseDate(c['NGAY']); return d&&d>=a&&d<=b; });
+}
+function applyFilter(cvs){ return filterCVs(cvs, filter==='custom'?[dfrom,dto]:getRange(filter)); }
+function applyPrevFilter(cvs){ return filterCVs(cvs, getPrevRange(filter)); }
+
+function setFilter(f){
+  filter=f; dfrom=dto=null;
+  document.querySelectorAll('.fb').forEach(b=>b.classList.remove('active'));
+  const map={'week':0,'last-week':1,'month':2,'last-month':3,'year':4,'all':5};
+  document.querySelectorAll('.fb')[map[f]]?.classList.add('active');
+  if(rawData) render();
+}
+function applyRange(){
+  const a=document.getElementById('df').value, b=document.getElementById('dt').value;
+  if(!a||!b) return;
+  filter='custom'; dfrom=new Date(a); dto=new Date(b); dto.setHours(23,59,59,999);
+  document.querySelectorAll('.fb').forEach(b=>b.classList.remove('active'));
+  if(rawData) render();
+}
+
+/* ─── BADGE HELPERS ─── */
+function badge(curr, prev){
+  if(!prev && prev!==0) return '<span class="badge-neutral"><i class="ti ti-minus"></i>—</span>';
+  if(prev===0) return '<span class="badge-neutral"><i class="ti ti-minus"></i>—</span>';
+  const pct=((curr-prev)/prev*100);
+  const sign=pct>0?'+':'';
+  if(Math.abs(pct)<0.05) return `<span class="badge-neutral"><i class="ti ti-minus"></i>Không đổi</span>`;
+  return pct>0
+    ? `<span class="badge-up"><i class="ti ti-trending-up"></i>${sign}${pct.toFixed(1)}%</span>`
+    : `<span class="badge-down"><i class="ti ti-trending-down"></i>${pct.toFixed(1)}%</span>`;
+}
+function badgePt(curr, prev){
+  if(!prev && prev!==0) return '<span class="badge-neutral"><i class="ti ti-minus"></i>—</span>';
+  const diff=curr-prev;
+  const sign=diff>0?'+':'';
+  if(Math.abs(diff)<0.05) return `<span class="badge-neutral"><i class="ti ti-minus"></i>Không đổi</span>`;
+  return diff>0
+    ? `<span class="badge-up"><i class="ti ti-trending-up"></i>${sign}${diff.toFixed(1)}pt</span>`
+    : `<span class="badge-down"><i class="ti ti-trending-down"></i>${diff.toFixed(1)}pt</span>`;
+}
+function getField(obj,...keys){
+  for(const k of keys){ if(obj[k]!==undefined&&obj[k]!==null&&String(obj[k]).trim()!=='') return String(obj[k]).trim(); }
+  return null;
+}
+function getFieldLike(obj,...patterns){
+  const allKeys=Object.keys(obj);
+  for(const p of patterns){
+    const found=allKeys.find(k=>k.toUpperCase().replace(/\s/g,'').includes(p.toUpperCase().replace(/\s/g,'')));
+    if(found&&obj[found]!==undefined&&obj[found]!==null&&String(obj[found]).trim()!=='') return String(obj[found]).trim();
+  }
+  return null;
+}
+function initials(name){
+  if(!name) return '?';
+  const parts=name.trim().split(' ');
+  if(parts.length===1) return parts[0][0].toUpperCase();
+  return (parts[0][0]+parts[parts.length-1][0]).toUpperCase();
+}
+
+/* ─── FETCH ─── */
+const CACHE_KEY='bigx_hr_v2';
+async function loadData(){
+  /* Hiện cache ngay nếu có */
+  const cached=localStorage.getItem(CACHE_KEY);
+  if(cached){
+    try{
+      rawData=JSON.parse(cached);
+      render();
+      document.getElementById('uptime').textContent='Đang làm mới...';
+    }catch(_){}
+  } else {
+    document.getElementById('content').innerHTML='<div class="loading"><i class="ti ti-loader"></i>Đang tải dữ liệu...</div>';
+    document.getElementById('uptime').textContent='Đang tải...';
+  }
+  /* Fetch mới ngầm */
+  try{
+    const r=await fetch(API);
+    rawData=await r.json();
+    localStorage.setItem(CACHE_KEY,JSON.stringify(rawData));
+    document.getElementById('uptime').textContent='Cập nhật: '+new Date().toLocaleTimeString('vi-VN');
+    render();
+    /* Nếu đang ở tab Công việc thì fetch task data riêng */
+    if(document.getElementById('nav-cv').classList.contains('active')){
+      loadTaskData();
+    }
+  }catch(e){
+    if(!cached){
+      document.getElementById('content').innerHTML=`<div class="error-msg"><i class="ti ti-wifi-off"></i>Lỗi kết nối API<br><small style="color:#94a3b8">${e.message}</small></div>`;
+    }
+    document.getElementById('uptime').textContent=cached?'Offline — dùng cache':'Lỗi';
+  }
+}
+
+/* ─── RENDER ─── */
+function render(){
+  const cvs=rawData.cv||[], viTri=rawData.viTri||[];
+  const fCVs=applyFilter(cvs);
+  const pCVs=applyPrevFilter(cvs);
+
+  /* KPI */
+  const total=fCVs.length, pTotal=pCVs.length;
+  const hired=fCVs.filter(c=>c['FINAL']==='TRÚNG TUYỂN').length;
+  const pHired=pCVs.filter(c=>c['FINAL']==='TRÚNG TUYỂN').length;
+  const rate=total>0?(hired/total*100):0;
+  const pRate=pTotal>0?(pHired/pTotal*100):0;
+  const open=viTri.filter(v=>v['Trang Thai']==='Đang mở').length;
+  const prevLabel=filter==='month'?'T.trước':filter==='week'?'Tuần trước':filter==='year'?'Năm trước':filter==='last-month'?'2 tháng trước':filter==='last-week'?'2 tuần trước':'';
+
+  /* Pipeline by position (toàn bộ rawData, không filter date) */
+  const byPos={};
+  cvs.forEach(c=>{
+    const vt=(c['VI TRI']||'Khác').trim();
+    if(!byPos[vt]) byPos[vt]={cv:0,pass:0,hire:0};
+    byPos[vt].cv++;
+    if(c['HR REVIEW CV']&&String(c['HR REVIEW CV']).trim()) byPos[vt].pass++;
+    if(c['FINAL']==='TRÚNG TUYỂN') byPos[vt].hire++;
+  });
+  const topPos=Object.entries(byPos).sort((a,b)=>b[1].cv-a[1].cv).slice(0,6);
+  const maxCV=Math.max(...topPos.map(p=>p[1].cv),1);
+
+  /* Trend 6 months */
+  const now=new Date(), yr=now.getFullYear();
+  const months=Array.from({length:6},(_,i)=>{
+    const raw=now.getMonth()-5+i;
+    const m=((raw%12)+12)%12;
+    const y=raw<0?yr-1:yr;
+    return {label:`T${m+1}`,m,y,cv:0,hire:0,rate:0};
+  });
+  cvs.forEach(c=>{
+    const d=parseDate(c['NGAY']); if(!d) return;
+    const idx=months.findIndex(mo=>mo.m===d.getMonth()&&mo.y===d.getFullYear());
+    if(idx>=0){ months[idx].cv++; if(c['FINAL']==='TRÚNG TUYỂN') months[idx].hire++; }
+  });
+  months.forEach(m=>{ m.rate=m.cv>0?parseFloat((m.hire/m.cv*100).toFixed(1)):0; });
+
+  /* Danh sách ứng viên trúng tuyển trong kỳ */
+  const hiredList=fCVs.filter(c=>c['FINAL']==='TRÚNG TUYỂN');
+
+  /* ─── BUILD HTML ─── */
+  document.getElementById('content').innerHTML=`
+  <div class="td-kpi-grid">
+    <div class="td-kpi">
+      <div class="td-kpi-top">
+        <span class="td-kpi-lbl">Tổng CV nhận</span>
+        <div class="td-kpi-icon" style="background:#eff6ff;"><i class="ti ti-files" style="color:#3b82f6;"></i></div>
+      </div>
+      <div class="td-kpi-val">${total}</div>
+      <div class="td-kpi-footer">
+        <span class="td-kpi-prev">${prevLabel?prevLabel+': '+pTotal:'Tổng: '+cvs.length}</span>
+        ${prevLabel?badge(total,pTotal):''}
+      </div>
+    </div>
+    <div class="td-kpi">
+      <div class="td-kpi-top">
+        <span class="td-kpi-lbl">Trúng tuyển</span>
+        <div class="td-kpi-icon" style="background:#f0fdf4;"><i class="ti ti-user-check" style="color:#22c55e;"></i></div>
+      </div>
+      <div class="td-kpi-val">${hired}</div>
+      <div class="td-kpi-footer">
+        <span class="td-kpi-prev">${prevLabel?prevLabel+': '+pHired:'Tổng: '+cvs.filter(c=>c['FINAL']==='TRÚNG TUYỂN').length}</span>
+        ${prevLabel?badge(hired,pHired):''}
+      </div>
+    </div>
+    <div class="td-kpi">
+      <div class="td-kpi-top">
+        <span class="td-kpi-lbl">Tỷ lệ đậu</span>
+        <div class="td-kpi-icon" style="background:#fff7ed;"><i class="ti ti-chart-pie" style="color:#f97316;"></i></div>
+      </div>
+      <div class="td-kpi-val" style="color:#f97316;">${rate.toFixed(1)}%</div>
+      <div class="td-kpi-footer">
+        <span class="td-kpi-prev">${prevLabel?prevLabel+': '+pRate.toFixed(1)+'%':'Trúng / CV nhận'}</span>
+        ${prevLabel?badgePt(rate,pRate):''}
+      </div>
+    </div>
+    <div class="td-kpi">
+      <div class="td-kpi-top">
+        <span class="td-kpi-lbl">Vị trí đang mở</span>
+        <div class="td-kpi-icon" style="background:#fdf4ff;"><i class="ti ti-briefcase" style="color:#a855f7;"></i></div>
+      </div>
+      <div class="td-kpi-val">${open}</div>
+      <div class="td-kpi-footer">
+        <span class="td-kpi-prev">Tổng vị trí: ${viTri.length}</span>
+        <span class="badge-neutral"><i class="ti ti-minus"></i>Không đổi</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="td-row-charts">
+    <div class="td-card">
+      <div class="td-card-title"><i class="ti ti-chart-line"></i>Xu hướng 6 tháng gần nhất</div>
+      <div class="td-legend">
+        <span class="td-leg"><span class="td-leg-sq" style="background:#818cf8;"></span>CV nhận</span>
+        <span class="td-leg"><span class="td-leg-sq" style="background:#34d399;"></span>Trúng tuyển</span>
+        <span class="td-leg"><span class="td-leg-sq" style="background:#fb923c;border-radius:50%;"></span>Tỷ lệ đậu (%)</span>
+      </div>
+      <div class="td-chart-wrap"><canvas id="chart-trend"></canvas></div>
+    </div>
+    <div class="td-card">
+      <div class="td-card-title"><i class="ti ti-filter"></i>Pipeline theo vị trí</div>
+      <div class="td-legend">
+        <span class="td-leg"><span class="td-leg-sq" style="background:#c7d2fe;"></span>CV nhận</span>
+        <span class="td-leg"><span class="td-leg-sq" style="background:#818cf8;"></span>HR pass</span>
+        <span class="td-leg"><span class="td-leg-sq" style="background:#34d399;"></span>Trúng tuyển</span>
+      </div>
+      <div id="td-pipeline">
+        ${topPos.map(([name,d])=>`
+        <div class="td-bar-row">
+          <div class="td-bar-lbl"><span>${name}</span><span>${d.cv}</span></div>
+          <div class="td-bar-track" style="position:relative;height:7px;background:#f1f5f9;border-radius:4px;overflow:hidden;">
+            <div class="td-bar-fill" style="width:${Math.round(d.cv/maxCV*100)}%;background:#c7d2fe;position:absolute;left:0;top:0;height:100%;border-radius:4px;"></div>
+            <div class="td-bar-fill" style="width:${Math.round(d.pass/maxCV*100)}%;background:#818cf8;position:absolute;left:0;top:0;height:100%;border-radius:4px;"></div>
+            <div class="td-bar-fill" style="width:${Math.round(d.hire/maxCV*100)}%;background:#34d399;position:absolute;left:0;top:0;height:100%;border-radius:4px;"></div>
+          </div>
+        </div>`).join('')}
+      </div>
+    </div>
+  </div>
+
+  <div class="td-row-bottom">
+    <div class="td-card">
+      <div class="td-card-title"><i class="ti ti-briefcase"></i>Danh sách vị trí tuyển dụng</div>
+      <table class="td-table">
+        <thead><tr>
+          <th>Vị trí</th>
+          <th>Lương</th>
+          <th style="text-align:center;">SL</th>
+          <th>Trạng thái</th>
+        </tr></thead>
+        <tbody>
+          ${viTri.length===0?`<tr><td colspan="4" class="td-muted" style="text-align:center;padding:16px;">Không có dữ liệu</td></tr>`:
+          viTri.map(v=>{
+            const ten=getField(v,'Ten Vi Tri','VI TRI','Vị trí','TEN VI TRI','Ten','TEN')||'—';
+            const luong=getField(v,'Muc Luong','Luong','LUONG','MUC LUONG','Lương','Mức lương')||'—';
+            const sl=getField(v,'SL Can Tuyen','So Luong','SO LUONG','SL','Số lượng')||'—';
+            const status=getField(v,'Trang Thai','Trạng thái')||'';
+            const isOpen=status==='Đang mở';
+            const statusLabel=status||'—';
+            return `<tr>
+              <td>${ten}</td>
+              <td class="td-muted">${luong}</td>
+              <td style="text-align:center;"><span class="qty-badge">${sl}</span></td>
+              <td>${isOpen?'<span class="tag-open">Đang mở</span>':'<span class="tag-closed">'+statusLabel+'</span>'}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="td-card">
+      <div class="td-card-title" style="justify-content:space-between;">
+        <span style="display:flex;align-items:center;gap:6px;">
+          <i class="ti ti-user-check" style="color:#22c55e;"></i>Ứng viên trúng tuyển trong kỳ
+        </span>
+        <span class="td-count-badge">${hiredList.length} người</span>
+      </div>
+      <table class="td-table">
+        <thead><tr>
+          <th>Ứng viên</th>
+          <th>Vị trí</th>
+          <th>Ngày nộp CV</th>
+          <th>Ngày nhận việc</th>
+          <th>Kết quả</th>
+        </tr></thead>
+        <tbody>
+          ${hiredList.length===0?`<tr><td colspan="5" class="td-muted" style="text-align:center;padding:16px;">Không có ứng viên trúng tuyển trong kỳ này</td></tr>`:
+          hiredList.map(c=>{
+            const ten=getField(c,'HO VA TEN','HO TEN','Ho Ten','TEN','Ten','Họ tên','HỌ TÊN')||'—';
+            const vt=getField(c,'VI TRI','Vị trí')||'—';
+            const ngayNop=getField(c,'NGAY','Ngày nộp','NGAY NOP')||'—';
+            const ngayNV=getField(c,'NGÀY NHẬN VIỆC','NGAY NHAN VIEC','Ngay Nhan Viec','Ngày nhận việc','NNV')||'—';
+            return `<tr>
+              <td><span class="td-av">${initials(ten)}</span>${ten}</td>
+              <td class="td-muted">${vt}</td>
+              <td class="td-muted">${ngayNop}</td>
+              <td class="td-muted">${ngayNV}</td>
+              <td><span class="tag-hire">Trúng tuyển</span></td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+
+  /* ─── CHARTS ─── */
+  if(chartTrend) chartTrend.destroy();
+  if(chartPipeline) chartPipeline.destroy();
+
+  chartTrend = new Chart(document.getElementById('chart-trend').getContext('2d'),{
+    type:'bar',
+    data:{
+      labels:months.map(m=>m.label),
+      datasets:[
+        {label:'CV nhận',data:months.map(m=>m.cv),backgroundColor:'rgba(129,140,248,0.2)',borderColor:'#818cf8',borderWidth:1.5,borderRadius:4,yAxisID:'y'},
+        {label:'Trúng tuyển',data:months.map(m=>m.hire),backgroundColor:'rgba(52,211,153,0.2)',borderColor:'#34d399',borderWidth:1.5,borderRadius:4,yAxisID:'y'},
+        {label:'Tỷ lệ đậu (%)',data:months.map(m=>m.rate),type:'line',borderColor:'#fb923c',backgroundColor:'transparent',borderWidth:2,pointRadius:4,pointBackgroundColor:'#fb923c',tension:0.4,yAxisID:'y2'}
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{font:{size:10},color:'#64748b'}},
+        y:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{font:{size:10},color:'#64748b'},beginAtZero:true},
+        y2:{position:'right',grid:{drawOnChartArea:false},ticks:{font:{size:10},color:'#ea7434',callback:v=>v+'%'},beginAtZero:true}
+      }
+    }
+  });
+}
+
+function nav(v){
+  document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('active'));
+  const fb=document.getElementById('filter-bar');
+  if(v==='coming'){
+    document.getElementById('topbar-left').innerHTML='<i class="ti ti-tools"></i> Dashboard <span class="live-tag">● Live</span>';
+    fb.classList.add('hidden');
+    document.getElementById('content').innerHTML='<div class="coming"><i class="ti ti-tools"></i>Chức năng đang phát triển</div>';
+    return;
+  }
+  if(v==='tuyen-dung'){
+    document.getElementById('nav-td').classList.add('active');
+    document.getElementById('topbar-left').innerHTML='<i class="ti ti-file-description"></i> Tuyển dụng <span class="live-tag">● Live</span>';
+    fb.classList.remove('hidden');
+    if(rawData) render(); else loadData();
+    return;
+  }
+  if(v==='so-do'){
+    document.getElementById('nav-so-do').classList.add('active');
+    document.getElementById('topbar-left').innerHTML='<i class="ti ti-sitemap"></i> Sơ đồ tổ chức <span class="live-tag">● Live</span>';
+    fb.classList.add('hidden');
+    renderSoDo();
+    return;
+  }
+  if(v==='cong-viec'){
+    document.getElementById('nav-cv').classList.add('active');
+    document.getElementById('topbar-left').innerHTML='<i class="ti ti-checklist"></i> Công việc nhân sự <span class="live-tag">● Live</span>';
+    fb.classList.add('hidden');
+    loadTaskData();
+    return;
+  }
+  if(v==='quy-trinh'){
+    document.getElementById('nav-qt').classList.add('active');
+    document.getElementById('topbar-left').innerHTML='<i class="ti ti-arrow-guide"></i> Quy trình <span class="live-tag">● Live</span>';
+    fb.classList.add('hidden');
+    renderQuyTrinh();
+    return;
+  }
+  if(v==='quy-dinh'){
+    document.getElementById('nav-qd').classList.add('active');
+    document.getElementById('topbar-left').innerHTML='<i class="ti ti-book"></i> Quy định <span class="live-tag">● Live</span>';
+    fb.classList.add('hidden');
+    renderQuyDinh();
+    return;
+  }
+  document.getElementById('nav-td').classList.add('active');
+  fb.classList.remove('hidden');
+  if(rawData) render(); else loadData();
+}
+
+/* ══════════════════════════════════════════
+   CÔNG VIỆC NHÂN SỰ — Data & Render
+══════════════════════════════════════════ */
+const SHEET_ID = '1ahePajJUtjB6LqIfBByEwwyvGlMXtJz0ymardz8ygCY';
+let rawTaskLH = [], rawTaskCD = [], taskDataLoaded = false;
+let cvYear = new Date().getFullYear(), cvMonth = new Date().getMonth();
+let cvFilterMang = 'all', cvFilterUu = 'all';
+let cvChartYear = null;
+let cvRangeStart = null, cvRangeEnd = null;
+
+function cvDayClick(y,m,d){
+  const clicked=new Date(y,m,d);
+  if(!cvRangeStart||cvRangeEnd){
+    cvRangeStart=clicked; cvRangeEnd=null;
+  } else {
+    if(clicked<cvRangeStart){ cvRangeEnd=cvRangeStart; cvRangeStart=clicked; }
+    else { cvRangeEnd=clicked; }
+  }
+  renderCongViec();
+}
+function cvClearRange(){ cvRangeStart=null; cvRangeEnd=null; renderCongViec(); }
+
+function parseGViz(text){
+  try{
+    const json = text.replace(/^[^(]*\(/, '').replace(/\);\s*$/, '');
+    return JSON.parse(json);
+  }catch(e){ return null; }
+}
+function gvizRows(data){
+  if(!data||!data.table) return [];
+  const cols = data.table.cols.map(c=>c.label||'');
+  return (data.table.rows||[]).map(r=>{
+    const obj={};
+    (r.c||[]).forEach((cell,i)=>{ obj[cols[i]] = cell&&cell.v!==null&&cell.v!==undefined ? String(cell.v).trim() : ''; });
+    return obj;
+  });
+}
+function parseTaskDate(s){
+  if(!s) return null;
+  const p=String(s).trim().split('/');
+  if(p.length!==3) return null;
+  const d=new Date(+p[2],+p[1]-1,+p[0]);
+  return isNaN(d)?null:d;
+}
+function fmtTaskDate(s){
+  const d=parseTaskDate(s); if(!d) return s||'—';
+  return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`;
+}
+function dlClass(s){
+  const d=parseTaskDate(s); if(!d) return 'cv-dl-norm';
+  const now=new Date(); now.setHours(0,0,0,0);
+  const pct=parseInt(s&&s.replace('%',''))||0;
+  if(pct===100) return 'cv-dl-done';
+  if(d<now) return 'cv-dl-over';
+  return 'cv-dl-norm';
+}
+function mangBadge(m){
+  if(!m) return '';
+  m=m.trim();
+  if(m==='Tuyển dụng') return `<span class="cv-badge cv-b-tuyen">Tuyển dụng</span>`;
+  if(m==='C&B') return `<span class="cv-badge cv-b-cb">C&amp;B</span>`;
+  if(m==='Văn hóa nội bộ') return `<span class="cv-badge cv-b-vh">Văn hóa</span>`;
+  if(m==='Đào tạo') return `<span class="cv-badge cv-b-dt">Đào tạo</span>`;
+  return `<span class="cv-badge cv-b-thap">${m}</span>`;
+}
+function uuBadge(u){
+  if(!u) return '';
+  if(u==='Cao') return `<span class="cv-badge cv-b-cao">Cao</span>`;
+  if(u==='Trung bình') return `<span class="cv-badge cv-b-tb">Trung bình</span>`;
+  return `<span class="cv-badge cv-b-thap">Thấp</span>`;
+}
+function progColor(p){
+  const n=parseInt(p)||0;
+  if(n===100) return '#22c55e';
+  if(n>=50) return '#f97316';
+  return '#e2e8f0';
+}
+
+/* Dữ liệu mặc định — tự động cập nhật bởi Claude theo lịch */
+const DEFAULT_LH=[
+  {Mảng:'Tuyển dụng','Nội dung chi tiết':'Đăng tuyển dụng vị trí Kế toán Thuế','Ưu tiên':'Cao',Deadline:'25/05/2026','Tiến độ (%)':'100%'},
+  {Mảng:'Văn hóa nội bộ','Nội dung chi tiết':'Thiết kế poster pass probation cho nhân sự Hương, Đào.','Ưu tiên':'Trung bình',Deadline:'08/05/2026','Tiến độ (%)':'100%'},
+  {Mảng:'Văn hóa nội bộ','Nội dung chi tiết':'Design poster chúc mừng nhân sự được level up (Kim Dung)','Ưu tiên':'Trung bình',Deadline:'08/05/2026','Tiến độ (%)':'100%'},
+  {Mảng:'C&B','Nội dung chi tiết':'Soạn HĐTV cho nhân sự Minh Thiện & Phụng','Ưu tiên':'Cao',Deadline:'12/05/2026','Tiến độ (%)':'100%'},
+  {Mảng:'Tuyển dụng','Nội dung chi tiết':'Đăng tuyển dụng vị trí Booking KOC','Ưu tiên':'Trung bình',Deadline:'20/05/2026','Tiến độ (%)':'100%'},
+  {Mảng:'C&B','Nội dung chi tiết':'Soạn HĐLĐ cho nhân sự Hương & Đào','Ưu tiên':'Trung bình',Deadline:'11/05/2026','Tiến độ (%)':'100%'},
+  {Mảng:'C&B','Nội dung chi tiết':'Báo giảm BH của nhân sự Sale Hưng','Ưu tiên':'Cao',Deadline:'11/05/2026','Tiến độ (%)':'100%'},
+  {Mảng:'Văn hóa nội bộ','Nội dung chi tiết':'Chuẩn bị poster pass probation của Nghĩa','Ưu tiên':'Trung bình',Deadline:'20/05/2026','Tiến độ (%)':'100%'},
+  {Mảng:'Văn hóa nội bộ','Nội dung chi tiết':'Set lịch meeting review cho nhân sự Nghĩa','Ưu tiên':'Cao',Deadline:'25/05/2026','Tiến độ (%)':'100%'},
+  {Mảng:'Văn hóa nội bộ','Nội dung chi tiết':'Thiết kế poster pass probation cho nhân sự Nghĩa.','Ưu tiên':'Trung bình',Deadline:'20/05/2026','Tiến độ (%)':'100%'},
+  {Mảng:'Văn hóa nội bộ','Nội dung chi tiết':'Set lịch review cho nhân sự Nghĩa.','Ưu tiên':'Trung bình',Deadline:'22/05/2026','Tiến độ (%)':'100%'},
+  {Mảng:'C&B','Nội dung chi tiết':'Kiểm tra lại toàn bộ hồ sơ của nhân sự, thông báo bổ sung nếu cần.','Ưu tiên':'Trung bình',Deadline:'31/05/2026','Tiến độ (%)':'100%'},
+  {Mảng:'C&B','Nội dung chi tiết':'Sắp xếp meeting để trao đổi về JD Kế toán Thuế.','Ưu tiên':'Cao',Deadline:'16/05/2026','Tiến độ (%)':'100%'},
+  {Mảng:'Văn hóa nội bộ','Nội dung chi tiết':'Thông báo sinh nhật của nhân sự tháng 5 đến team Kế toán.','Ưu tiên':'Thấp',Deadline:'21/05/2026','Tiến độ (%)':'100%'},
+  {Mảng:'Tuyển dụng','Nội dung chi tiết':'Sắp xếp tuyển dụng Mar Event.','Ưu tiên':'Cao',Deadline:'23/05/2026','Tiến độ (%)':'100%'},
+  {Mảng:'Tuyển dụng','Nội dung chi tiết':'Sắp xếp phỏng vấn round 2 Booking.','Ưu tiên':'Thấp',Deadline:'18/05/2026','Tiến độ (%)':'100%'},
+  {Mảng:'Văn hóa nội bộ','Nội dung chi tiết':'Xây dựng kế hoạch Company trip 2026.','Ưu tiên':'Cao',Deadline:'25/05/2026','Tiến độ (%)':'100%'},
+  {Mảng:'Đào tạo','Nội dung chi tiết':'Chia sẻ văn hóa, quy định, nội bộ cho nhân sự mới','Ưu tiên':'Thấp',Deadline:'25/05/2026','Tiến độ (%)':'100%'},
+  {Mảng:'C&B','Nội dung chi tiết':'Chuẩn bị HĐTV cho nhân sự Bé và Thủy','Ưu tiên':'Thấp',Deadline:'30/05/2026','Tiến độ (%)':'100%'},
+  {Mảng:'Tuyển dụng','Nội dung chi tiết':'Báo cáo tình hình tuyển dụng hằng tuần','Ưu tiên':'Trung bình',Deadline:'31/12/2026','Tiến độ (%)':'100%'},
+  {Mảng:'C&B','Nội dung chi tiết':'Sắp xếp meeting review sau thử việc cho nhân sự Chi','Ưu tiên':'Trung bình',Deadline:'31/05/2026','Tiến độ (%)':'100%'},
+  {Mảng:'C&B','Nội dung chi tiết':'Thiết kế poster pass thử việc cho Chi','Ưu tiên':'Thấp',Deadline:'31/05/2026','Tiến độ (%)':'100%'},
+  {Mảng:'Văn hóa nội bộ','Nội dung chi tiết':'Chia sẻ văn hóa, quy định, nội bộ cho nhân sự mới','Ưu tiên':'Trung bình',Deadline:'01/06/2026','Tiến độ (%)':'100%'},
+  {Mảng:'Văn hóa nội bộ','Nội dung chi tiết':'Post chúc mừng nhân sự Chi passed','Ưu tiên':'Thấp',Deadline:'03/06/2026','Tiến độ (%)':'100%'},
+  {Mảng:'C&B','Nội dung chi tiết':'Hoàn thành hồ sơ nghỉ việc của nhân sự Sales Vi','Ưu tiên':'Trung bình',Deadline:'03/06/2026','Tiến độ (%)':'100%'},
+  {Mảng:'C&B','Nội dung chi tiết':'Báo giảm BH của nhân sự Sale Vi ở gr Nhân sự','Ưu tiên':'Trung bình',Deadline:'03/06/2026','Tiến độ (%)':'100%'},
+  {Mảng:'C&B','Nội dung chi tiết':'Báo tăng BH cho nhân sự Chi','Ưu tiên':'Trung bình',Deadline:'03/06/2026','Tiến độ (%)':'100%'},
+  {Mảng:'Văn hóa nội bộ','Nội dung chi tiết':'Hoàn thành file check công việc của HR phối hợp với các bộ phận','Ưu tiên':'Trung bình',Deadline:'10/06/2026','Tiến độ (%)':'100%'},
+  {Mảng:'Tuyển dụng','Nội dung chi tiết':'Nhận thông tin tuyển dụng Booking mới từ giữa tháng 6.','Ưu tiên':'Trung bình',Deadline:'20/07/2026','Tiến độ (%)':'100%'},
+  {Mảng:'Văn hóa nội bộ','Nội dung chi tiết':'Thiết kế poster pass thử việc cho Vy và Thiện','Ưu tiên':'Trung bình',Deadline:'10/06/2026','Tiến độ (%)':'100%'},
+  {Mảng:'C&B','Nội dung chi tiết':'Báo tăng BH cho nhân sự Vy và Thiên','Ưu tiên':'Thấp',Deadline:'30/06/2026','Tiến độ (%)':'100%'},
+  {Mảng:'Tuyển dụng','Nội dung chi tiết':'Hoàn thành file report phối hợp làm việc giữa HR và các team','Ưu tiên':'Cao',Deadline:'08/06/2026','Tiến độ (%)':'100%'},
+  {Mảng:'C&B','Nội dung chi tiết':'Cho các nhân sự kí HĐTV/HĐLĐ: Thủy, Vy, Quang, Bé, Chi.','Ưu tiên':'Trung bình',Deadline:'05/06/2026','Tiến độ (%)':'100%'},
+  {Mảng:'Tuyển dụng','Nội dung chi tiết':'Hoàn thành JD Booking mới, rà soát thị trường.','Ưu tiên':'Cao',Deadline:'25/06/2026','Tiến độ (%)':'100%'},
+  {Mảng:'Văn hóa nội bộ','Nội dung chi tiết':'Tìm hiểu "Công đoàn"','Ưu tiên':'Trung bình',Deadline:'15/06/2026','Tiến độ (%)':'100%'},
+  {Mảng:'Tuyển dụng','Nội dung chi tiết':'Xây dựng JD tuyển dụng mới cho vị trí Booking','Ưu tiên':'Cao',Deadline:'20/06/2026','Tiến độ (%)':'100%'},
+  {Mảng:'Văn hóa nội bộ','Nội dung chi tiết':'Tiến hành bầu ban chấp hành công đoàn','Ưu tiên':'Cao',Deadline:'15/06/2026','Tiến độ (%)':'100%'},
+  {Mảng:'Văn hóa nội bộ','Nội dung chi tiết':'Set lịch họp bàn giao của KT và BCH công đoàn','Ưu tiên':'Cao',Deadline:'16/06/2026','Tiến độ (%)':'100%'},
+  {Mảng:'Văn hóa nội bộ','Nội dung chi tiết':'Chuẩn bị thông báo sinh nhật tháng 6','Ưu tiên':'Cao',Deadline:'19/6/2026','Tiến độ (%)':'100%'},
+  {Mảng:'Văn hóa nội bộ','Nội dung chi tiết':'Hoàn thành web dashboard tổng hợp','Ưu tiên':'Cao',Deadline:'19/6/2026','Tiến độ (%)':'100%'},
+  {Mảng:'Tuyển dụng','Nội dung chi tiết':'Tuyển dụng final 1 Booking KOC, OBD tuần sau','Ưu tiên':'Cao',Deadline:'19/6/2026','Tiến độ (%)':'100%'},
+  {Mảng:'C&B','Nội dung chi tiết':'Tạo web chấm công onl, tối ưu thủ công','Ưu tiên':'Cao',Deadline:'25/6/2026','Tiến độ (%)':'100%'},
+  {Mảng:'Tuyển dụng','Nội dung chi tiết':'Tuyển 1 EDIT, OBD tuần sau.','Ưu tiên':'Cao',Deadline:'25/6/2026','Tiến độ (%)':'100%'},
+  {Mảng:'Văn hóa nội bộ','Nội dung chi tiết':'Meeting thống nhất plan team building','Ưu tiên':'Cao',Deadline:'24/6/2026','Tiến độ (%)':'100%'},
+  {Mảng:'Tuyển dụng','Nội dung chi tiết':'Phỏng vấn round 1/2: SM,S,B,E','Ưu tiên':'Cao',Deadline:'25/6/2026','Tiến độ (%)':'100%'},
+];
+const DEFAULT_CD=[
+  {'Nội dung chi tiết':'Công đoàn',Loại:'Cố định'},
+  {'Nội dung chi tiết':'Hỗ trợ OBD (Onboarding)',Loại:'Cố định'},
+  {'Nội dung chi tiết':'Lên theo dõi hợp đồng lao động (điền thông tin nhân sự, chữ ký)',Loại:'Cố định'},
+  {'Nội dung chi tiết':'Lên hợp đồng công tác viên (điền thông tin nhân sự)',Loại:'Cố định'},
+  {'Nội dung chi tiết':'Quản lý file theo dõi nhân sự',Loại:'Cố định'},
+  {'Nội dung chi tiết':'Chấm công',Loại:'Cố định'},
+  {'Nội dung chi tiết':'Theo dõi báo tăng giảm nhân sự tòa nhà + check chi tiết lên VP với tòa nhà',Loại:'Cố định'},
+  {'Nội dung chi tiết':'Teambuilding, YEP, sinh nhật,...',Loại:'Cố định'},
+];
+
+const TASK_API='https://script.google.com/macros/s/AKfycbxp_DCrToKsLfUa3rWMJhXi1-zjbSXs5hWRa0hSfy3OW90Vyb6UvuSv5ROKFPSPX9pR2Q/exec';
+const TASK_CACHE_KEY='bigx_task_v1';
+function cvIsActive(){ return document.getElementById('nav-cv').classList.contains('active'); }
+function applyTaskData(d){
+  rawTaskLH=(d&&d.taskLH&&d.taskLH.length>0)?d.taskLH:DEFAULT_LH;
+  rawTaskCD=(d&&d.taskCD&&d.taskCD.length>0)?d.taskCD:DEFAULT_CD;
+}
+async function loadTaskData(force){
+  /* 1) Hiện ngay dữ liệu có sẵn — không chờ mạng */
+  if(taskDataLoaded && !force){
+    renderCongViec();                       // đã có trong bộ nhớ → render tức thì
+  } else {
+    const cached=localStorage.getItem(TASK_CACHE_KEY);
+    if(cached){
+      try{ applyTaskData(JSON.parse(cached)); }catch(_){ applyTaskData(null); }
+    } else {
+      applyTaskData(null);                  // dùng DEFAULT để màn hình không trống
+    }
+    taskDataLoaded=true;
+    renderCongViec();
+  }
+  /* 2) Fetch mới ngầm rồi cập nhật lại (chỉ render nếu vẫn đang ở tab) */
+  try{
+    const r=await fetch(TASK_API);
+    const d=await r.json();
+    applyTaskData(d);
+    localStorage.setItem(TASK_CACHE_KEY,JSON.stringify({taskLH:rawTaskLH,taskCD:rawTaskCD}));
+    taskDataLoaded=true;
+    if(cvIsActive()) renderCongViec();
+  }catch(e){
+    /* giữ nguyên dữ liệu đang hiển thị nếu fetch lỗi */
+  }
+}
+// tự cập nhật ngầm mỗi 5 phút, chỉ khi đang xem tab Công việc
+setInterval(()=>{ if(cvIsActive()) loadTaskData(true); }, 5*60*1000);
+
+function cvSetMonth(y,m){
+  cvYear=y; cvMonth=m; cvRangeStart=null; cvRangeEnd=null;
+  renderCongViec();
+}
+
+function renderCongViec(){
+  const today=new Date();
+  const curY=new Date().getFullYear();
+
+  /* ── Tasks in selected month ── */
+  const monthTasks=rawTaskLH.filter(t=>{
+    const d=parseTaskDate(t['Deadline']||t['deadline']||t['DEADLINE']);
+    return d&&d.getFullYear()===cvYear&&d.getMonth()===cvMonth;
+  });
+  const totalCD=rawTaskCD.filter(t=>t['Nội dung chi tiết']).length;
+  const totalM=monthTasks.length+totalCD;
+  const doneM=monthTasks.filter(t=>(parseInt(t['Tiến độ (%)'||t['Tiến độ']||t['TIEN DO']])||0)===100||(t['Tiến độ (%)'||'']||'').trim()==='100%').length;
+
+  /* better pct parse */
+  function getPct(t){
+    const raw=t['Tiến độ (%)']; if(raw===undefined||raw===null||raw==='') return 0;
+    const n=parseFloat(String(raw).replace('%',''));
+    if(isNaN(n)) return 0;
+    /* Google Sheets % format lưu dạng decimal: 100% → 1, 50% → 0.5 */
+    if(n>=0 && n<=1) return Math.round(n*100);
+    return Math.round(n);
+  }
+  const doneM2=monthTasks.filter(t=>getPct(t)===100).length;
+  const overdueM=monthTasks.filter(t=>{
+    const d=parseTaskDate(t['Deadline']); if(!d) return false;
+    const n=new Date(); n.setHours(0,0,0,0);
+    return d<n && getPct(t)<100;
+  }).length;
+
+  /* ── Calendar task dates ── */
+  const taskDates=new Set();
+  rawTaskLH.forEach(t=>{
+    const d=parseTaskDate(t['Deadline']);
+    if(d&&d.getFullYear()===cvYear&&d.getMonth()===cvMonth) taskDates.add(d.getDate());
+  });
+
+  /* ── Year chart data ── */
+  const yearCounts=Array(12).fill(0);
+  rawTaskLH.forEach(t=>{
+    const d=parseTaskDate(t['Deadline']);
+    if(d&&d.getFullYear()===cvYear) yearCounts[d.getMonth()]++;
+  });
+
+  /* ── Filtered table rows ── */
+  const basePool=cvRangeStart&&cvRangeEnd?rawTaskLH.filter(t=>{
+    const d=parseTaskDate(t['Deadline']); if(!d) return false;
+    const dn=new Date(d.getFullYear(),d.getMonth(),d.getDate());
+    const rs=new Date(cvRangeStart.getFullYear(),cvRangeStart.getMonth(),cvRangeStart.getDate());
+    const re=new Date(cvRangeEnd.getFullYear(),cvRangeEnd.getMonth(),cvRangeEnd.getDate());
+    return dn>=rs&&dn<=re;
+  }):monthTasks;
+  let filtered=basePool.filter(t=>{
+    if(cvFilterMang!=='all'&&t['Mảng']!==cvFilterMang) return false;
+    if(cvFilterUu!=='all'&&t['Ưu tiên']!==cvFilterUu) return false;
+    return true;
+  });
+
+  /* ── Calendar HTML ── */
+  const firstDay=new Date(cvYear,cvMonth,1).getDay();
+  const daysInMonth=new Date(cvYear,cvMonth+1,0).getDate();
+  const prevDays=new Date(cvYear,cvMonth,0).getDate();
+  const monthNames=['Tháng 1','Tháng 2','Tháng 3','Tháng 4','Tháng 5','Tháng 6','Tháng 7','Tháng 8','Tháng 9','Tháng 10','Tháng 11','Tháng 12'];
+  const prevM=cvMonth===0?11:cvMonth-1;
+  const prevY=cvMonth===0?cvYear-1:cvYear;
+  const nextM=cvMonth===11?0:cvMonth+1;
+  const nextY=cvMonth===11?cvYear+1:cvYear;
+
+  /* range helpers */
+  function dayTs(y,m,d){ return new Date(y,m,d).getTime(); }
+  const rsTs=cvRangeStart?dayTs(cvRangeStart.getFullYear(),cvRangeStart.getMonth(),cvRangeStart.getDate()):null;
+  const reTs=cvRangeEnd?dayTs(cvRangeEnd.getFullYear(),cvRangeEnd.getMonth(),cvRangeEnd.getDate()):null;
+
+  let daysCells='';
+  for(let i=0;i<firstDay;i++){
+    daysCells+=`<span class="cv-day other">${prevDays-firstDay+1+i}</span>`;
+  }
+  for(let d=1;d<=daysInMonth;d++){
+    const isToday=d===today.getDate()&&cvMonth===today.getMonth()&&cvYear===today.getFullYear();
+    const hasTsk=taskDates.has(d);
+    const dTs=dayTs(cvYear,cvMonth,d);
+    const isRS=rsTs&&dTs===rsTs;
+    const isRE=reTs&&dTs===reTs;
+    const inRange=rsTs&&reTs&&dTs>rsTs&&dTs<reTs;
+    const cls=['cv-day',isToday?'today':'',hasTsk?'has-task':'',isRS?'range-s':'',isRE?'range-e':'',inRange?'in-range':''].filter(Boolean).join(' ');
+    daysCells+=`<span class="${cls}" onclick="cvDayClick(${cvYear},${cvMonth},${d})">${d}</span>`;
+  }
+  const remain=42-firstDay-daysInMonth;
+  for(let d=1;d<=remain;d++) daysCells+=`<span class="cv-day other">${d}</span>`;
+
+  /* ── Table rows HTML ── */
+  const taskRows=filtered.length===0
+    ? `<tr><td colspan="5" style="text-align:center;padding:16px;color:#94a3b8;font-size:12px;">Không có task trong tháng này</td></tr>`
+    : filtered.map(t=>{
+        const pct=getPct(t);
+        const dl=t['Deadline']||'';
+        const d=parseTaskDate(dl);
+        const now2=new Date(); now2.setHours(0,0,0,0);
+        const isOver=d&&d<now2&&pct<100;
+        const dlHtml=pct===100
+          ? `<span class="cv-dl-done">✓ ${fmtTaskDate(dl)}</span>`
+          : isOver
+            ? `<span class="cv-dl-over">! ${fmtTaskDate(dl)}</span>`
+            : `<span class="cv-dl-norm">${fmtTaskDate(dl)}</span>`;
+        return `<tr>
+          <td><div style="display:flex;align-items:center;gap:7px;">
+            ${pct===100?'<div class="cv-check"><i class="ti ti-check"></i></div>':'<div class="cv-check" style="border-color:#e2e8f0;background:none;"></div>'}
+            <span style="font-size:12px;">${t['Nội dung chi tiết']||'—'}</span>
+          </div></td>
+          <td>${mangBadge(t['Mảng'])}</td>
+          <td>${uuBadge(t['Ưu tiên'])}</td>
+          <td>${dlHtml}</td>
+          <td><div class="cv-prog-wrap">
+            <div class="cv-prog-bar"><div class="cv-prog-fill" style="width:${pct}%;background:${progColor(pct)};"></div></div>
+            <span class="cv-prog-pct">${pct}%</span>
+          </div></td>
+        </tr>`;
+      }).join('');
+
+  /* ── Fixed rows ── */
+  const fixedIcons={'Công đoàn':'ti-flag','Hỗ trợ OBD (Onboarding)':'ti-user-plus','Chấm công':'ti-clock','Quản lý file theo dõi nhân sự':'ti-folder','Theo dõi báo tăng giảm nhân sự tòa nhà + check chi tiết lên VP với tòa nhà':'ti-building','Teambuilding, YEP, sinh nhật,...':'ti-confetti'};
+  const fixedRows=rawTaskCD.length===0
+    ? `<div class="cv-fixed-row"><span style="color:#94a3b8;font-size:12px;padding:4px 0;">Không có dữ liệu</span></div>`
+    : rawTaskCD.map(t=>{
+        const name=t['Nội dung chi tiết']||'';
+        if(!name) return '';
+        const icon=Object.entries(fixedIcons).find(([k])=>name.includes(k.split(' ')[0]))?.[1]||'ti-repeat';
+        return `<div class="cv-fixed-row"><i class="ti ${icon} fi"></i><span>${name}</span><span class="cv-always">Hằng tháng</span></div>`;
+      }).join('');
+
+  /* ── KPI tags ── */
+  const doneTag=doneM2===totalM&&totalM>0?'cv-tag-g':doneM2>0?'cv-tag-a':'cv-tag-n';
+  const overTag=overdueM>0?'cv-tag-r':'cv-tag-g';
+
+  /* ── RENDER ── */
+  document.getElementById('content').innerHTML=`
+  <div class="cv-layout">
+    <div class="cv-left">
+      <!-- Calendar -->
+      <div class="cv-cal">
+        <div class="cv-cal-hdr">
+          <span class="cv-cal-title">${monthNames[cvMonth]}, ${cvYear}</span>
+          <div class="cv-cal-nav">
+            <button onclick="cvSetMonth(${prevM===11?prevY:cvYear},${prevM})" title="Tháng trước">▲</button>
+            <button onclick="cvSetMonth(${nextM===0?nextY:cvYear},${nextM})" title="Tháng sau">▼</button>
+          </div>
+        </div>
+        <div class="cv-cal-grid">
+          <div class="cv-cal-dow"><span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span></div>
+          <div class="cv-cal-days">${daysCells}</div>
+        </div>
+        <div class="cv-cal-leg">
+          <div class="cv-cal-leg-row"><span class="cv-ldot" style="background:#5b21b6;"></span>Có deadline task</div>
+          <div class="cv-cal-leg-row"><span class="cv-ldot" style="background:#5b21b6;opacity:.4;"></span>Click chọn khoảng thời gian</div>
+        </div>
+        <div class="cv-range-bar">
+          ${cvRangeStart&&cvRangeEnd
+            ? `<span class="cv-range-txt"><i class="ti ti-calendar-event"></i>${cvRangeStart.getDate()}/${cvRangeStart.getMonth()+1} → ${cvRangeEnd.getDate()}/${cvRangeEnd.getMonth()+1}</span>
+               <span class="cv-range-clear" onclick="cvClearRange()">Xoá</span>`
+            : cvRangeStart
+              ? `<span class="cv-range-hint">Chọn ngày kết thúc...</span>`
+              : `<span class="cv-range-hint">Click ngày để chọn khoảng</span>`
+          }
+        </div>
+      </div>
+      <!-- Year chart mini -->
+      <div class="cv-chart-card">
+        <div class="cv-chart-title"><i class="ti ti-chart-bar-popular"></i>Khối lượng năm ${cvYear}</div>
+        <div class="cv-mini-chart">
+          ${(()=>{
+            const maxC=Math.max(...yearCounts,1);
+            return yearCounts.map((c,i)=>{
+              if(c===0) return `<div class="cv-mc-row"><span class="cv-mc-label">T${i+1}</span><div class="cv-mc-track"><div class="cv-mc-fill" style="width:2%"></div></div><span class="cv-mc-count" style="color:#e2e8f0">0</span></div>`;
+              const isCur=i===cvMonth;
+              return `<div class="cv-mc-row">
+                <span class="cv-mc-label" style="${isCur?'color:#5b21b6;font-weight:600;':''}"">T${i+1}</span>
+                <div class="cv-mc-track"><div class="cv-mc-fill${isCur?' cur':''}" style="width:${Math.round(c/maxC*100)}%"></div></div>
+                <span class="cv-mc-count${isCur?' cur':''}">${c}</span>
+              </div>`;
+            }).join('');
+          })()}
+        </div>
+      </div>
+    </div>
+
+    <div class="cv-right">
+      <!-- KPIs -->
+      <div class="cv-kpi-row">
+        <div class="cv-kpi"><div class="cv-kpi-accent" style="background:#5b21b6;"></div>
+          <div class="cv-kpi-lbl">Task ${monthNames[cvMonth]}</div>
+          <div class="cv-kpi-val">${totalM}</div>
+          <span class="cv-kpi-tag cv-tag-n">Linh hoạt + Cố định</span>
+        </div>
+        <div class="cv-kpi"><div class="cv-kpi-accent" style="background:#22c55e;"></div>
+          <div class="cv-kpi-lbl">Hoàn thành</div>
+          <div class="cv-kpi-val">${doneM2}</div>
+          <span class="cv-kpi-tag ${doneTag}">${totalM>0?Math.round(doneM2/totalM*100):0}%</span>
+        </div>
+        <div class="cv-kpi"><div class="cv-kpi-accent" style="background:#ef4444;"></div>
+          <div class="cv-kpi-lbl">Quá deadline</div>
+          <div class="cv-kpi-val">${overdueM}</div>
+          <span class="cv-kpi-tag ${overTag}">${overdueM===0?'On track':'Cần xử lý'}</span>
+        </div>
+      </div>
+
+      <!-- Bảng LINH HOẠT -->
+      <div class="cv-tbl-card">
+        <div class="cv-tbl-hdr">
+          <div class="cv-tbl-hdr-left"><i class="ti ti-adjustments-horizontal"></i>Task linh hoạt <span class="cv-count">${filtered.length} task${cvRangeStart&&cvRangeEnd?' (theo khoảng)':''}</span></div>
+        </div>
+        <div class="cv-filter-row">
+          <select onchange="cvFilterMang=this.value;renderCongViec()">
+            <option value="all">Tất cả mảng</option>
+            <option value="Tuyển dụng" ${cvFilterMang==='Tuyển dụng'?'selected':''}>Tuyển dụng</option>
+            <option value="C&B" ${cvFilterMang==='C&B'?'selected':''}>C&B</option>
+            <option value="Văn hóa nội bộ" ${cvFilterMang==='Văn hóa nội bộ'?'selected':''}>Văn hóa nội bộ</option>
+            <option value="Đào tạo" ${cvFilterMang==='Đào tạo'?'selected':''}>Đào tạo</option>
+          </select>
+          <select onchange="cvFilterUu=this.value;renderCongViec()">
+            <option value="all">Tất cả ưu tiên</option>
+            <option value="Cao" ${cvFilterUu==='Cao'?'selected':''}>Cao</option>
+            <option value="Trung bình" ${cvFilterUu==='Trung bình'?'selected':''}>Trung bình</option>
+            <option value="Thấp" ${cvFilterUu==='Thấp'?'selected':''}>Thấp</option>
+          </select>
+        </div>
+        <table class="cv-table">
+          <thead><tr>
+            <th style="width:42%;">Nội dung</th>
+            <th style="width:14%;">Mảng</th>
+            <th style="width:13%;">Ưu tiên</th>
+            <th style="width:12%;">Deadline</th>
+            <th style="width:19%;">Tiến độ</th>
+          </tr></thead>
+          <tbody>${taskRows}</tbody>
+        </table>
+      </div>
+
+      <!-- Bảng CỐ ĐỊNH -->
+      <div class="cv-tbl-card">
+        <div class="cv-tbl-hdr">
+          <div class="cv-tbl-hdr-left"><i class="ti ti-pin"></i>Task cố định <span class="cv-count">${rawTaskCD.filter(t=>t['Nội dung chi tiết']).length} task</span></div>
+          <span class="cv-tbl-hdr-right">Thực hiện mỗi tháng</span>
+        </div>
+        ${fixedRows}
+      </div>
+    </div>
+  </div>`;
+
+}
+
+/* ══════════════════════════════════════════
+   SƠ ĐỒ TỔ CHỨC
+══════════════════════════════════════════ */
+function renderSoDo(){
+  document.getElementById('content').innerHTML=`
+  <div class="oc-page" id="oc-page">
+    <div class="oc-wrap" id="oc-wrap">
+      <ul class="oc-tree">
+        <li style="padding-top:0">
+          <div class="oc-card oc-ceo">
+            <div class="oc-ci"><i class="ti ti-user-star"></i></div>
+            <div class="oc-cx">
+              <div class="oc-cx-badge">CEO &amp; Founder</div>
+              <div class="oc-cx-name">NGUYỄN VĂN VŨNG</div>
+              <div class="oc-cx-role">Giám đốc Điều hành</div>
+            </div>
+          </div>
+          <ul class="oc-ul-or">
+            <li class="oc-li-or">
+              <div class="oc-card oc-coo">
+                <div class="oc-ci"><i class="ti ti-users"></i></div>
+                <div class="oc-cx">
+                  <div class="oc-cx-badge">COO</div>
+                  <div class="oc-cx-name">NGUYỄN THỊ HẠNH DIỆU</div>
+                  <div class="oc-cx-role">Giám đốc Điều hành</div>
+                </div>
+              </div>
+              <ul class="oc-ul-bl">
+                <li class="oc-li-bl">
+                  <div class="oc-team oc-tts">
+                    <div class="oc-ti"><i class="ti ti-shopping-bag"></i></div>
+                    <div class="oc-tn">Team TikTok Shop</div>
+                  </div>
+                </li>
+                <li class="oc-li-bl">
+                  <div class="oc-team oc-mkt">
+                    <div class="oc-ti"><i class="ti ti-speakerphone"></i></div>
+                    <div class="oc-tn">Team Digital Marketing</div>
+                    <div class="oc-tr">Vận hành MKT</div>
+                  </div>
+                  <div class="oc-subitems">
+                    <div class="oc-sub"><div class="oc-si"><i class="ti ti-rocket"></i></div><span class="oc-sn">Performance</span></div>
+                    <div class="oc-sub"><div class="oc-si"><i class="ti ti-headset"></i></div><span class="oc-sn">Customer Account Manager</span></div>
+                    <div class="oc-sub"><div class="oc-si"><i class="ti ti-star"></i></div><span class="oc-sn">Booking KOC/KOLs</span></div>
+                  </div>
+                </li>
+                <li class="oc-li-bl">
+                  <div class="oc-team oc-acct">
+                    <div class="oc-ti"><i class="ti ti-briefcase"></i></div>
+                    <div class="oc-tn">Team Account Management</div>
+                    <div class="oc-tr">Quản lý &amp; cấp TKQC</div>
+                  </div>
+                  <div class="oc-subitems">
+                    <div class="oc-sub"><div class="oc-si"><i class="ti ti-video"></i></div><span class="oc-sn">Production</span></div>
+                    <div class="oc-sub"><div class="oc-si"><i class="ti ti-palette"></i></div><span class="oc-sn">Content Creative</span></div>
+                    <div class="oc-sub"><div class="oc-si"><i class="ti ti-cut"></i></div><span class="oc-sn">Video Editor</span></div>
+                    <div class="oc-sub"><div class="oc-si"><i class="ti ti-ad"></i></div><span class="oc-sn">Quảng cáo</span></div>
+                  </div>
+                </li>
+                <li class="oc-li-bl">
+                  <div class="oc-team oc-ecom">
+                    <div class="oc-ti"><i class="ti ti-shopping-cart"></i></div>
+                    <div class="oc-tn">Team Ecom</div>
+                  </div>
+                </li>
+                <li class="oc-li-bl">
+                  <div class="oc-team oc-thr">
+                    <div class="oc-ti"><i class="ti ti-user-plus"></i></div>
+                    <div class="oc-tn">Nhân sự &amp;<br>Tuyển dụng</div>
+                  </div>
+                </li>
+                <li class="oc-li-bl">
+                  <div class="oc-team oc-tacc">
+                    <div class="oc-ti"><i class="ti ti-calculator"></i></div>
+                    <div class="oc-tn">Kế toán &amp;<br>Hành chính</div>
+                  </div>
+                  <div class="oc-subitems">
+                    <div class="oc-sub"><div class="oc-si"><i class="ti ti-coin"></i></div><span class="oc-sn">Kế toán nội bộ</span></div>
+                    <div class="oc-sub"><div class="oc-si"><i class="ti ti-receipt"></i></div><span class="oc-sn">Kế toán thuế</span></div>
+                  </div>
+                </li>
+              </ul>
+            </li>
+            <li class="oc-li-or">
+              <div class="oc-card oc-cgo">
+                <div class="oc-ci"><i class="ti ti-trending-up"></i></div>
+                <div class="oc-cx">
+                  <div class="oc-cx-badge">CGO</div>
+                  <div class="oc-cx-name">HUỲNH THỊ HOÀNG ANH</div>
+                  <div class="oc-cx-role">Giám đốc Tăng trưởng</div>
+                </div>
+              </div>
+              <ul class="oc-ul-gr">
+                <li class="oc-li-gr">
+                  <div class="oc-team oc-biz">
+                    <div class="oc-ti"><i class="ti ti-chart-bar"></i></div>
+                    <div class="oc-tn">Team Kinh doanh</div>
+                  </div>
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+    <div class="oc-bigx">Big<b>X</b></div>
+  </div>`;
+  setTimeout(function(){
+    var page=document.getElementById('oc-page');
+    var wrap=document.getElementById('oc-wrap');
+    if(!page||!wrap)return;
+    var sw=page.clientWidth-32,sh=page.clientHeight-32;
+    var ww=wrap.scrollWidth,wh=wrap.scrollHeight;
+    var scale=Math.min(sw/ww,sh/wh,1);
+    if(scale<1){wrap.style.transform='scale('+scale+')';wrap.style.transformOrigin='top center';}
+  },200);
+}
+
+/* ══════════════════════════════════════════
+   QUY TRÌNH
+══════════════════════════════════════════ */
+let qtView='overview', qtSelected=null, qtExpanded=new Set(), qtFilterLoai='all', qtSearch='';
+
+const quyTrinhData=[{
+  id:'onboarding',ten:'Onboarding nhân sự',loai:'Onboarding',
+  icon:'ti-user-plus',iconBg:'#ede9fe',iconColor:'#5b21b6',tagBg:'#ede9fe',tagColor:'#5b21b6',
+  steps:[
+    {stt:'01',ten:'Đón nhân sự',giaiDoan:'Tiếp nhận',moTa:'Bộ phận HR đón nhân sự mới tại sảnh, hỗ trợ thủ tục vào cổng, dẫn tham quan không gian văn phòng.',checklist:['Chuẩn bị quà OBD','Phân công nhân viên HR đón tiếp tại sảnh đúng giờ','Dẫn tham quan: khu làm việc','Giới thiệu sơ lược lịch trình ngày đầu tiên']},
+    {stt:'02',ten:'Chào mừng tại phòng',giaiDoan:'Tiếp nhận',moTa:'Team leader và đồng nghiệp chào đón nhân sự mới tại khu vực làm việc, giới thiệu từng thành viên trong nhóm.',checklist:['Sắp xếp buổi chào hỏi ngắn (5–10 phút) với toàn team','Giới thiệu sơ đồ tổ chức phòng ban: Sale, Booking, E-COM (Edit, Content), Per, CAM, TSP, Kế Toán, Nhân sự','Thông báo về mentor sẽ hỗ trợ nhân sự mới']},
+    {stt:'03',ten:'Tặng quà OBD',giaiDoan:'Gắn kết',moTa:'Trao Welcome Kit của BIGX: sổ tay và bình nước.',checklist:['Bình nước có thương hiệu BIGX','Sổ tay có in logo']},
+    {stt:'04',ten:'Chia sẻ văn hóa',giaiDoan:'Gắn kết',moTa:'HR tổ chức buổi chia sẻ về tầm nhìn, sứ mệnh, văn hóa và các quy tắc ứng xử tại BIGX trong phòng họp.',checklist:['Tầm nhìn, sứ mệnh, giá trị cốt lõi, quy định, quy trình','Cơ cấu tổ chức và sơ đồ phòng ban','Văn hóa làm việc, chuẩn mực ứng xử nội bộ','Phúc lợi và chính sách đãi ngộ chung']},
+    {stt:'05',ten:'Gửi quy trình & quy định',giaiDoan:'Đào tạo',moTa:'HR cung cấp đầy đủ bộ tài liệu nội quy, quy trình làm việc và chính sách của công ty.',checklist:['Nội quy lao động công ty','Quy trình xử lý công việc theo phòng ban','Chính sách nghỉ phép, làm thêm giờ','Quy định bảo mật thông tin (NDA)','Hướng dẫn sử dụng hệ thống nội bộ']},
+    {stt:'06',ten:'Làm bài test',giaiDoan:'Đào tạo',dieuKien:true,moTa:'Nhân sự mới hoàn thành bài kiểm tra đánh giá hiểu biết về văn hóa, quy định. Đạt điểm yêu cầu mới tiến sang bước tiếp theo.',checklist:['Đạt yêu cầu → Tiến sang Bước 07 — Ký biên bản cam kết','Chưa đạt → Ôn lại tài liệu và thực hiện lại bài test, HR hỗ trợ giải đáp']},
+    {stt:'07',ten:'Ký biên bản cam kết',giaiDoan:'Cam kết',moTa:'Nhân sự ký kết biên bản cam kết tuân thủ quy định, bảo mật thông tin và các chính sách của BIGX.',checklist:['<a href="https://drive.google.com/file/d/1_LkY-B92Ux6hCM1oNSu_8BqczhThk50-/view?usp=sharing" target="_blank" style="color:#5b21b6;text-decoration:underline;">Biên bản cam kết tuân thủ nội quy lao động</a>','Cam kết bảo mật thông tin công ty (NDA)','Xác nhận đã nhận và đọc hiểu tài liệu OBD','Cam kết hoàn thành thử việc theo quy định']}
+  ]
+},{
+  id:'offboarding',ten:'Offboarding nhân sự',loai:'Offboarding',
+  icon:'ti-user-minus',iconBg:'#fee2e2',iconColor:'#ef4444',tagBg:'#fee2e2',tagColor:'#ef4444',
+  steps:[
+    {stt:'01',ten:'Tiếp nhận đơn xin nghỉ việc',giaiDoan:'Phê duyệt',moTa:'HR nhận đơn xin nghỉ việc và kiểm tra thời hạn báo trước theo HĐLĐ (thường 30 ngày với HĐ xác định thời hạn).',checklist:['Xác nhận thời hạn báo trước theo HĐLĐ','Ghi nhận ngày nộp đơn chính thức']},
+    {stt:'02',ten:'Xét duyệt đơn',giaiDoan:'Phê duyệt',moTa:'Quản lý trực tiếp và Giám đốc ký duyệt đơn xin nghỉ việc.',checklist:['Manager ký duyệt đơn','Giám đốc ký xác nhận']},
+    {stt:'03',ten:'Email xác nhận Last Working Day',giaiDoan:'Phê duyệt',moTa:'HR gửi email xác nhận ngày làm việc cuối cùng và danh mục đầu việc cần bàn giao.',checklist:['Email xác nhận ngày làm việc cuối (Last Working Day)','Đính kèm checklist bàn giao']},
+    {stt:'04',ten:'Thông báo phối hợp nội bộ',giaiDoan:'Phê duyệt',moTa:'HR thông báo cho các bộ phận liên quan để chuẩn bị phối hợp quy trình.',checklist:['Thông báo Kế toán để chốt lương & phép năm','Thông báo Trưởng bộ phận để chuẩn bị thu hồi quyền truy cập']},
+    {stt:'05',ten:'Bàn giao dự án & tài khoản',giaiDoan:'Bàn giao',moTa:'Nhân sự lập biên bản bàn giao chi tiết về dự án, client và tài khoản dùng chung.',checklist:['Trạng thái các dự án đang chạy và deadline tiếp theo','Danh sách liên hệ client/vendors và lưu ý làm việc','Tài khoản dùng chung: Meta Ads, Google Ads, Canva, Figma, fanpage,...','Link Google Drive, source file thiết kế']},
+    {stt:'06',ten:'Ký biên bản bàn giao',giaiDoan:'Bàn giao',moTa:'Lập và ký biên bản bàn giao với đủ 3 chữ ký theo quy định.',checklist:['Manager chỉ định người tiếp nhận','3 chữ ký: Người nghỉ – Người nhận – Manager','<a href="https://drive.google.com/file/d/1rRuNLwgZhq6cXvFbr4ska7bukqy3BBXH/view" target="_blank" style="color:#5b21b6;text-decoration:none;">→ Xem mẫu biên bản bàn giao</a>']},
+    {stt:'07',ten:'Email bàn giao đến Line Manager',giaiDoan:'Bàn giao',moTa:'Nhân sự gửi email tóm tắt toàn bộ nội dung bàn giao đến Line Manager, cc Phòng Nhân sự.',checklist:['Tóm tắt nội dung bàn giao','Gửi đến: Line Manager — CC: Phòng Nhân sự']},
+    {stt:'08',ten:'Exit Interview',giaiDoan:'Thu hồi',moTa:'HR thực hiện phỏng vấn nghỉ việc để thu thập phản hồi và ghi nhận lý do rời đi.',checklist:['Phỏng vấn 1-1 với HR','Ghi nhận lý do nghỉ việc vào hồ sơ nội bộ']},
+    {stt:'09',ten:'Thu hồi thiết bị',giaiDoan:'Thu hồi',moTa:'HR kiểm tra và thu hồi toàn bộ tài sản công ty.',checklist:['Laptop và phụ kiện đi kèm','Thẻ gửi xe, thẻ nhân viên','Các thiết bị khác (nếu có)']},
+    {stt:'10',ten:'Thu hồi quyền truy cập',giaiDoan:'Thu hồi',moTa:'Trưởng bộ phận phối hợp xóa toàn bộ quyền truy cập của nhân sự khỏi hệ thống và tools.',checklist:['Email công ty','Tài khoản tools: Canva, Figma, Meta Ads, Google Ads,...','Hệ thống quản lý nội bộ','Tài khoản fanpage, group nội bộ']},
+    {stt:'11',ten:'Nộp hồ sơ & ký đủ 3 giấy tờ',giaiDoan:'Thanh lý',moTa:'Nhân sự nộp đầy đủ hồ sơ và ký đủ 3 biểu mẫu theo quy định trước ngày làm việc cuối.',checklist:['<a href="https://drive.google.com/file/d/1yqlPPs6Mg5IObaqpAkIEV_3FVqZAyUNe/view" target="_blank" style="color:#5b21b6;text-decoration:none;">Đơn xin nghỉ việc</a>','<a href="https://drive.google.com/file/d/1rRuNLwgZhq6cXvFbr4ska7bukqy3BBXH/view" target="_blank" style="color:#5b21b6;text-decoration:none;">Biên bản bàn giao</a>','<a href="https://drive.google.com/file/d/1xZ77G7MqpmhsX_IvROC5H6HIKK1GYVYu/view" target="_blank" style="color:#5b21b6;text-decoration:none;">Thoả thuận chấm dứt hợp đồng</a>']},
+    {stt:'12',ten:'Quyết toán tài chính',giaiDoan:'Thanh lý',moTa:'Kế toán và HR hoàn tất các khoản quyết toán tài chính trước ngày làm việc cuối.',checklist:['Hoàn tất tạm ứng còn nợ (nếu có)','Chốt số ngày phép năm chưa dùng và quy đổi thành tiền']},
+    {stt:'13',ten:'Báo giảm BHXH & chốt sổ',giaiDoan:'Thanh lý',moTa:'HR thực hiện báo giảm BHXH và gửi sổ BHXH đã chốt cho nhân viên theo lịch cơ quan bảo hiểm.',checklist:['Làm thủ tục báo giảm BHXH','Gửi sổ BHXH đã chốt cho nhân viên']},
+    {stt:'14',ten:'Ký biên bản thanh lý HĐLĐ',giaiDoan:'Thanh lý',moTa:'Hai bên ký biên bản thanh lý HĐLĐ và xác nhận không còn nợ nần tài sản/công việc.',checklist:['<a href="https://drive.google.com/file/d/1xZ77G7MqpmhsX_IvROC5H6HIKK1GYVYu/view" target="_blank" style="color:#5b21b6;text-decoration:none;">→ Xem mẫu thoả thuận chấm dứt hợp đồng</a>','Xác nhận không còn nợ tài sản/công việc']}
+  ]
+}];
+
+function qtPhaseColor(g){
+  if(g==='Tiếp nhận') return {circle:'#dbeafe',border:'#3b82f6',text:'#1d4ed8',line:'#dbeafe',bb:'#dbeafe',bt:'#1d4ed8'};
+  if(g==='Gắn kết')  return {circle:'#fdf4ff',border:'#a855f7',text:'#7e22ce',line:'#f3e8ff',bb:'#fdf4ff',bt:'#7e22ce'};
+  if(g==='Đào tạo')  return {circle:'#fefce8',border:'#eab308',text:'#a16207',line:'#fef9c3',bb:'#fefce8',bt:'#a16207'};
+  if(g==='Cam kết')  return {circle:'#f0fdf4',border:'#22c55e',text:'#15803d',line:'#dcfce7',bb:'#f0fdf4',bt:'#15803d'};
+  if(g==='Phê duyệt') return {circle:'#dbeafe',border:'#3b82f6',text:'#1d4ed8',line:'#dbeafe',bb:'#dbeafe',bt:'#1d4ed8'};
+  if(g==='Bàn giao')  return {circle:'#fdf4ff',border:'#a855f7',text:'#7e22ce',line:'#f3e8ff',bb:'#fdf4ff',bt:'#7e22ce'};
+  if(g==='Thu hồi')   return {circle:'#fff7ed',border:'#f97316',text:'#c2410c',line:'#fed7aa',bb:'#fff7ed',bt:'#c2410c'};
+  if(g==='Thanh lý')  return {circle:'#f0fdf4',border:'#22c55e',text:'#15803d',line:'#dcfce7',bb:'#f0fdf4',bt:'#15803d'};
+  return {circle:'#f1f5f9',border:'#94a3b8',text:'#64748b',line:'#f1f5f9',bb:'#f1f5f9',bt:'#64748b'};
+}
+function qtToggleStep(stt){
+  qtExpanded.has(stt)?qtExpanded.delete(stt):qtExpanded.add(stt);
+  renderQuyTrinh();
+}
+function qtOpenDetail(id){ qtSelected=id; qtView='detail'; qtExpanded=new Set(); renderQuyTrinh(); }
+function qtBack(){ qtView='overview'; qtSelected=null; renderQuyTrinh(); }
+function qtSetFilter(l){ qtFilterLoai=l; renderQuyTrinh(); }
+
+function renderQuyTrinh(){
+  if(qtView==='detail'){
+    const qt=quyTrinhData.find(q=>q.id===qtSelected);
+    if(!qt){ qtView='overview'; renderQuyTrinh(); return; }
+    const stepRows=qt.steps.map((s,i)=>{
+      const c=qtPhaseColor(s.giaiDoan);
+      const isLast=i===qt.steps.length-1;
+      const isOpen=qtExpanded.has(s.stt);
+      const body=isOpen?`<div class="qt-step-body"><div class="qt-step-desc">${s.moTa}</div>${s.checklist.map(ch=>`<div class="qt-check-item"><i class="ti ti-check"></i>${ch}</div>`).join('')}</div>`:'';
+      return `<div class="qt-step-row">
+        <div class="qt-step-line-col">
+          <div class="qt-step-circle" style="background:${c.circle};border-color:${c.border};color:${c.text};">${s.stt}</div>
+          ${!isLast?`<div class="qt-step-vline" style="background:${c.line};"></div>`:''}
+        </div>
+        <div class="qt-step-content">
+          <div class="qt-step-card">
+            <div class="qt-step-hdr" onclick="qtToggleStep('${s.stt}')">
+              <div class="qt-step-hdr-left">
+                <span class="qt-step-badge" style="background:${c.bb};color:${c.bt};">${s.giaiDoan}</span>
+                <span class="qt-step-name">${s.ten}</span>
+                ${s.dieuKien?'<span class="qt-step-cond">Có điều kiện</span>':''}
+              </div>
+              <i class="ti ${isOpen?'ti-chevron-down':'ti-chevron-right'}" style="font-size:14px;color:#94a3b8;"></i>
+            </div>
+            ${body}
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+    document.getElementById('content').innerHTML=`
+    <div style="max-width:680px;">
+      <div class="qt-back" onclick="qtBack()"><i class="ti ti-arrow-left"></i>Quay lại danh sách</div>
+      <div class="qt-detail-title">${qt.ten}</div>
+      <div class="qt-detail-sub">${qt.steps.length} bước · ${[...new Set(qt.steps.map(s=>s.giaiDoan))].length} giai đoạn</div>
+      <div>${stepRows}</div>
+    </div>`;
+    return;
+  }
+  const loaiList=[...new Set(quyTrinhData.map(q=>q.loai))];
+  const filtered=quyTrinhData.filter(q=>(qtFilterLoai==='all'||q.loai===qtFilterLoai)&&(!qtSearch||q.ten.toLowerCase().includes(qtSearch.toLowerCase())));
+  const cards=filtered.map(q=>`
+    <div class="qt-card" onclick="qtOpenDetail('${q.id}')">
+      <div class="qt-card-top">
+        <div class="qt-card-icon" style="background:${q.iconBg};"><i class="ti ${q.icon}" style="color:${q.iconColor};"></i></div>
+        <div><div class="qt-card-name">${q.ten}</div><div class="qt-card-sub">${q.steps.length} bước · ${[...new Set(q.steps.map(s=>s.giaiDoan))].length} giai đoạn</div></div>
+      </div>
+      <span class="qt-card-tag" style="background:${q.tagBg};color:${q.tagColor};">${q.loai}</span>
+      <div class="qt-card-prog"><div class="qt-card-prog-bar"><div class="qt-card-prog-fill" style="width:0%;background:${q.tagColor};"></div></div><div class="qt-card-prog-txt">Chưa bắt đầu</div></div>
+    </div>`).join('');
+  document.getElementById('content').innerHTML=`
+  <div class="qt-search-bar">
+    <div class="qt-search-box"><i class="ti ti-search"></i><input type="text" placeholder="Tìm quy trình..." value="${qtSearch}" oninput="qtSearch=this.value;renderQuyTrinh()"></div>
+    <div class="qt-filters">
+      <span class="qt-fb ${qtFilterLoai==='all'?'active':''}" onclick="qtSetFilter('all')">Tất cả</span>
+      ${loaiList.map(l=>`<span class="qt-fb ${qtFilterLoai===l?'active':''}" onclick="qtSetFilter('${l}')">${l}</span>`).join('')}
+    </div>
+  </div>
+  <div class="qt-grid">${cards}<div class="qt-add"><i class="ti ti-plus"></i>Thêm quy trình</div></div>`;
+}
+
+/* ══════════════════════════════════════════
+   QUY ĐỊNH
+══════════════════════════════════════════ */
+let qdView='overview', qdSelected=null, qdExpanded=new Set();
+
+const qdDocs=[
+  {
+    id:'lv',
+    title:'Quy định & Nguyên tắc làm việc chung',
+    tag:'Nội quy',tagBg:'#ede9fe',tagColor:'#5b21b6',
+    icon:'ti-book',iconBg:'#ede9fe',iconColor:'#5b21b6',
+    updated:'20/06/2026',applyTo:'Toàn thể nhân viên',
+    sections:[
+      {id:'1',num:'I',title:'Thời gian làm việc',icon:'ti-clock',iconBg:'#eff6ff',iconColor:'#3b82f6',badgeBg:'#eff6ff',badgeColor:'#1d4ed8',badge:'Giờ hành chính',
+       items:['<b>Giờ làm việc chính thức:</b> 09h00 – 18h00, thứ Hai đến thứ Sáu. Nghỉ trưa: 12h00 – 13h00.','Nhân viên có trách nhiệm online đúng giờ và đảm bảo khả năng phối hợp xử lý công việc kịp thời.']},
+      {id:'2',num:'II',title:'Check-in & Check-out',icon:'ti-login',iconBg:'#ede9fe',iconColor:'#5b21b6',badgeBg:'#ede9fe',badgeColor:'#5b21b6',badge:'Chấm công',
+       items:['<b>Check-in:</b> 09h00 và 13h00 hằng ngày. Thông báo trạng thái online trên kênh nội bộ, bật camera khi check-in.','<b>Check-out:</b> Cập nhật tình trạng công việc (done/đang xử lý), báo cáo trên hệ thống hoặc kênh theo yêu cầu của Line Manager.','<b>Đến trễ / không check-in chung:</b> Check-in ngay khi có mặt. Tại văn phòng: chụp hình check-in gửi HR.']},
+      {id:'3',num:'III',title:'Nguyên tắc trong giờ làm việc',icon:'ti-shield-check',iconBg:'#f0fdf4',iconColor:'#16a34a',badgeBg:'#f0fdf4',badgeColor:'#15803d',badge:'Hành vi',
+       items:['Luôn trong trạng thái sẵn sàng trao đổi qua các kênh làm việc chính thức.','<b>Thời gian phản hồi:</b> Không quá 15 phút, trừ khi đang họp hoặc xử lý task phức tạp có thông báo trước.','Không tự ý rời công việc trong giờ làm mà không báo cáo Quản lý trực tiếp.','Tất cả lịch họp bắt buộc phải được cập nhật đầy đủ trên Calendar cá nhân.']},
+      {id:'4',num:'IV',title:'Năng suất & trách nhiệm công việc',icon:'ti-target',iconBg:'#fff7ed',iconColor:'#f97316',badgeBg:'#fff7ed',badgeColor:'#c2410c',badge:'KPI',
+       items:['Mỗi nhân viên chịu trách nhiệm hoàn thành KPI và task được giao theo ngày/tuần/tháng.','<b>Nguy cơ chậm tiến độ:</b> Báo ngay cho Quản lý và chủ động đề xuất phương án xử lý.','Công việc bàn giao cần rõ ràng, đầy đủ thông tin, tránh gây gián đoạn bộ phận khác.','Tuân thủ đúng trách nhiệm cá nhân/bộ phận theo KPI đã được phê duyệt.']},
+      {id:'5',num:'V',title:'Họp & trao đổi công việc',icon:'ti-video',iconBg:'#fdf4ff',iconColor:'#a855f7',badgeBg:'#fdf4ff',badgeColor:'#7e22ce',badge:'Meeting',
+       items:['Họp team định kỳ theo lịch của Quản lý trực tiếp. Tham gia đầy đủ, đúng giờ.','Bật camera trong các buổi họp online quan trọng.','Tôn trọng ý kiến đồng nghiệp, trao đổi chuyên nghiệp, không cắt ngang hoặc gây gián đoạn.']},
+      {id:'6',num:'VI',title:'Kỷ luật & xử lý vi phạm',icon:'ti-gavel',iconBg:'#fef2f2',iconColor:'#ef4444',badgeBg:'#fef2f2',badgeColor:'#b91c1c',badge:'Phạt',special:true},
+      {id:'7',num:'VII',title:'Văn hóa làm việc remote',icon:'ti-home-2',iconBg:'#fefce8',iconColor:'#ca8a04',badgeBg:'#fefce8',badgeColor:'#a16207',badge:'Remote',
+       items:['Chủ động, minh bạch trong giao tiếp. Ưu tiên hiệu quả công việc, không "online cho có".','Nhân viên mới: add friend chéo với toàn thể thành viên ngay ngày đầu tiên.','Khi nhận tin nhắn giao việc / thông báo từ cấp trên: <b>bắt buộc phản hồi hoặc react</b> để xác nhận đã nắm thông tin.','<b>Bảo mật thông tin:</b> Tuyệt đối bảo mật dữ liệu. Chỉ chia sẻ link tài liệu, không gửi file trực tiếp. File phải cài đúng quyền truy cập theo email được cấp phép.']},
+      {id:'8',num:'VIII',title:'Ngày nghỉ & phép năm',icon:'ti-calendar-off',iconBg:'#f0fdf4',iconColor:'#16a34a',badgeBg:'#f0fdf4',badgeColor:'#15803d',badge:'Phép',
+       items:['<b>Xin nghỉ phép:</b> Dưới 3 ngày → báo trước ít nhất 01 ngày. Từ 3 ngày trở lên → báo trước ít nhất 01 tuần.','Thông báo trên nhóm chung của team và đặt lịch nghỉ trên Calendar cá nhân.','Bàn giao công việc đầy đủ trước khi nghỉ.','<b>Nghỉ ốm / đột xuất:</b> Thông báo ngay lập tức cho Quản lý trực tiếp và HR.']},
+      {id:'9',num:'IX',title:'Mục tiêu áp dụng',icon:'ti-flag',iconBg:'#f8fafc',iconColor:'#64748b',badgeBg:'#f8fafc',badgeColor:'#475569',badge:'Tổng quan',badgeExtra:'border:1px solid #e2e8f0;',
+       items:['Đảm bảo tính <b>kỷ luật – thống nhất – trách nhiệm</b> trong môi trường làm việc từ xa.','Xây dựng môi trường làm việc <b>chuyên nghiệp, minh bạch, hợp tác</b>.','Nâng cao hiệu quả công việc và hiệu suất chung của toàn Công ty.']}
+    ]
+  },
+  {
+    id:'lt',
+    title:'Quy chế chính sách lương thưởng - BigX',
+    tag:'C&B',tagBg:'#fff7ed',tagColor:'#c2410c',
+    icon:'ti-coin',iconBg:'#fff7ed',iconColor:'#f97316',
+    updated:'01/09/2023',applyTo:'Toàn thể NLĐ theo HĐLĐ chính thức',
+    sections:[
+      {id:'d1',num:'Điều 1',title:'Đối tượng áp dụng',icon:'ti-users',iconBg:'#eff6ff',iconColor:'#3b82f6',badgeBg:'#eff6ff',badgeColor:'#1d4ed8',badge:'Phạm vi',
+       items:['Toàn bộ NLĐ làm việc theo <b>HĐLĐ chính thức</b> (xác định và không xác định thời hạn) tại Công ty Bigx.','Không áp dụng cho hợp đồng học việc và thử việc.']},
+      {id:'d2',num:'Điều 2',title:'Mục đích',icon:'ti-target',iconBg:'#fff7ed',iconColor:'#f97316',badgeBg:'#fff7ed',badgeColor:'#c2410c',badge:'Tổng quan',
+       items:['Khuyến khích NLĐ hoàn thành tốt công việc theo nguyên tắc <b>làm nhiều hưởng nhiều</b>.','Đảm bảo đời sống NLĐ, đáp ứng mức sống cơ bản.','Tuân thủ đúng quy định pháp luật lao động về lương thưởng và các chế độ.']},
+      {id:'d3',num:'Điều 3',title:'Cơ sở căn cứ',icon:'ti-book-2',iconBg:'#f8fafc',iconColor:'#64748b',badgeBg:'#f8fafc',badgeColor:'#475569',badge:'Pháp lý',badgeExtra:'border:1px solid #e2e8f0;',
+       items:['Luật Việc làm 38/2013 · Bộ luật Lao động 10/2012 · Luật BHBB 25/2008 · Luật Doanh nghiệp 68/2014 · Nghị định 141/2017/NĐ-CP.','Điều lệ tổ chức và hoạt động của Công ty Bigx · Quyết định Giám đốc ngày 01/09/2023.']},
+      {id:'d4',num:'Điều 4',title:'Nguyên tắc tính lương, thưởng',icon:'ti-scale',iconBg:'#ede9fe',iconColor:'#5b21b6',badgeBg:'#ede9fe',badgeColor:'#5b21b6',badge:'Nguyên tắc',
+       items:['Lương, thưởng dựa trên kết quả kinh doanh và mức đóng góp cá nhân. <b>Làm nhiều hưởng nhiều, làm ít hưởng ít.</b>','Khi thay đổi vị trí hoặc chức vụ → hưởng lương theo vị trí mới.','Khi kết quả kinh doanh tăng → lương, thưởng tăng theo hiệu quả thực tế, do Giám đốc phê duyệt.']},
+      {id:'d5',num:'Điều 5',title:'Phân loại tiền lương',icon:'ti-layers-subtract',iconBg:'#f0fdf4',iconColor:'#16a34a',badgeBg:'#f0fdf4',badgeColor:'#15803d',badge:'Phân loại',
+       items:['<b>Lương chính:</b> Trả cho NLĐ làm việc đủ giờ, điều kiện bình thường. Ghi rõ trong HĐLĐ theo Nghị định 141/2017/NĐ-CP.','<b>Lương khoán:</b> Theo hợp đồng giao khoán, thể hiện rõ nội dung, thời gian, mức lương.','<b>Lương thử việc:</b> Bộ phận kinh doanh: <b>85%</b> mức thỏa thuận. Các bộ phận khác: <b>100%</b> mức thỏa thuận.']},
+      {id:'d6',num:'Điều 6',title:'Các khoản hỗ trợ đi kèm',icon:'ti-plus',iconBg:'#f0fdf4',iconColor:'#16a34a',badgeBg:'#f0fdf4',badgeColor:'#15803d',badge:'Phụ cấp',
+       items:['Ngoài lương chính, NLĐ có thể nhận thêm các khoản hỗ trợ tùy vị trí và đặc thù công việc. Mức hỗ trợ thể hiện trong phụ lục HĐLĐ hoặc quyết định bổ nhiệm.']},
+      {id:'d7',num:'Điều 7',title:'Cách tính lương',icon:'ti-calculator',iconBg:'#eff6ff',iconColor:'#3b82f6',badgeBg:'#eff6ff',badgeColor:'#1d4ed8',badge:'Công thức',specialFn:'d7'},
+      {id:'d8',num:'Điều 8',title:'Thời hạn trả lương',icon:'ti-calendar-due',iconBg:'#fdf4ff',iconColor:'#a855f7',badgeBg:'#fdf4ff',badgeColor:'#7e22ce',badge:'Thanh toán',
+       items:['Trả lương vào <b>ngày 30 – 31 hàng tháng</b> của tháng kế tiếp (trả lương tháng này vào cuối tháng sau).','Nếu trùng ngày nghỉ lễ/cuối tuần → Công ty thông báo trước qua email nội bộ.']},
+      {id:'d9',num:'Điều 9',title:'Chế độ xét nâng lương',icon:'ti-trending-up',iconBg:'#f0fdf4',iconColor:'#16a34a',badgeBg:'#f0fdf4',badgeColor:'#15803d',badge:'Nâng lương',
+       items:['Xét nâng lương <b>1 lần/năm vào tháng 01</b>, áp dụng với NLĐ đã đủ 12 tháng hưởng mức lương hiện tại.','<b>Điều kiện:</b> Hoàn thành tốt nhiệm vụ, không vi phạm nội quy, không bị kỷ luật khiển trách bằng văn bản trở lên.','<b>Mức nâng:</b> 5% – 10% lương hiện tại, căn cứ kết quả kinh doanh thực tế của Công ty.','Phòng Nhân sự tổng hợp danh sách → trình Giám đốc phê duyệt → họp thông báo và trao Quyết định nâng lương.']},
+      {id:'d10',num:'Điều 10',title:'Bảo hiểm & chăm sóc sức khỏe',icon:'ti-shield-heart',iconBg:'#eff6ff',iconColor:'#3b82f6',badgeBg:'#eff6ff',badgeColor:'#1d4ed8',badge:'Phúc lợi',
+       items:['<b>Bảo hiểm bắt buộc:</b> NLĐ chính thức được mua BHXH, BHYT, BHTN đầy đủ theo quy định Nhà nước.','<b>Khám sức khỏe định kỳ:</b> Hàng năm tại các cơ sở uy tín tại Hà Nội và TP.HCM, Công ty chi trả 100%.']},
+      {id:'d11',num:'Điều 11',title:'Thưởng & phúc lợi',icon:'ti-gift',iconBg:'#fefce8',iconColor:'#ca8a04',badgeBg:'#fefce8',badgeColor:'#a16207',badge:'8 khoản',specialFn:'d11'},
+      {id:'d12',num:'Điều 12',title:'Điều khoản thi hành',icon:'ti-file-check',iconBg:'#f8fafc',iconColor:'#64748b',badgeBg:'#f8fafc',badgeColor:'#475569',badge:'Hiệu lực',badgeExtra:'border:1px solid #e2e8f0;',
+       items:['Quy chế có hiệu lực kể từ ngày <b>01/09/2023</b>.','Giao Trưởng phòng Nhân sự và Kế toán phối hợp triển khai thực hiện.','Quá trình phát sinh vướng mắc sẽ được nghiên cứu, điều chỉnh phù hợp theo tình hình thực tế.']}
+    ]
+  }
+];
+
+function qdOpenDoc(id){qdSelected=id;qdView='detail';qdExpanded=new Set();renderQuyDinh();}
+function qdBack(){qdView='overview';qdSelected=null;renderQuyDinh();}
+function qdToggle(id){qdExpanded.has(id)?qdExpanded.delete(id):qdExpanded.add(id);renderQuyDinh();}
+
+function renderQuyDinh(){
+  if(qdView==='detail'){
+    const doc=qdDocs.find(d=>d.id===qdSelected);
+    if(!doc){qdView='overview';renderQuyDinh();return;}
+
+    function bodySection6(){
+      return `
+      <div class="qd-divider">Đi trễ có thông báo trước</div>
+      <div class="qd-item"><span class="qd-dot"></span><span>Thông báo trước ít nhất 01 ngày cho Quản lý / HR. Chỉ áp dụng khi được cấp trên đồng ý.</span></div>
+      <div class="qd-item"><span class="qd-dot"></span><span>Trường hợp khẩn cấp (hỏng xe...): được xem là có thông báo, tối đa <b>01 lần/tháng</b>, không phạt.</span></div>
+      <div class="qd-divider">Đi trễ không thông báo (kẹt xe không được chấp nhận)</div>
+      <table class="qd-tbl">
+        <thead><tr><th>Thời gian trễ</th><th>Hình thức phạt</th></tr></thead>
+        <tbody>
+          <tr><td>03 – 20 phút</td><td><span class="qd-fine">20.000đ / lần</span></td></tr>
+          <tr><td>21 – 45 phút</td><td><span class="qd-fine">50.000đ / lần</span></td></tr>
+          <tr><td>Trên 45 phút</td><td><span class="qd-warn">Tính nghỉ 01 buổi sáng</span></td></tr>
+        </tbody>
+      </table>
+      <div class="qd-divider">Quy định chung</div>
+      <div class="qd-item"><span class="qd-dot"></span><span>Tổng số lần đi trễ (kể cả có lý do) <b>không vượt quá 03 lần/tháng</b>. Vi phạm ảnh hưởng trực tiếp đến đánh giá hiệu suất cuối kỳ.</span></div>
+      <div class="qd-item"><span class="qd-dot"></span><span>Thiếu trách nhiệm, sai sót lặp lại nhiều lần: bị xem xét giảm thưởng hoặc hạ bậc đánh giá cuối kỳ.</span></div>`;
+    }
+
+    function bodyDieu7(){
+      return `<div class="qd-formula">
+        <div style="font-size:11.5px;font-weight:600;color:#334155;margin-bottom:4px;">Lương thực nhận hàng tháng</div>
+        <div class="qd-formula-num">(Lương chính + Hỗ trợ nếu có) &times; Số ngày công đi làm</div>
+        <div class="qd-formula-bar">Số ngày công chuẩn &nbsp;(tối đa 26 ngày/tháng)</div>
+      </div>
+      <div class="qd-item" style="margin-top:8px;"><span class="qd-dot" style="background:#3b82f6;"></span><span>Phòng Nhân sự tính lương dựa trên bảng chấm công hàng tháng.</span></div>`;
+    }
+    function bodyDieu11(){
+      return `<div class="qd-divider">1. Nghỉ lễ, tết hưởng nguyên lương</div>
+      <div class="qd-item"><span class="qd-dot" style="background:#ca8a04;"></span><span>Tết Dương lịch 1 ngày · Tết Âm lịch 5 ngày · 30/4 · 1/5 · Quốc khánh 2/9 (2 ngày) · Giỗ Tổ Hùng Vương 10/3 âm lịch.</span></div>
+      <div class="qd-item"><span class="qd-dot" style="background:#ca8a04;"></span><span>Nghỉ việc riêng hưởng lương: Kết hôn 3 ngày · Con kết hôn 1 ngày · Bố/mẹ/vợ/chồng/con mất 3 ngày.</span></div>
+      <div class="qd-divider">2. Hỗ trợ đám hiếu, hỷ, thiên tai, ốm đau</div>
+      <table class="qd-tbl"><thead><tr><th>Đối tượng</th><th>Hiếu hỷ / sinh bé</th><th>Thiên tai / ốm đau</th></tr></thead>
+      <tbody>
+        <tr><td>Bản thân NLĐ</td><td><span class="qd-fine">1.000.000đ</span></td><td><span class="qd-fine">500.000đ</span></td></tr>
+        <tr><td>Vợ/chồng, bố mẹ, anh chị em</td><td><span class="qd-fine">500.000đ</span></td><td><span class="qd-fine">200.000đ</span></td></tr>
+      </tbody></table>
+      <div class="qd-divider">3. Team building & du lịch</div>
+      <div class="qd-item"><span class="qd-dot" style="background:#ca8a04;"></span><span>Công ty tổ chức định kỳ: sinh nhật, outdoor meeting, team building. Du lịch/nghỉ mát hàng năm tùy kết quả kinh doanh — Giám đốc quyết định thời gian và mức phí.</span></div>
+      <div class="qd-divider">4. Hỗ trợ học phí đào tạo</div>
+      <div class="qd-item"><span class="qd-dot" style="background:#ca8a04;"></span><span>Khi công việc yêu cầu NLĐ đi học → Công ty chi trả học phí theo hóa đơn thực tế.</span></div>
+      <div class="qd-divider">5. Thưởng cuối năm</div>
+      <div class="qd-item"><span class="qd-dot" style="background:#ca8a04;"></span><span>Căn cứ lợi nhuận thực tế. Mức thưởng dựa trên đóng góp và chất lượng công tác. Điều kiện: vẫn còn làm việc tại thời điểm chi thưởng (không trong danh sách báo nghỉ trước).</span></div>
+      <div class="qd-divider">6. Lương tháng 13</div>
+      <div class="qd-item"><span class="qd-dot" style="background:#ca8a04;"></span><span>Đủ 12 tháng → 1 tháng lương cứng. Chưa đủ → <i>(Số tháng làm việc / 12) × Lương cứng trung bình</i>. Không tính thời gian thử việc.</span></div>
+      <div class="qd-divider">7. Thưởng sinh nhật & ngày lễ (8/3, 30/4, 1/5, 2/9, Trung thu, Tết)</div>
+      <div class="qd-item"><span class="qd-dot" style="background:#ca8a04;"></span><span>Mức thưởng: <span class="qd-fine">300.000 – 500.000đ</span>/người. Tùy kết quả kinh doanh và đóng góp thực tế.</span></div>
+      <div class="qd-divider">8. Thưởng sáng kiến / đột xuất</div>
+      <div class="qd-item"><span class="qd-dot" style="background:#ca8a04;"></span><span>Khi có thành tích đặc biệt hoặc đóng góp sáng tạo vào phát triển Công ty. Mức thưởng do Giám đốc quyết định bằng văn bản.</span></div>`;
+    }
+    function buildCard(s){
+      const isOpen=qdExpanded.has(s.id);
+      const body=s.special?bodySection6():s.specialFn==='d7'?bodyDieu7():s.specialFn==='d11'?bodyDieu11():(s.items||[]).map(t=>`<div class="qd-item"><span class="qd-dot"></span><span>${t}</span></div>`).join('');
+      return `<div class="qd-card">
+        <div class="qd-hdr" onclick="qdToggle('${s.id}')">
+          <div class="qd-ico" style="background:${s.iconBg};"><i class="ti ${s.icon}" style="color:${s.iconColor};"></i></div>
+          <span class="qd-num">${s.num}</span>
+          <span class="qd-title">${s.title}</span>
+          <span class="qd-badge" style="background:${s.badgeBg};color:${s.badgeColor};${s.badgeExtra||''}">${s.badge}</span>
+          <i class="ti ${isOpen?'ti-chevron-down':'ti-chevron-right'} qd-chev"></i>
+        </div>
+        <div class="qd-body${isOpen?' open':''}">${body}</div>
+      </div>`;
+    }
+
+    const detailContent=doc.sections.length===0
+      ? `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:200px;color:#94a3b8;font-size:13px;gap:10px;"><i class="ti ti-file-off" style="font-size:36px;color:#e2e8f0;display:block;"></i>Chưa có nội dung. Liên hệ HR để cập nhật.</div>`
+      : doc.sections.map(buildCard).join('');
+
+    document.getElementById('content').innerHTML=`
+    <div style="max-width:680px;">
+      <div class="qt-back" onclick="qdBack()"><i class="ti ti-arrow-left"></i>Quay lại danh sách</div>
+      <div class="qt-detail-title">${doc.title}</div>
+      <div class="qt-detail-sub">${doc.sections.length>0?doc.sections.length+' mục · '+doc.applyTo+' · Cập nhật: '+doc.updated:doc.applyTo+' · Chưa có nội dung'}</div>
+      <div>${detailContent}</div>
+    </div>`;
+    return;
+  }
+
+  /* ── OVERVIEW ── */
+  const cards=qdDocs.map(d=>`
+    <div class="qt-card" onclick="qdOpenDoc('${d.id}')">
+      <div class="qt-card-top">
+        <div class="qt-card-icon" style="background:${d.iconBg};"><i class="ti ${d.icon}" style="color:${d.iconColor};"></i></div>
+        <div><div class="qt-card-name">${d.title}</div><div class="qt-card-sub">${d.sections.length>0?d.sections.length+' mục · '+d.applyTo:'Chưa có nội dung'}</div></div>
+      </div>
+      <span class="qt-card-tag" style="background:${d.tagBg};color:${d.tagColor};">${d.tag}</span>
+      <div class="qt-card-prog">
+        <div class="qt-card-prog-bar"><div class="qt-card-prog-fill" style="width:${d.sections.length>0?100:0}%;background:${d.tagColor};"></div></div>
+        <div class="qt-card-prog-txt">${d.updated!=='—'?'Cập nhật: '+d.updated:'Chưa có nội dung'}</div>
+      </div>
+    </div>`).join('');
+
+  document.getElementById('content').innerHTML=`
+  <div class="qt-grid">${cards}<div class="qt-add"><i class="ti ti-plus"></i>Thêm quy định</div></div>`;
+}
+
+/* init */
+nav('tuyen-dung');
+setInterval(loadData, 5 * 60 * 1000); // auto-refresh mỗi 5 phút
+</script>
+</body>
+</html>
