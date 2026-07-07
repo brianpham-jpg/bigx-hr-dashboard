@@ -8,6 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 body{font-family:'Be Vietnam Pro',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;display:flex;height:100vh;background:#f8fafc;overflow:hidden;color:#1e293b;}
@@ -389,20 +390,44 @@ nav{flex:1;padding:8px 0;}
 .qd-formula-num{font-size:12px;color:#1e293b;}
 .qd-formula-bar{border-top:1.5px solid #334155;padding-top:4px;margin-top:4px;font-size:11px;color:#64748b;}
 
-/* ─── CALENDAR ─── */
-.cal-wrap{display:flex;flex-direction:column;gap:10px;height:calc(100vh - 90px);}
+/* ─── CALENDAR (custom + OAuth) ─── */
+.cal-wrap{display:flex;flex-direction:column;gap:10px;}
 .cal-toolbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
-.cal-views{display:flex;gap:5px;}
-.cal-vb{font-size:11px;padding:5px 14px;border-radius:20px;border:1px solid #e2e8f0;background:#fff;cursor:pointer;color:#64748b;font-family:inherit;}
+.cal-vb{font-size:11px;padding:5px 12px;border-radius:20px;border:1px solid #e2e8f0;background:#fff;cursor:pointer;color:#64748b;font-family:inherit;display:inline-flex;align-items:center;gap:4px;}
 .cal-vb:hover{border-color:#5b21b6;color:#5b21b6;}
-.cal-vb.active{border-color:#5b21b6;background:#ede9fe;color:#5b21b6;font-weight:500;}
 .cal-open{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:#64748b;text-decoration:none;padding:5px 12px;border:1px solid #e2e8f0;border-radius:8px;}
 .cal-open:hover{border-color:#5b21b6;color:#5b21b6;}
-.cal-open i{font-size:14px;}
-.cal-frame{flex:1;background:#fff;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;min-height:420px;}
-.cal-frame iframe{display:block;width:100%;height:100%;border:0;}
-.cal-note{display:flex;align-items:center;gap:6px;font-size:10px;color:#94a3b8;}
-.cal-note i{font-size:13px;color:#5b21b6;}
+.cal-open i,.cal-vb i{font-size:14px;}
+.cal-signin{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;height:52vh;color:#64748b;text-align:center;}
+.cal-signin>i{font-size:40px;color:#cbd5e1;}
+.cal-btn{display:inline-flex;align-items:center;gap:8px;background:#5b21b6;color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:13px;font-family:inherit;cursor:pointer;}
+.cal-btn:hover{background:#4c1d95;}
+.cal-card{background:#fff;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;}
+.cal-head{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid #f1f5f9;}
+.cal-nav{width:26px;height:26px;border-radius:6px;border:1px solid #e2e8f0;background:#fff;color:#64748b;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;}
+.cal-nav:hover{border-color:#5b21b6;color:#5b21b6;}
+.cal-mtitle{font-size:15px;font-weight:600;color:#1e293b;}
+.cal-dow{display:grid;grid-template-columns:repeat(7,1fr);border-bottom:1px solid #f1f5f9;}
+.cal-dow span{font-size:11px;color:#94a3b8;padding:6px 8px;}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);}
+.cal-cell{min-height:74px;border-right:1px solid #f1f5f9;border-bottom:1px solid #f1f5f9;padding:5px 6px;overflow:hidden;}
+.cal-dn{font-size:12px;color:#334155;margin-bottom:4px;}
+.cal-cell.out .cal-dn{color:#cbd5e1;}
+.cal-tdy{display:inline-flex;width:20px;height:20px;border-radius:50%;background:#5b21b6;color:#fff;align-items:center;justify-content:center;font-size:11px;}
+.cal-ev{font-size:10px;padding:2px 5px;border-radius:4px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cev-p{background:#ede9fe;color:#5b21b6;}
+.cev-b{background:#eff6ff;color:#1d4ed8;}
+.cev-g{background:#f0fdf4;color:#15803d;}
+.cev-o{background:#fff7ed;color:#c2410c;}
+.cal-more{font-size:10px;color:#94a3b8;}
+.cal-lg{display:flex;gap:14px;padding:9px 14px;border-top:1px solid #f1f5f9;flex-wrap:wrap;}
+.cal-l{display:flex;align-items:center;gap:5px;font-size:11px;color:#64748b;}
+.cal-d{width:9px;height:9px;border-radius:2px;}
+.cal-up{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.cal-uc{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:10px 11px;}
+.cal-ub{font-size:10px;color:#5b21b6;background:#ede9fe;border-radius:6px;padding:2px 7px;display:inline-block;margin-bottom:6px;}
+.cal-un{font-size:12px;font-weight:500;line-height:1.35;color:#1e293b;}
+.cal-ut{font-size:11px;color:#94a3b8;}
 </style>
 </head>
 <body>
@@ -1717,32 +1742,130 @@ function renderQuyDinh(){
 }
 
 /* ══════════════════════════════════════════
-   CALENDAR — nhúng Google Calendar bigx.vn
+   CALENDAR — Google Calendar API (OAuth GIS)
 ══════════════════════════════════════════ */
-const CAL_SRC='brian.pham@bigx.vn';
-let calView='MONTH';
-function calEmbedUrl(){
-  const src=encodeURIComponent(CAL_SRC);
-  return `https://calendar.google.com/calendar/embed?src=${src}`
-    +`&ctz=Asia%2FHo_Chi_Minh&wkst=2&hl=vi&mode=${calView}`
-    +`&showTitle=0&showPrint=0&showTz=0&showCalendars=0&showTabs=0`;
+const CAL_CLIENT_ID='188787944192-9iq8f8gsrc1gctpcf34qbp0sc2itkngf.apps.googleusercontent.com';
+const CAL_ID='brian.pham@bigx.vn';
+const CAL_SCOPE='https://www.googleapis.com/auth/calendar.readonly';
+const CAL_DOW=['Th 2','Th 3','Th 4','Th 5','Th 6','Th 7','CN'];
+let calToken=null, calTokenClient=null, calEvents=[], calLoading=false, calErr=null, calRef=new Date();
+
+function calInit(){
+  if(calTokenClient) return true;
+  if(!(window.google&&google.accounts&&google.accounts.oauth2)) return false;
+  calTokenClient=google.accounts.oauth2.initTokenClient({
+    client_id:CAL_CLIENT_ID, scope:CAL_SCOPE,
+    callback:(r)=>{ if(r&&r.access_token){ calToken=r.access_token; calFetch(); } else { calErr='Không lấy được quyền truy cập.'; renderCalendar(); } }
+  });
+  return true;
 }
-function setCalView(m){ calView=m; renderCalendar(); }
+function calSignIn(){
+  if(!calInit()){ calErr='Google Sign-In chưa tải xong, thử lại sau vài giây.'; renderCalendar(); return; }
+  calErr=null; calTokenClient.requestAccessToken();
+}
+async function calFetch(){
+  if(!calToken) return;
+  calLoading=true; calErr=null; renderCalendar();
+  const tMin=new Date(calRef.getFullYear(),calRef.getMonth()-1,1).toISOString();
+  const tMax=new Date(calRef.getFullYear(),calRef.getMonth()+2,0,23,59,59).toISOString();
+  const url='https://www.googleapis.com/calendar/v3/calendars/'+encodeURIComponent(CAL_ID)
+    +'/events?singleEvents=true&orderBy=startTime&maxResults=250'
+    +'&timeMin='+encodeURIComponent(tMin)+'&timeMax='+encodeURIComponent(tMax);
+  try{
+    const res=await fetch(url,{headers:{Authorization:'Bearer '+calToken}});
+    if(res.status===401||res.status===403){ calToken=null; throw new Error('Phiên hết hạn, đăng nhập lại.'); }
+    if(!res.ok) throw new Error('Lỗi API '+res.status);
+    const d=await res.json();
+    calEvents=(d.items||[]).map(e=>({
+      title:e.summary||'(không tiêu đề)',
+      raw:(e.start&&(e.start.dateTime||e.start.date))||null,
+      allDay:!!(e.start&&e.start.date&&!e.start.dateTime)
+    })).filter(e=>e.raw);
+  }catch(err){ calErr=err.message; }
+  calLoading=false; renderCalendar();
+}
+function calDate(ev){
+  if(!ev.raw) return null;
+  if(ev.allDay){ const p=ev.raw.split('-'); return new Date(+p[0],+p[1]-1,+p[2]); }
+  const d=new Date(ev.raw); return isNaN(d)?null:d;
+}
+function calTime(ev){
+  if(ev.allDay) return 'Cả ngày';
+  const d=calDate(ev); if(!d) return '';
+  return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+}
+function calCat(t){
+  const s=(t||'').toLowerCase();
+  if(/train|đào tạo|workshop/.test(s)) return 'cev-b';
+  if(/tuyển|phỏng vấn|\bhr\b|onboard|\bcv\b/.test(s)) return 'cev-g';
+  if(/thông báo|nghỉ|lương|thanh toán|nhắc/.test(s)) return 'cev-o';
+  return 'cev-p';
+}
+function calChange(delta){ calRef=new Date(calRef.getFullYear(),calRef.getMonth()+delta,1); if(calToken) calFetch(); else renderCalendar(); }
+function calSameDay(a,b){ return a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate(); }
+function calEsc(s){ return String(s).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m])); }
+
 function renderCalendar(){
-  document.getElementById('content').innerHTML=`
+  const c=document.getElementById('content');
+  if(!calToken && !calLoading){
+    c.innerHTML=`<div class="cal-signin">
+      <i class="ti ti-calendar-event"></i>
+      <div style="font-size:13px">Kết nối Google Calendar (bigx.vn) để xem lịch trên dashboard</div>
+      ${calErr?`<div style="font-size:11px;color:#ef4444">${calEsc(calErr)}</div>`:''}
+      <button class="cal-btn" onclick="calSignIn()"><i class="ti ti-brand-google"></i>Đăng nhập Google</button>
+    </div>`;
+    return;
+  }
+  const today=new Date();
+  const first=new Date(calRef.getFullYear(),calRef.getMonth(),1);
+  const off=(first.getDay()||7)-1;
+  const gridStart=new Date(first); gridStart.setDate(1-off);
+  const byDay={};
+  calEvents.forEach(ev=>{ const d=calDate(ev); if(!d) return; const k=d.getFullYear()+'-'+d.getMonth()+'-'+d.getDate(); (byDay[k]=byDay[k]||[]).push(ev); });
+  let cells='';
+  for(let i=0;i<42;i++){
+    const d=new Date(gridStart); d.setDate(gridStart.getDate()+i);
+    const out=d.getMonth()!==calRef.getMonth();
+    const k=d.getFullYear()+'-'+d.getMonth()+'-'+d.getDate();
+    const evs=(byDay[k]||[]).sort((a,b)=>calDate(a)-calDate(b));
+    let chips='';
+    evs.slice(0,2).forEach(ev=>{ const tm=calTime(ev); chips+=`<div class="cal-ev ${calCat(ev.title)}">${tm!=='Cả ngày'?tm+' ':''}${calEsc(ev.title)}</div>`; });
+    if(evs.length>2) chips+=`<div class="cal-more">+${evs.length-2} nữa</div>`;
+    const dn=calSameDay(d,today)?`<span class="cal-tdy">${d.getDate()}</span>`:d.getDate();
+    cells+=`<div class="cal-cell ${out?'out':''}"><div class="cal-dn">${dn}</div>${chips}</div>`;
+  }
+  const todayMid=new Date(today.getFullYear(),today.getMonth(),today.getDate());
+  const up=calEvents.map(ev=>({ev,d:calDate(ev)})).filter(x=>x.d&&x.d>=todayMid).sort((a,b)=>a.d-b.d).slice(0,3);
+  let ups='';
+  up.forEach(x=>{ const d=x.d; const lbl=calSameDay(d,today)?'Hôm nay':String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0');
+    ups+=`<div class="cal-uc"><span class="cal-ub">${lbl} · ${calTime(x.ev)}</span><div class="cal-un">${calEsc(x.ev.title)}</div></div>`; });
+  if(!ups) ups=`<div class="cal-uc" style="grid-column:1/-1;color:#94a3b8;font-size:11px">Không có sự kiện sắp tới</div>`;
+  const status=calLoading?'Đang tải lịch…':(calErr||'Đã kết nối Google Calendar');
+  c.innerHTML=`
   <div class="cal-wrap">
     <div class="cal-toolbar">
-      <div class="cal-views">
-        <button class="cal-vb ${calView==='MONTH'?'active':''}" onclick="setCalView('MONTH')">Tháng</button>
-        <button class="cal-vb ${calView==='WEEK'?'active':''}" onclick="setCalView('WEEK')">Tuần</button>
-        <button class="cal-vb ${calView==='AGENDA'?'active':''}" onclick="setCalView('AGENDA')">Lịch biểu</button>
+      <div style="font-size:11px;color:${calErr?'#ef4444':'#94a3b8'}">${calEsc(status)}</div>
+      <div style="display:flex;gap:6px">
+        <button class="cal-vb" onclick="calFetch()"><i class="ti ti-refresh"></i>Làm mới</button>
+        <a class="cal-open" href="https://calendar.google.com/calendar/u/0/r" target="_blank" rel="noopener"><i class="ti ti-external-link"></i>Mở Google Calendar</a>
       </div>
-      <a class="cal-open" href="https://calendar.google.com/calendar/u/0/r" target="_blank" rel="noopener"><i class="ti ti-external-link"></i>Mở Google Calendar</a>
     </div>
-    <div class="cal-frame">
-      <iframe src="${calEmbedUrl()}" scrolling="no"></iframe>
+    <div class="cal-card">
+      <div class="cal-head">
+        <span class="cal-nav" onclick="calChange(-1)"><i class="ti ti-chevron-left"></i></span>
+        <span class="cal-nav" onclick="calChange(1)"><i class="ti ti-chevron-right"></i></span>
+        <span class="cal-mtitle">Tháng ${calRef.getMonth()+1}, ${calRef.getFullYear()}</span>
+      </div>
+      <div class="cal-dow">${CAL_DOW.map(x=>`<span>${x}</span>`).join('')}</div>
+      <div class="cal-grid">${cells}</div>
+      <div class="cal-lg">
+        <span class="cal-l"><span class="cal-d" style="background:#5b21b6"></span>Họp / Nội bộ</span>
+        <span class="cal-l"><span class="cal-d" style="background:#1d4ed8"></span>Đào tạo</span>
+        <span class="cal-l"><span class="cal-d" style="background:#15803d"></span>HR / Tuyển dụng</span>
+        <span class="cal-l"><span class="cal-d" style="background:#c2410c"></span>Thông báo</span>
+      </div>
     </div>
-    <div class="cal-note"><i class="ti ti-info-circle"></i>Lịch từ ${CAL_SRC}. Nếu hiển thị trống: cần bật "Make available to public" trong cài đặt Google Calendar.</div>
+    <div class="cal-up">${ups}</div>
   </div>`;
 }
 
