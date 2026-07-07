@@ -388,6 +388,21 @@ nav{flex:1;padding:8px 0;}
 .qd-formula{background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:12px 16px;margin:6px 0;text-align:center;line-height:1.8;}
 .qd-formula-num{font-size:12px;color:#1e293b;}
 .qd-formula-bar{border-top:1.5px solid #334155;padding-top:4px;margin-top:4px;font-size:11px;color:#64748b;}
+
+/* ─── CALENDAR ─── */
+.cal-wrap{display:flex;flex-direction:column;gap:10px;height:calc(100vh - 90px);}
+.cal-toolbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+.cal-views{display:flex;gap:5px;}
+.cal-vb{font-size:11px;padding:5px 14px;border-radius:20px;border:1px solid #e2e8f0;background:#fff;cursor:pointer;color:#64748b;font-family:inherit;}
+.cal-vb:hover{border-color:#5b21b6;color:#5b21b6;}
+.cal-vb.active{border-color:#5b21b6;background:#ede9fe;color:#5b21b6;font-weight:500;}
+.cal-open{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:#64748b;text-decoration:none;padding:5px 12px;border:1px solid #e2e8f0;border-radius:8px;}
+.cal-open:hover{border-color:#5b21b6;color:#5b21b6;}
+.cal-open i{font-size:14px;}
+.cal-frame{flex:1;background:#fff;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;min-height:420px;}
+.cal-frame iframe{display:block;width:100%;height:100%;border:0;}
+.cal-note{display:flex;align-items:center;gap:6px;font-size:10px;color:#94a3b8;}
+.cal-note i{font-size:13px;color:#5b21b6;}
 </style>
 </head>
 <body>
@@ -416,7 +431,7 @@ nav{flex:1;padding:8px 0;}
     <div class="nav-sub" onclick="nav('coming')"><i class="ti ti-template"></i>Form mẫu HĐ BigX</div>
     <div class="nav-item" id="nav-cv" onclick="nav('cong-viec')"><i class="ti ti-checklist"></i>Công việc nhân sự</div>
     <div class="nav-item" onclick="nav('coming')"><i class="ti ti-mail"></i>Mail</div>
-    <div class="nav-item" onclick="nav('coming')"><i class="ti ti-calendar"></i>Calendar</div>
+    <div class="nav-item" id="nav-cal" onclick="nav('calendar')"><i class="ti ti-calendar"></i>Calendar</div>
   </nav>
 
   <div class="sb-footer">
@@ -854,6 +869,13 @@ function nav(v){
     document.getElementById('topbar-left').innerHTML='<i class="ti ti-book"></i> Quy định <span class="live-tag">● Live</span>';
     fb.classList.add('hidden');
     renderQuyDinh();
+    return;
+  }
+  if(v==='calendar'){
+    document.getElementById('nav-cal').classList.add('active');
+    document.getElementById('topbar-left').innerHTML='<i class="ti ti-calendar"></i> Calendar <span class="live-tag">● Live</span>';
+    fb.classList.add('hidden');
+    renderCalendar();
     return;
   }
   document.getElementById('nav-td').classList.add('active');
@@ -1692,6 +1714,36 @@ function renderQuyDinh(){
 
   document.getElementById('content').innerHTML=`
   <div class="qt-grid">${cards}<div class="qt-add"><i class="ti ti-plus"></i>Thêm quy định</div></div>`;
+}
+
+/* ══════════════════════════════════════════
+   CALENDAR — nhúng Google Calendar bigx.vn
+══════════════════════════════════════════ */
+const CAL_SRC='brian.pham@bigx.vn';
+let calView='MONTH';
+function calEmbedUrl(){
+  const src=encodeURIComponent(CAL_SRC);
+  return `https://calendar.google.com/calendar/embed?src=${src}`
+    +`&ctz=Asia%2FHo_Chi_Minh&wkst=2&hl=vi&mode=${calView}`
+    +`&showTitle=0&showPrint=0&showTz=0&showCalendars=0&showTabs=0`;
+}
+function setCalView(m){ calView=m; renderCalendar(); }
+function renderCalendar(){
+  document.getElementById('content').innerHTML=`
+  <div class="cal-wrap">
+    <div class="cal-toolbar">
+      <div class="cal-views">
+        <button class="cal-vb ${calView==='MONTH'?'active':''}" onclick="setCalView('MONTH')">Tháng</button>
+        <button class="cal-vb ${calView==='WEEK'?'active':''}" onclick="setCalView('WEEK')">Tuần</button>
+        <button class="cal-vb ${calView==='AGENDA'?'active':''}" onclick="setCalView('AGENDA')">Lịch biểu</button>
+      </div>
+      <a class="cal-open" href="https://calendar.google.com/calendar/u/0/r" target="_blank" rel="noopener"><i class="ti ti-external-link"></i>Mở Google Calendar</a>
+    </div>
+    <div class="cal-frame">
+      <iframe src="${calEmbedUrl()}" scrolling="no"></iframe>
+    </div>
+    <div class="cal-note"><i class="ti ti-info-circle"></i>Lịch từ ${CAL_SRC}. Nếu hiển thị trống: cần bật "Make available to public" trong cài đặt Google Calendar.</div>
+  </div>`;
 }
 
 /* init */
