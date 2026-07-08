@@ -1576,7 +1576,7 @@ const qdDocs=[
     title:'Quy định & Nguyên tắc làm việc chung',
     tag:'Nội quy',tagBg:'#ede9fe',tagColor:'#5b21b6',
     icon:'ti-book',iconBg:'#ede9fe',iconColor:'#5b21b6',
-    updated:'20/06/2026',applyTo:'Toàn thể nhân viên',
+    updated:'08/07/2026',applyTo:'Toàn thể nhân viên',
     sections:[
       {id:'1',num:'I',title:'Thời gian làm việc',icon:'ti-clock',iconBg:'#eff6ff',iconColor:'#3b82f6',badgeBg:'#eff6ff',badgeColor:'#1d4ed8',badge:'Giờ hành chính',
        items:['<b>Giờ làm việc chính thức:</b> 09h00 – 18h00, thứ Hai đến thứ Sáu. Nghỉ trưa: 12h00 – 13h00.','Nhân viên có trách nhiệm online đúng giờ và đảm bảo khả năng phối hợp xử lý công việc kịp thời.']},
@@ -1591,10 +1591,11 @@ const qdDocs=[
       {id:'6',num:'VI',title:'Kỷ luật & xử lý vi phạm',icon:'ti-gavel',iconBg:'#fef2f2',iconColor:'#ef4444',badgeBg:'#fef2f2',badgeColor:'#b91c1c',badge:'Phạt',special:true},
       {id:'7',num:'VII',title:'Văn hóa làm việc remote',icon:'ti-home-2',iconBg:'#fefce8',iconColor:'#ca8a04',badgeBg:'#fefce8',badgeColor:'#a16207',badge:'Remote',
        items:['Chủ động, minh bạch trong giao tiếp. Ưu tiên hiệu quả công việc, không "online cho có".','Nhân viên mới: add friend chéo với toàn thể thành viên ngay ngày đầu tiên.','Khi nhận tin nhắn giao việc / thông báo từ cấp trên: <b>bắt buộc phản hồi hoặc react</b> để xác nhận đã nắm thông tin.','<b>Bảo mật thông tin:</b> Tuyệt đối bảo mật dữ liệu. Chỉ chia sẻ link tài liệu, không gửi file trực tiếp. File phải cài đúng quyền truy cập theo email được cấp phép.']},
-      {id:'8',num:'VIII',title:'Ngày nghỉ & phép năm',icon:'ti-calendar-off',iconBg:'#f0fdf4',iconColor:'#16a34a',badgeBg:'#f0fdf4',badgeColor:'#15803d',badge:'Phép',
-       items:['<b>Xin nghỉ phép:</b> Dưới 3 ngày → báo trước ít nhất 01 ngày. Từ 3 ngày trở lên → báo trước ít nhất 01 tuần.','Thông báo trên nhóm chung của team và đặt lịch nghỉ trên Calendar cá nhân.','Bàn giao công việc đầy đủ trước khi nghỉ.','<b>Nghỉ ốm / đột xuất:</b> Thông báo ngay lập tức cho Quản lý trực tiếp và HR.']},
+      {id:'8',num:'VIII',title:'Quy trình nghỉ phép',icon:'ti-calendar-off',iconBg:'#f0fdf4',iconColor:'#16a34a',badgeBg:'#f0fdf4',badgeColor:'#15803d',badge:'Nghỉ phép',specialFn:'v8'},
       {id:'9',num:'IX',title:'Mục tiêu áp dụng',icon:'ti-flag',iconBg:'#f8fafc',iconColor:'#64748b',badgeBg:'#f8fafc',badgeColor:'#475569',badge:'Tổng quan',badgeExtra:'border:1px solid #e2e8f0;',
-       items:['Đảm bảo tính <b>kỷ luật – thống nhất – trách nhiệm</b> trong môi trường làm việc từ xa.','Xây dựng môi trường làm việc <b>chuyên nghiệp, minh bạch, hợp tác</b>.','Nâng cao hiệu quả công việc và hiệu suất chung của toàn Công ty.']}
+       items:['Đảm bảo tính <b>kỷ luật – thống nhất – trách nhiệm</b> trong môi trường làm việc từ xa.','Xây dựng môi trường làm việc <b>chuyên nghiệp, minh bạch, hợp tác</b>.','Nâng cao hiệu quả công việc và hiệu suất chung của toàn Công ty.']},
+      {id:'10',num:'X',title:'Hiệu lực thi hành & trách nhiệm tuân thủ',icon:'ti-file-check',iconBg:'#ede9fe',iconColor:'#5b21b6',badgeBg:'#ede9fe',badgeColor:'#5b21b6',badge:'Hiệu lực',
+       items:['<b>Trạng thái:</b> Có hiệu lực tức thì kể từ ngày ban hành.','<b>Đầu mối hỗ trợ:</b> Phòng Human Resources (HR).','Mọi nhân sự BigX có trách nhiệm tuân thủ nghiêm ngặt chuẩn mực này.','HR đóng vai trò hoa tiêu: hướng dẫn, theo dõi và đề xuất nâng cấp quy trình để thích ứng với tốc độ phát triển của Công ty.','<i>"Sự chuẩn bị của cá nhân là nền tảng cho sự vững vàng của cả tập thể."</i>']}
     ]
   },
   {
@@ -1689,9 +1690,56 @@ function renderQuyDinh(){
       <div class="qd-divider">8. Thưởng sáng kiến / đột xuất</div>
       <div class="qd-item"><span class="qd-dot" style="background:#ca8a04;"></span><span>Khi có thành tích đặc biệt hoặc đóng góp sáng tạo vào phát triển Công ty. Mức thưởng do Giám đốc quyết định bằng văn bản.</span></div>`;
     }
+    function bodyV8(){
+      return `<div class="qd-item"><span class="qd-dot"></span><span><b>Mục tiêu:</b> Nghỉ ngơi không làm gián đoạn vận hành — bảo vệ luồng công việc, minh bạch thông tin giữa các phòng ban, và lưu vết dữ liệu nghỉ phép chuẩn xác.</span></div>
+      <div class="qd-divider">1. Quy định phê duyệt nghỉ phép</div>
+      <table class="qd-tbl">
+        <thead><tr><th>Phân loại nghỉ</th><th>Báo trước tối thiểu</th><th>Người phê duyệt</th><th>SLA phản hồi</th></tr></thead>
+        <tbody>
+          <tr><td>1 ngày (gồm nghỉ theo giờ)</td><td>24 giờ trước thời điểm nghỉ</td><td>Leader trực tiếp</td><td>04 giờ làm việc</td></tr>
+          <tr><td>2 – 3 ngày</td><td>03 ngày làm việc</td><td>Leader trực tiếp</td><td>04 giờ làm việc</td></tr>
+          <tr><td>Từ 3 ngày trở lên</td><td>05 ngày làm việc</td><td>Leader đề xuất → CEO phê duyệt</td><td>04 giờ (Leader) + 04 giờ (CEO)</td></tr>
+        </tbody>
+      </table>
+      <div class="qd-item"><span class="qd-dot"></span><span>Trường hợp vắng mặt, người có thẩm quyền phải chủ động <b>ủy quyền</b> để không làm đứt gãy quy trình.</span></div>
+      <div class="qd-divider">2. Luồng xử lý xin nghỉ phép</div>
+      <div class="qd-item"><span class="qd-dot"></span><span>① Nhân viên gửi yêu cầu & kế hoạch bàn giao → ② Leader đánh giá & phê duyệt → ③ CEO phê duyệt cấp cao (chỉ khi nghỉ ≥ 3 ngày) → ④ Nhân viên hoàn tất bàn giao thực tế → ⑤ Gửi hồ sơ phê duyệt cho HR → ⑥ Cập nhật trạng thái trên Google Calendar → ⑦ HR ghi nhận hệ thống → ⑧ Thông báo trên group tổng của Công ty.</span></div>
+      <div class="qd-divider">3. Tốc độ xử lý — trách nhiệm cấp quản lý</div>
+      <table class="qd-tbl">
+        <thead><tr><th>Cấp</th><th>SLA</th><th>Trách nhiệm</th></tr></thead>
+        <tbody>
+          <tr><td>Leader</td><td>04 giờ làm việc</td><td>Đánh giá ảnh hưởng vận hành, bố trí người thay thế, chốt phê duyệt/từ chối.</td></tr>
+          <tr><td>CEO (nếu áp dụng)</td><td>04 giờ làm việc</td><td>Kể từ khi Leader trình duyệt — chỉ dành cho nghỉ ≥ 3 ngày.</td></tr>
+          <tr><td>HR</td><td>Trong ngày làm việc</td><td>Xử lý ngay khi nhận đủ thông tin minh chứng hợp lệ.</td></tr>
+        </tbody>
+      </table>
+      <div class="qd-divider">4. Thông tin bắt buộc gửi HR (Pre-Flight Checklist)</div>
+      <div class="qd-item"><span class="qd-dot"></span><span>Họ và tên · Phòng ban · Chức danh.</span></div>
+      <div class="qd-item"><span class="qd-dot"></span><span>Thời gian nghỉ & tổng số ngày nghỉ · Lý do xin nghỉ.</span></div>
+      <div class="qd-item"><span class="qd-dot"></span><span>Thông tin người nhận bàn giao (tên & kênh liên lạc).</span></div>
+      <div class="qd-item"><span class="qd-dot"></span><span><b>BẮT BUỘC:</b> Ảnh chụp màn hình minh chứng Leader/CEO đã phê duyệt. <span class="qd-warn">HR từ chối ghi nhận nếu thiếu minh chứng hoặc sai thẩm quyền.</span></span></div>
+      <div class="qd-divider">5. Đồng bộ hệ thống — Google Calendar</div>
+      <div class="qd-item"><span class="qd-dot"></span><span>Chuyển trạng thái thành <b>Out of Office / Off</b> trong suốt thời gian nghỉ.</span></div>
+      <div class="qd-item"><span class="qd-dot"></span><span>Cập nhật thông điệp tự động (VD: "Tôi đang nghỉ phép, vui lòng liên hệ [Tên người bàn giao] khi khẩn cấp").</span></div>
+      <div class="qd-item"><span class="qd-dot"></span><span>Chủ động mời các thành viên phối hợp trực tiếp vào sự kiện để họ nắm lịch trình.</span></div>
+      <div class="qd-divider">6. Quy trình khẩn cấp (Bypass Flow)</div>
+      <div class="qd-item"><span class="qd-dot"></span><span><b>Áp dụng cho:</b> ốm đau đột xuất, tai nạn, người thân qua đời, việc gia đình khẩn cấp.</span></div>
+      <div class="qd-item"><span class="qd-dot"></span><span>① <b>Cấp báo (ngay lập tức):</b> nhân viên/người thân báo ngay cho Leader (Call/Zalo), bỏ qua thời gian báo trước → ② <b>Điều phối (Leader):</b> gánh vác điều phối vận hành và báo trực tiếp HR → ③ <b>Ghi nhận tạm thời (HR):</b> note trạng thái nghỉ khẩn cấp, thông báo các bên → ④ <b>Bổ sung (hậu kỳ):</b> nhân viên bổ sung minh chứng cho HR ngay khi quay lại làm việc.</span></div>
+      <div class="qd-divider">7. Tiêu chí xác nhận nghỉ phép hợp lệ</div>
+      <table class="qd-tbl">
+        <thead><tr><th>Yếu tố</th><th>Điều kiện</th></tr></thead>
+        <tbody>
+          <tr><td>Thẩm quyền</td><td>Được phê duyệt đúng cấp (Leader/CEO) & có ảnh chụp minh chứng.</td></tr>
+          <tr><td>Vận hành</td><td>Đã hoàn tất bàn giao công việc cho người thay thế.</td></tr>
+          <tr><td>Dữ liệu</td><td>Hồ sơ thông tin đã gửi và HR xác nhận cập nhật.</td></tr>
+          <tr><td>Hệ thống</td><td>Google Calendar hiển thị OOO/Off & HR đã thông báo toàn công ty.</td></tr>
+        </tbody>
+      </table>
+      <div class="qd-item"><span class="qd-dot"></span><span><span class="qd-warn">Thiếu bất kỳ 1 trong 4 yếu tố trên</span> → yêu cầu nghỉ phép tính là chưa hợp lệ và có thể ảnh hưởng đến quyền lợi nhân sự.</span></div>`;
+    }
     function buildCard(s){
       const isOpen=qdExpanded.has(s.id);
-      const body=s.special?bodySection6():s.specialFn==='d7'?bodyDieu7():s.specialFn==='d11'?bodyDieu11():(s.items||[]).map(t=>`<div class="qd-item"><span class="qd-dot"></span><span>${t}</span></div>`).join('');
+      const body=s.special?bodySection6():s.specialFn==='d7'?bodyDieu7():s.specialFn==='d11'?bodyDieu11():s.specialFn==='v8'?bodyV8():(s.items||[]).map(t=>`<div class="qd-item"><span class="qd-dot"></span><span>${t}</span></div>`).join('');
       return `<div class="qd-card">
         <div class="qd-hdr" onclick="qdToggle('${s.id}')">
           <div class="qd-ico" style="background:${s.iconBg};"><i class="ti ${s.icon}" style="color:${s.iconColor};"></i></div>
