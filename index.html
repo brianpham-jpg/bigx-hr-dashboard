@@ -445,7 +445,7 @@ nav{flex:1;padding:8px 0;}
   </div>
 
   <nav>
-    <div class="nav-item" onclick="nav('overview')"><i class="ti ti-layout-dashboard"></i>Tổng quan</div>
+    <div class="nav-item" id="nav-ov" onclick="nav('overview')"><i class="ti ti-layout-dashboard"></i>Tổng quan</div>
     <div class="nav-item" onclick="nav('coming')"><i class="ti ti-id-badge"></i>Hồ sơ nhân sự</div>
     <div class="nav-item" onclick="nav('so-do')"><i class="ti ti-sitemap"></i>Sơ đồ & quy trình</div>
     <div class="nav-sub" id="nav-so-do" onclick="nav('so-do')"><i class="ti ti-chart-dots"></i>Sơ đồ tổ chức</div>
@@ -903,9 +903,114 @@ function nav(v){
     renderCalendar();
     return;
   }
+  if(v==='overview'){
+    document.getElementById('nav-ov').classList.add('active');
+    document.getElementById('topbar-left').innerHTML='<i class="ti ti-layout-dashboard"></i> Tổng quan <span class="live-tag">● Live</span>';
+    fb.classList.add('hidden');
+    loadOverview();
+    return;
+  }
   document.getElementById('nav-td').classList.add('active');
   fb.classList.remove('hidden');
   if(rawData) render(); else loadData();
+}
+
+/* ══════════════════════════════════════════
+   TỔNG QUAN — Overview (Style B)
+══════════════════════════════════════════ */
+const TQ_NV_TOTAL=26; /* Tổng nhân sự — cập nhật khi có nguồn data NV */
+function tqIsActive(){ return document.getElementById('nav-ov').classList.contains('active'); }
+function tqParseDate(s){ if(!s) return null; const p=String(s).trim().split('/'); if(p.length<3) return null; const d=+p[0],m=+p[1],y=+p[2]; if(!d||!m||!y) return null; return new Date(y,m-1,d); }
+function tqProg(t){ const v=parseInt(String(t['Tiến độ (%)']||'').replace(/[^0-9]/g,''),10); return isNaN(v)?0:v; }
+
+async function loadOverview(){
+  renderTongQuan();
+  if(!rawData){
+    try{ const c=localStorage.getItem(CACHE_KEY); if(c) rawData=JSON.parse(c); }catch(_){}
+    if(!rawData){ try{ const r=await fetch(API); rawData=await r.json(); localStorage.setItem(CACHE_KEY,JSON.stringify(rawData)); }catch(_){} }
+    if(tqIsActive()) renderTongQuan();
+  }
+  if(!taskDataLoaded){
+    const c=localStorage.getItem(TASK_CACHE_KEY);
+    if(c){ try{ applyTaskData(JSON.parse(c)); }catch(_){ applyTaskData(null); } } else { applyTaskData(null); }
+    taskDataLoaded=true;
+    if(tqIsActive()) renderTongQuan();
+    fetch(TASK_API).then(r=>r.json()).then(d=>{ applyTaskData(d); localStorage.setItem(TASK_CACHE_KEY,JSON.stringify({taskLH:rawTaskLH,taskCD:rawTaskCD})); if(tqIsActive()) renderTongQuan(); }).catch(()=>{});
+  }
+}
+
+function tqEmptyBlock(title,icon,accent){
+  return `<div style="background:#fff;border:0.5px solid #e2e8f0;border-radius:12px;padding:1rem 1.25rem;">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;"><i class="ti ${icon}" style="color:${accent};font-size:18px;"></i><span style="font-size:14px;font-weight:500;color:#1e293b;">${title}</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;height:96px;color:#94a3b8;font-size:12.5px;"><i class="ti ti-database-off" style="font-size:26px;color:#e2e8f0;"></i>Chưa có dữ liệu · cập nhật sau</div>
+  </div>`;
+}
+
+function renderTongQuan(){
+  const C=document.getElementById('content'); if(!C) return;
+  const cvs=(rawData&&rawData.cv)||[], viTri=(rawData&&rawData.viTri)||[];
+  const now=new Date();
+  const cvThisMonth=cvs.filter(c=>{ const d=parseDate(c['NGAY']); return d&&d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear(); }).length;
+  const open=viTri.filter(v=>v['Trang Thai']==='Đang mở').length;
+  const totalCV=cvs.length, hired=cvs.filter(c=>c['FINAL']==='TRÚNG TUYỂN').length;
+  const rate=totalCV>0?(hired/totalCV*100):0;
+  const byPos={}; cvs.forEach(c=>{ const vt=(c['VI TRI']||'Khác').trim(); byPos[vt]=(byPos[vt]||0)+1; });
+  const topPos=Object.entries(byPos).sort((a,b)=>b[1]-a[1]).slice(0,4);
+  const maxCV=Math.max(...topPos.map(p=>p[1]),1);
+  const running=rawTaskLH.filter(t=>tqProg(t)<100), runCount=running.length;
+  const attention=running.slice().sort((a,b)=>{ const da=tqParseDate(a.Deadline),db=tqParseDate(b.Deadline); return (da?da.getTime():9e15)-(db?db.getTime():9e15); }).slice(0,5);
+
+  const kpi=(lbl,val,icon,bg,ic,tc,vc)=>`<div style="background:${bg};border-radius:12px;padding:14px;display:flex;align-items:center;gap:12px;">
+    <div style="width:38px;height:38px;border-radius:10px;background:${ic};display:flex;align-items:center;justify-content:center;flex:none;"><i class="ti ${icon}" style="color:#fff;font-size:20px;"></i></div>
+    <div><div style="font-size:22px;font-weight:600;color:${vc};">${val}</div><div style="font-size:11px;color:${tc};">${lbl}</div></div></div>`;
+  const priBadge=(p)=>{ const m={'Cao':['#faece7','#993c1d'],'Trung bình':['#faeeda','#854f0b'],'Thấp':['#f1f5f9','#475569']}; const c=m[p]||m['Thấp']; return `<span style="font-size:10px;font-weight:600;color:${c[1]};background:${c[0]};padding:2px 8px;border-radius:20px;white-space:nowrap;">${p||'—'}</span>`; };
+  const fmtDl=(s)=>{ const d=tqParseDate(s); return d?String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0'):(s||''); };
+  const quick=(lbl,icon,v)=>`<div onclick="nav('${v}')" style="display:flex;align-items:center;gap:8px;border:0.5px solid #cbd5e1;border-radius:8px;padding:10px 12px;font-size:12.5px;cursor:pointer;"><i class="ti ${icon}" style="color:#5b21b6;"></i>${lbl}</div>`;
+
+  const recruitCard=`<div style="background:#fff;border:0.5px solid #e2e8f0;border-radius:12px;padding:1rem 1.25rem;">
+    <div style="display:flex;align-items:center;margin-bottom:12px;"><span style="font-size:14px;font-weight:500;color:#1e293b;">Tuyển dụng</span><span onclick="nav('tuyen-dung')" style="margin-left:auto;font-size:12px;color:#5b21b6;cursor:pointer;">Chi tiết <i class="ti ti-arrow-right"></i></span></div>
+    <div style="display:flex;gap:16px;margin-bottom:12px;">
+      <div><div style="font-size:20px;font-weight:600;">${totalCV}</div><div style="font-size:11px;color:#94a3b8;">Tổng CV</div></div>
+      <div><div style="font-size:20px;font-weight:600;">${hired}</div><div style="font-size:11px;color:#94a3b8;">Trúng tuyển</div></div>
+      <div><div style="font-size:20px;font-weight:600;color:#d85a30;">${rate.toFixed(1)}%</div><div style="font-size:11px;color:#94a3b8;">Tỷ lệ đậu</div></div>
+    </div>
+    ${topPos.length?`<div style="font-size:11px;color:#64748b;margin-bottom:6px;">Pipeline theo vị trí</div>`+topPos.map(([n,v])=>`<div style="display:flex;align-items:center;gap:8px;font-size:12px;margin-bottom:6px;"><span style="width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${n}</span><div style="flex:1;height:8px;background:#eeedfe;border-radius:20px;"><div style="width:${Math.round(v/maxCV*100)}%;height:8px;background:#534ab7;border-radius:20px;"></div></div><span style="width:28px;text-align:right;">${v}</span></div>`).join(''):`<div style="color:#94a3b8;font-size:12px;">Đang tải dữ liệu tuyển dụng...</div>`}
+  </div>`;
+
+  const taskCard=`<div style="background:#fff;border:0.5px solid #e2e8f0;border-radius:12px;padding:1rem 1.25rem;">
+    <div style="display:flex;align-items:center;margin-bottom:12px;"><span style="font-size:14px;font-weight:500;color:#1e293b;">Công việc cần chú ý</span><span onclick="nav('cong-viec')" style="margin-left:auto;font-size:12px;color:#5b21b6;cursor:pointer;">Tất cả <i class="ti ti-arrow-right"></i></span></div>
+    ${attention.length?attention.map(t=>`<div style="display:flex;align-items:center;gap:8px;font-size:12.5px;margin-bottom:10px;">${priBadge(t['Ưu tiên'])}<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${t['Nội dung chi tiết']||''}</span><span style="color:#94a3b8;white-space:nowrap;">${fmtDl(t.Deadline)}</span></div>`).join(''):`<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;height:96px;color:#94a3b8;font-size:12.5px;"><i class="ti ti-checks" style="font-size:26px;color:#e2e8f0;"></i>Không có công việc tồn đọng</div>`}
+  </div>`;
+
+  C.innerHTML=`
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px;">
+    ${kpi('Tổng nhân sự',TQ_NV_TOTAL,'ti-users','#eeedfe','#534ab7','#3c3489','#26215c')}
+    ${kpi('Vị trí đang tuyển',rawData?open:'—','ti-briefcase','#e6f1fb','#185fa5','#0c447c','#042c53')}
+    ${kpi('CV tháng này',rawData?cvThisMonth:'—','ti-file-cv','#e1f5ee','#0f6e56','#085041','#04342c')}
+    ${kpi('Task đang chạy',taskDataLoaded?runCount:'—','ti-checklist','#faeeda','#854f0b','#633806','#412402')}
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-bottom:16px;">
+    ${tqEmptyBlock('Sinh nhật sắp tới','ti-cake','#d4537e')}
+    ${tqEmptyBlock('Sắp hết hạn hợp đồng','ti-file-alert','#d85a30')}
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-bottom:16px;">
+    ${recruitCard}
+    ${taskCard}
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-bottom:16px;">
+    ${tqEmptyBlock('Nhân sự theo phòng ban','ti-building','#1d9e75')}
+    <div></div>
+  </div>
+  <div style="background:#fff;border:0.5px solid #e2e8f0;border-radius:12px;padding:1rem 1.25rem;">
+    <div style="font-size:14px;font-weight:500;color:#1e293b;margin-bottom:12px;">Truy cập nhanh</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;">
+      ${quick('Quy định','ti-book','quy-dinh')}
+      ${quick('Quy trình','ti-arrow-guide','quy-trinh')}
+      ${quick('Tuyển dụng','ti-file-description','tuyen-dung')}
+      ${quick('Công việc','ti-checklist','cong-viec')}
+      ${quick('Calendar','ti-calendar','calendar')}
+    </div>
+  </div>`;
 }
 
 /* ══════════════════════════════════════════
