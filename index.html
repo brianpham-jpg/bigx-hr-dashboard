@@ -1030,17 +1030,46 @@ function renderTongQuan(){
    (DỮ LIỆU MẪU — thay bằng data thật / nối Sheet sau)
 ══════════════════════════════════════════ */
 let hsView='list', hsSel=null, hsSearch='', hsDept='all', hsStatus='all';
+/* Data thật lấy từ Sheet hồ sơ (tên + bộ phận + vị trí + ngày sinh + ngày vào).
+   TODO: bổ sung giới tính (gt), tình trạng nghỉ (tt/nghi), loại HĐ, ảnh (anh URL), link HĐ. */
 const HS_DATA=[
-  {ten:'Nguyễn Thị Thu Hương',gt:'Nữ',ns:'16/08/1991',sdt:'097x xxx xxx',cccd:'0790xxxxxxxx',ngayCap:'12/03/2021',tamTru:'Thủ Đức, TP.HCM',vao:'01/02/2024',ketThuc:'',loaiHD:'Lao động chính thức',tt:'Đang làm việc',nghi:'',hocVan:'THPT',pb:'ACCOUNT',vt:'Account',anh:'',linkHD:''},
-  {ten:'Nguyễn Văn An',gt:'Nam',ns:'12/05/1996',sdt:'098x xxx xxx',cccd:'0790xxxxxxxx',ngayCap:'05/06/2020',tamTru:'Q.Bình Thạnh, TP.HCM',vao:'01/03/2025',ketThuc:'',loaiHD:'Lao động chính thức',tt:'Đang làm việc',nghi:'',hocVan:'Đại học',pb:'KINH DOANH',vt:'Sale',anh:'',linkHD:''},
-  {ten:'Trần Thị Hoa',gt:'Nữ',ns:'20/09/2001',sdt:'090x xxx xxx',cccd:'0790xxxxxxxx',ngayCap:'10/01/2022',tamTru:'Q.7, TP.HCM',vao:'02/03/2026',ketThuc:'',loaiHD:'Thử việc',tt:'Đang làm việc',nghi:'',hocVan:'Cao đẳng',pb:'MARKETING',vt:'Tiktok Ads',anh:'',linkHD:''},
-  {ten:'Lê Doãn Khánh',gt:'Nam',ns:'03/07/1994',sdt:'091x xxx xxx',cccd:'0790xxxxxxxx',ngayCap:'20/08/2019',tamTru:'Q.Gò Vấp, TP.HCM',vao:'10/06/2024',ketThuc:'',loaiHD:'Lao động chính thức',tt:'Đang làm việc',nghi:'',hocVan:'Đại học',pb:'KẾ TOÁN',vt:'Kế toán thuế',anh:'',linkHD:''},
-  {ten:'Phạm Nguyễn Quế An',gt:'Nữ',ns:'02/02/1998',sdt:'093x xxx xxx',cccd:'0790xxxxxxxx',ngayCap:'15/05/2020',tamTru:'Q.3, TP.HCM',vao:'02/01/2025',ketThuc:'',loaiHD:'Lao động chính thức',tt:'Đang làm việc',nghi:'',hocVan:'Đại học',pb:'NHÂN SỰ',vt:'HR Specialist',anh:'',linkHD:''},
-  {ten:'Hồ Bảo Trung',gt:'Nam',ns:'18/11/2000',sdt:'094x xxx xxx',cccd:'0790xxxxxxxx',ngayCap:'01/12/2021',tamTru:'TP.Thủ Đức, TP.HCM',vao:'11/11/2025',ketThuc:'',loaiHD:'Lao động chính thức',tt:'Đang làm việc',nghi:'',hocVan:'Đại học',pb:'MARKETING',vt:'Tiktok Ads',anh:'',linkHD:''},
-  {ten:'Ngô Huy',gt:'Nam',ns:'25/04/1999',sdt:'095x xxx xxx',cccd:'0790xxxxxxxx',ngayCap:'08/09/2020',tamTru:'Q.10, TP.HCM',vao:'28/11/2025',ketThuc:'',loaiHD:'Thử việc',tt:'Đang làm việc',nghi:'',hocVan:'Cao đẳng',pb:'MARKETING',vt:'Tiktok Ads',anh:'',linkHD:''},
-  {ten:'Trần Nguyễn Ngọc Việt',gt:'Nam',ns:'09/12/1997',sdt:'096x xxx xxx',cccd:'0790xxxxxxxx',ngayCap:'22/02/2019',tamTru:'Q.Tân Bình, TP.HCM',vao:'15/09/2023',ketThuc:'',loaiHD:'Lao động chính thức',tt:'Đang làm việc',nghi:'',hocVan:'Đại học',pb:'BOOKING',vt:'Booking',anh:'',linkHD:''},
-  {ten:'Phạm Văn Vĩ',gt:'Nam',ns:'14/03/1995',sdt:'097x xxx xxx',cccd:'0790xxxxxxxx',ngayCap:'30/07/2018',tamTru:'Q.4, TP.HCM',vao:'01/01/2024',ketThuc:'',loaiHD:'Lao động chính thức',tt:'Nghỉ việc',nghi:'20/05/2026',hocVan:'Đại học',pb:'ACCOUNT',vt:'Account',anh:'',linkHD:''},
-  {ten:'Lê Minh Thiện',gt:'Nam',ns:'07/10/1997',sdt:'098x xxx xxx',cccd:'0790xxxxxxxx',ngayCap:'11/04/2019',tamTru:'Q.Phú Nhuận, TP.HCM',vao:'05/05/2025',ketThuc:'',loaiHD:'Lao động chính thức',tt:'Nghỉ việc',nghi:'02/07/2026',hocVan:'Cao đẳng',pb:'KINH DOANH',vt:'Sale',anh:'',linkHD:''}
+  {ten:'Nguyễn Thị Thu Uyên',gt:'',ns:'06/02/1998',vao:'15/08/2023',vt:'Nhân viên',pb:'Marketing',tt:''},
+  {ten:'Phạm Thị Bảo Yến',gt:'',ns:'25/03/1992',vao:'26/03/2018',vt:'HRBP',pb:'Nhân sự',tt:''},
+  {ten:'Trần Nguyễn Ngọc Việt',gt:'',ns:'28/11/2000',vao:'03/06/2024',vt:'Digital Marketing Executive',pb:'Marketing',tt:''},
+  {ten:'Trần Thị Tâm',gt:'',ns:'17/11/1993',vao:'07/02/2024',vt:'',pb:'Khác',tt:''},
+  {ten:'Tống Thị Kim Dung',gt:'',ns:'02/09/1997',vao:'10/03/2025',vt:'Nhân viên kế toán',pb:'Kế toán',tt:''},
+  {ten:'Nguyễn Hoài Nam',gt:'',ns:'05/02/1996',vao:'22/09/2025',vt:'Digital Marketing',pb:'Marketing',tt:''},
+  {ten:'Lê Doãn Khánh',gt:'',ns:'29/04/2000',vao:'01/10/2025',vt:'Digital Marketing (Media Plan)',pb:'Marketing',tt:''},
+  {ten:'Đoàn Thị Kim Loan',gt:'',ns:'24/02/1999',vao:'03/10/2025',vt:'Business Development Executive',pb:'Kinh doanh',tt:''},
+  {ten:'Trần Thuỵ Xuân Nghi',gt:'',ns:'01/10/2003',vao:'01/10/2025',vt:'Business Development Executive',pb:'Kinh doanh',tt:''},
+  {ten:'Võ Thị Na Na',gt:'',ns:'18/08/1994',vao:'01/10/2025',vt:'Business Development Executive',pb:'Kinh doanh',tt:''},
+  {ten:'Lê Văn Nguyên',gt:'',ns:'06/08/2000',vao:'03/11/2025',vt:'Digital Marketing Executive',pb:'Marketing',tt:''},
+  {ten:'Lê Thị Hồng Cúc',gt:'',ns:'01/01/2002',vao:'10/11/2025',vt:'Business Development',pb:'Kinh doanh',tt:'Nghỉ việc'},
+  {ten:'Đỗ Thục Nhi',gt:'',ns:'02/02/1996',vao:'10/11/2025',vt:'Business Development Executive',pb:'Kinh doanh',tt:''},
+  {ten:'Trần Nhật Vi',gt:'',ns:'05/06/2000',vao:'16/10/2025',vt:'Business Development Executive',pb:'Kinh doanh',tt:''},
+  {ten:'Phạm Nguyễn Quế An',gt:'',ns:'19/09/2000',vao:'24/11/2025',vt:'Talent Acquisition',pb:'Nhân sự',tt:''},
+  {ten:'Huỳnh Thị Cẩm Tú',gt:'',ns:'14/08/2000',vao:'24/11/2025',vt:'Business Development Executive',pb:'Kinh doanh',tt:''},
+  {ten:'Hồ Bảo Trung',gt:'',ns:'22/06/2001',vao:'08/12/2025',vt:'Digital MKT',pb:'Agency',tt:''},
+  {ten:'Nguyễn Hoàng Huy',gt:'',ns:'02/08/1999',vao:'10/12/2025',vt:'Digital Marketing Executive',pb:'Agency',tt:''},
+  {ten:'Ngô Huy',gt:'',ns:'26/04/2000',vao:'15/12/2025',vt:'Digital Marketing',pb:'Agency',tt:''},
+  {ten:'Trần Quang Minh',gt:'',ns:'13/06/2004',vao:'15/12/2025',vt:'Digital Marketing',pb:'Agency',tt:''},
+  {ten:'Nguyễn Thị Thiết',gt:'',ns:'06/03/1994',vao:'08/01/2026',vt:'Kế toán thuế',pb:'Account',tt:''},
+  {ten:'Nguyễn Thị Thu Hương',gt:'',ns:'14/11/1999',vao:'02/03/2026',vt:'Customer Account Manager',pb:'Account',tt:''},
+  {ten:'Hồ Huỳnh Thanh Tâm',gt:'',ns:'10/10/2002',vao:'02/03/2026',vt:'Booking KOL/KOC',pb:'Khác',tt:''},
+  {ten:'Phan Thuỵ Trúc Đào',gt:'',ns:'24/05/2000',vao:'09/03/2026',vt:'Booking KOC/KOL',pb:'Agency',tt:''},
+  {ten:'Nguyễn Kim Hưng',gt:'',ns:'31/03/2004',vao:'16/03/2026',vt:'Nhân viên kinh doanh',pb:'Kinh doanh',tt:''},
+  {ten:'Nguyễn Thanh Tâm',gt:'',ns:'06/01/1997',vao:'23/03/2026',vt:'Business Development Executive',pb:'Kinh doanh',tt:''},
+  {ten:'Huỳnh Công Nghĩa',gt:'',ns:'24/02/1994',vao:'23/03/2026',vt:'Senior Edit Capcut',pb:'Khác',tt:''},
+  {ten:'Trần Diễm Chi',gt:'',ns:'12/12/2002',vao:'04/01/2026',vt:'Content Executive',pb:'Khác',tt:''},
+  {ten:'Nguyễn Thị Ngọc Ngân',gt:'',ns:'12/03/1998',vao:'01/04/2026',vt:'Business Development Executive',pb:'Kinh doanh',tt:''},
+  {ten:'Nguyễn Ngọc Thảo Vy',gt:'',ns:'24/06/2001',vao:'06/04/2026',vt:'Business Development Executive',pb:'Kinh doanh',tt:''},
+  {ten:'Trương Thị Thu Vân',gt:'',ns:'16/02/1991',vao:'01/04/2026',vt:'Nhân viên kế toán',pb:'Kế toán',tt:''},
+  {ten:'Lê Minh Thiện',gt:'',ns:'24/12/2000',vao:'04/05/2026',vt:'Business Development Executive',pb:'Kinh doanh',tt:'Nghỉ việc'},
+  {ten:'Trịnh Thị Ngọc Phụng',gt:'',ns:'09/03/2003',vao:'04/05/2026',vt:'Booking KOC/KOL Junior',pb:'Khác',tt:''},
+  {ten:'Phạm Thị Thu Thủy',gt:'',ns:'21/07/2000',vao:'25/05/2026',vt:'Booking KOL/KOC',pb:'Khác',tt:''},
+  {ten:'Nguyễn Thị Bé',gt:'',ns:'17/11/1991',vao:'25/05/2026',vt:'Kế toán thuế',pb:'Kế toán',tt:''},
+  {ten:'Trần Quang',gt:'',ns:'19/10/1999',vao:'01/06/2026',vt:'Chuyên viên Kinh doanh',pb:'Kinh doanh',tt:''},
+  {ten:'Nguyễn Tiến Duyệt',gt:'',ns:'01/03/2002',vao:'07/06/2026',vt:'Video Editor',pb:'Agency',tt:''}
 ];
 
 function hsPD(s){ if(!s) return null; const p=String(s).trim().split('/'); if(p.length<3) return null; const d=new Date(+p[2],+p[1]-1,+p[0]); return isNaN(d)?null:d; }
@@ -1129,8 +1158,9 @@ function renderHoSo(){
   const avgAge=ages.length?Math.round(ages.reduce((s,a)=>s+a,0)/ages.length):0;
   const tenM=act.map(e=>hsTenM(e.vao,null)).filter(m=>m!=null);
   const avgTen=tenM.length?(tenM.reduce((s,m)=>s+m,0)/tenM.length/12):0;
-  const nam=D.filter(e=>String(e.gt).trim().toLowerCase()==='nam').length, nu=total-nam;
-  const namP=total?Math.round(nam/total*100):0;
+  const nam=D.filter(e=>String(e.gt).trim().toLowerCase()==='nam').length;
+  const nu=D.filter(e=>{const g=String(e.gt).trim().toLowerCase();return g==='nữ'||g==='nu';}).length;
+  const gTot=nam+nu, namP=gTot?Math.round(nam/gTot*100):0;
   const ab=[0,0,0,0]; ages.forEach(a=>{ if(a<25)ab[0]++; else if(a<=30)ab[1]++; else if(a<=35)ab[2]++; else ab[3]++; });
   const abMx=Math.max(1,...ab);
   const tb=[0,0,0,0]; act.forEach(e=>{ const m=hsTenM(e.vao,null); if(m==null)return; if(m<6)tb[0]++; else if(m<12)tb[1]++; else if(m<24)tb[2]++; else tb[3]++; });
@@ -1157,8 +1187,7 @@ function renderHoSo(){
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin-bottom:14px;">
     <div style="background:#fff;border:0.5px solid #e2e8f0;border-radius:12px;padding:1rem 1.25rem;">
       <div style="font-size:13px;font-weight:600;margin-bottom:12px;">Tỉ lệ nam / nữ</div>
-      <div style="display:flex;height:14px;border-radius:20px;overflow:hidden;margin-bottom:10px;"><div style="width:${namP}%;background:#378add;"></div><div style="width:${100-namP}%;background:#d4537e;"></div></div>
-      <div style="display:flex;justify-content:space-between;font-size:12px;"><span style="color:#185fa5;">Nam · ${nam} (${namP}%)</span><span style="color:#993556;">Nữ · ${nu} (${100-namP}%)</span></div>
+      ${gTot?'<div style="display:flex;height:14px;border-radius:20px;overflow:hidden;margin-bottom:10px;"><div style="width:'+namP+'%;background:#378add;"></div><div style="width:'+(100-namP)+'%;background:#d4537e;"></div></div><div style="display:flex;justify-content:space-between;font-size:12px;"><span style="color:#185fa5;">Nam · '+nam+' ('+namP+'%)</span><span style="color:#993556;">Nữ · '+nu+' ('+(100-namP)+'%)</span></div>':'<div style="font-size:12px;color:#94a3b8;padding:8px 0;">Chưa cập nhật giới tính.</div>'}
     </div>
     <div style="background:#fff;border:0.5px solid #e2e8f0;border-radius:12px;padding:1rem 1.25rem;">
       <div style="font-size:13px;font-weight:600;margin-bottom:12px;">Phân bố độ tuổi</div>
@@ -1175,9 +1204,7 @@ function renderHoSo(){
     </div>
     <div style="background:#fff;border:0.5px solid #e2e8f0;border-radius:12px;padding:1rem 1.25rem;">
       <div style="font-size:13px;font-weight:600;margin-bottom:12px;">Thử việc & loại hợp đồng</div>
-      <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:12px;"><span style="font-size:26px;font-weight:600;color:#0f6e56;">${pass}%</span><span style="font-size:12px;color:#64748b;">chính thức / (chính thức + thử việc)</span></div>
-      <div style="display:flex;height:12px;border-radius:20px;overflow:hidden;margin-bottom:8px;"><div style="width:${total?ct/total*100:0}%;background:#185fa5;"></div><div style="width:${total?tv/total*100:0}%;background:#ba7517;"></div><div style="width:${total?ctv/total*100:0}%;background:#888780;"></div></div>
-      <div style="display:flex;gap:12px;font-size:11.5px;flex-wrap:wrap;"><span style="color:#185fa5;">Chính thức ${ct}</span><span style="color:#854f0b;">Thử việc ${tv}</span><span style="color:#5f5e5a;">Khác ${ctv}</span></div>
+      ${(ct+tv)?'<div style="display:flex;align-items:baseline;gap:8px;margin-bottom:12px;"><span style="font-size:26px;font-weight:600;color:#0f6e56;">'+pass+'%</span><span style="font-size:12px;color:#64748b;">chính thức / (chính thức + thử việc)</span></div><div style="display:flex;height:12px;border-radius:20px;overflow:hidden;margin-bottom:8px;"><div style="width:'+(total?ct/total*100:0)+'%;background:#185fa5;"></div><div style="width:'+(total?tv/total*100:0)+'%;background:#ba7517;"></div><div style="width:'+(total?ctv/total*100:0)+'%;background:#888780;"></div></div><div style="display:flex;gap:12px;font-size:11.5px;flex-wrap:wrap;"><span style="color:#185fa5;">Chính thức '+ct+'</span><span style="color:#854f0b;">Thử việc '+tv+'</span><span style="color:#5f5e5a;">Khác '+ctv+'</span></div>':'<div style="font-size:12px;color:#94a3b8;padding:8px 0;">Chưa cập nhật loại hợp đồng.</div>'}
     </div>
   </div>
   <div style="background:#fff;border:0.5px solid #e2e8f0;border-radius:12px;padding:1rem 1.25rem;">
