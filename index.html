@@ -644,8 +644,13 @@ function render(){
 
   /* KPI */
   const total=fCVs.length, pTotal=pCVs.length;
-  const hired=fCVs.filter(c=>c['FINAL']==='TRÚNG TUYỂN').length;
-  const pHired=pCVs.filter(c=>c['FINAL']==='TRÚNG TUYỂN').length;
+  /* Trúng tuyển tính theo NGÀY NHẬN VIỆC (không phải ngày nộp CV) */
+  const _rNow=filter==='custom'?[dfrom,dto]:getRange(filter);
+  const _rPrev=getPrevRange(filter);
+  const inJoin=(s,r)=>{ if(!r) return true; const d=parseDate(s); return d&&d>=r[0]&&d<=r[1]; };
+  const hiredArr=cvs.filter(c=>c['FINAL']==='TRÚNG TUYỂN'&&inJoin(c['NGÀY NHẬN VIỆC'],_rNow));
+  const hired=hiredArr.length;
+  const pHired=cvs.filter(c=>c['FINAL']==='TRÚNG TUYỂN'&&inJoin(c['NGÀY NHẬN VIỆC'],_rPrev)).length;
   const rate=total>0?(hired/total*100):0;
   const pRate=pTotal>0?(pHired/pTotal*100):0;
   const open=viTri.filter(v=>v['Trang Thai']==='Đang mở').length;
@@ -679,7 +684,7 @@ function render(){
   months.forEach(m=>{ m.rate=m.cv>0?parseFloat((m.hire/m.cv*100).toFixed(1)):0; });
 
   /* Danh sách ứng viên trúng tuyển trong kỳ */
-  const hiredList=fCVs.filter(c=>c['FINAL']==='TRÚNG TUYỂN');
+  const hiredList=hiredArr;
 
   /* ─── BUILD HTML ─── */
   document.getElementById('content').innerHTML=`
