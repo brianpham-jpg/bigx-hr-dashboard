@@ -905,7 +905,7 @@ function nav(v){
     document.getElementById('nav-cal').classList.add('active');
     document.getElementById('topbar-left').innerHTML='<i class="ti ti-calendar"></i> Calendar <span class="live-tag">● Live</span>';
     fb.classList.add('hidden');
-    renderCalendar();
+    calAuto();
     return;
   }
   if(v==='ho-so'){
@@ -2116,13 +2116,17 @@ const CAL_ID='brian.pham@bigx.vn';
 const CAL_SCOPE='https://www.googleapis.com/auth/calendar.readonly';
 const CAL_DOW=['Th 2','Th 3','Th 4','Th 5','Th 6','Th 7','CN'];
 let calToken=null, calTokenClient=null, calEvents=[], calLoading=false, calErr=null, calRef=new Date();
+const CAL_TK_KEY='bigx_cal_tk';
+function calSaveTok(r){ try{ localStorage.setItem(CAL_TK_KEY, JSON.stringify({t:r.access_token, exp:Date.now()+((+r.expires_in||3600)*1000)})); }catch(_){} }
+function calCachedTok(){ try{ const c=JSON.parse(localStorage.getItem(CAL_TK_KEY)||'null'); if(c&&c.t&&c.exp>Date.now()+60000) return c.t; }catch(_){} return null; }
+function calAuto(){ if(calToken){ calFetch(); return; } const t=calCachedTok(); if(t){ calToken=t; calFetch(); return; } renderCalendar(); if(calInit()){ try{ calTokenClient.requestAccessToken({prompt:''}); }catch(_){} } }
 
 function calInit(){
   if(calTokenClient) return true;
   if(!(window.google&&google.accounts&&google.accounts.oauth2)) return false;
   calTokenClient=google.accounts.oauth2.initTokenClient({
     client_id:CAL_CLIENT_ID, scope:CAL_SCOPE,
-    callback:(r)=>{ if(r&&r.access_token){ calToken=r.access_token; calFetch(); } else { calErr='Không lấy được quyền truy cập.'; renderCalendar(); } }
+    callback:(r)=>{ if(r&&r.access_token){ calToken=r.access_token; calSaveTok(r); calFetch(); } else { renderCalendar(); } }
   });
   return true;
 }
@@ -2140,7 +2144,7 @@ async function calFetch(){
     +'&timeMin='+encodeURIComponent(tMin)+'&timeMax='+encodeURIComponent(tMax);
   try{
     const res=await fetch(url,{headers:{Authorization:'Bearer '+calToken}});
-    if(res.status===401||res.status===403){ calToken=null; throw new Error('Phiên hết hạn, đăng nhập lại.'); }
+    if(res.status===401||res.status===403){ calToken=null; try{localStorage.removeItem(CAL_TK_KEY);}catch(_){} if(calInit()){try{calTokenClient.requestAccessToken({prompt:''});}catch(_){}} throw new Error('Đang làm mới đăng nhập...'); }
     if(!res.ok) throw new Error('Lỗi API '+res.status);
     const d=await res.json();
     calEvents=(d.items||[]).map(e=>({
