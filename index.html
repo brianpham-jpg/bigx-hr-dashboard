@@ -445,13 +445,13 @@ nav{flex:1;padding:8px 0;}
   </div>
 
   <nav>
-    <div class="nav-item" id="nav-ov" onclick="nav('overview')"><i class="ti ti-layout-dashboard"></i>Tổng quan</div>
+    <div class="nav-item active" id="nav-ov" onclick="nav('overview')"><i class="ti ti-layout-dashboard"></i>Tổng quan</div>
     <div class="nav-item" id="nav-hs" onclick="nav('ho-so')"><i class="ti ti-id-badge"></i>Hồ sơ nhân sự</div>
     <div class="nav-item" onclick="nav('so-do')"><i class="ti ti-sitemap"></i>Sơ đồ & quy trình</div>
     <div class="nav-sub" id="nav-so-do" onclick="nav('so-do')"><i class="ti ti-chart-dots"></i>Sơ đồ tổ chức</div>
     <div class="nav-sub" id="nav-qd" onclick="nav('quy-dinh')"><i class="ti ti-book"></i>Quy định</div>
     <div class="nav-sub" id="nav-qt" onclick="nav('quy-trinh')"><i class="ti ti-arrow-guide"></i>Quy trình</div>
-    <div class="nav-item active" id="nav-td" onclick="nav('tuyen-dung')"><i class="ti ti-file-description"></i>Tuyển dụng</div>
+    <div class="nav-item" id="nav-td" onclick="nav('tuyen-dung')"><i class="ti ti-file-description"></i>Tuyển dụng</div>
     <div class="nav-item" onclick="nav('coming')"><i class="ti ti-file-certificate"></i>Hợp đồng nhân sự</div>
     <div class="nav-sub" onclick="nav('coming')"><i class="ti ti-template"></i>Form mẫu HĐ BigX</div>
     <div class="nav-item" id="nav-cv" onclick="nav('cong-viec')"><i class="ti ti-checklist"></i>Công việc nhân sự</div>
@@ -610,7 +610,7 @@ async function loadData(){
   if(cached){
     try{
       rawData=JSON.parse(cached);
-      render();
+      if(document.getElementById('nav-td').classList.contains('active')) render();
       document.getElementById('uptime').textContent='Đang làm mới...';
     }catch(_){}
   } else {
@@ -623,7 +623,7 @@ async function loadData(){
     rawData=await r.json();
     localStorage.setItem(CACHE_KEY,JSON.stringify(rawData));
     document.getElementById('uptime').textContent='Cập nhật: '+new Date().toLocaleTimeString('vi-VN');
-    render();
+    if(document.getElementById('nav-td').classList.contains('active')) render();
     /* Nếu đang ở tab Công việc thì fetch task data riêng */
     if(document.getElementById('nav-cv').classList.contains('active')){
       loadTaskData();
@@ -2237,7 +2237,7 @@ function renderCalendar(){
 }
 
 /* init */
-nav('tuyen-dung');
+nav('overview');
 setInterval(loadData, 5 * 60 * 1000); // auto-refresh mỗi 5 phút
 </script>
 </body>
