@@ -446,7 +446,7 @@ nav{flex:1;padding:8px 0;}
 
   <nav>
     <div class="nav-item" id="nav-ov" onclick="nav('overview')"><i class="ti ti-layout-dashboard"></i>Tổng quan</div>
-    <div class="nav-item" onclick="nav('coming')"><i class="ti ti-id-badge"></i>Hồ sơ nhân sự</div>
+    <div class="nav-item" id="nav-hs" onclick="nav('ho-so')"><i class="ti ti-id-badge"></i>Hồ sơ nhân sự</div>
     <div class="nav-item" onclick="nav('so-do')"><i class="ti ti-sitemap"></i>Sơ đồ & quy trình</div>
     <div class="nav-sub" id="nav-so-do" onclick="nav('so-do')"><i class="ti ti-chart-dots"></i>Sơ đồ tổ chức</div>
     <div class="nav-sub" id="nav-qd" onclick="nav('quy-dinh')"><i class="ti ti-book"></i>Quy định</div>
@@ -908,6 +908,13 @@ function nav(v){
     renderCalendar();
     return;
   }
+  if(v==='ho-so'){
+    document.getElementById('nav-hs').classList.add('active');
+    document.getElementById('topbar-left').innerHTML='<i class="ti ti-id-badge"></i> Hồ sơ nhân sự <span class="live-tag">● Live</span>';
+    fb.classList.add('hidden');
+    renderHoSo();
+    return;
+  }
   if(v==='overview'){
     document.getElementById('nav-ov').classList.add('active');
     document.getElementById('topbar-left').innerHTML='<i class="ti ti-layout-dashboard"></i> Tổng quan <span class="live-tag">● Live</span>';
@@ -1016,6 +1023,177 @@ function renderTongQuan(){
       ${quick('Calendar','ti-calendar','calendar')}
     </div>
   </div>`;
+}
+
+/* ══════════════════════════════════════════
+   HỒ SƠ NHÂN SỰ — Directory + Analytics
+   (DỮ LIỆU MẪU — thay bằng data thật / nối Sheet sau)
+══════════════════════════════════════════ */
+let hsView='list', hsSel=null, hsSearch='', hsDept='all', hsStatus='all';
+const HS_DATA=[
+  {ten:'Nguyễn Thị Thu Hương',gt:'Nữ',ns:'16/08/1991',sdt:'097x xxx xxx',cccd:'0790xxxxxxxx',ngayCap:'12/03/2021',tamTru:'Thủ Đức, TP.HCM',vao:'01/02/2024',ketThuc:'',loaiHD:'Lao động chính thức',tt:'Đang làm việc',nghi:'',hocVan:'THPT',pb:'ACCOUNT',vt:'Account',anh:'',linkHD:''},
+  {ten:'Nguyễn Văn An',gt:'Nam',ns:'12/05/1996',sdt:'098x xxx xxx',cccd:'0790xxxxxxxx',ngayCap:'05/06/2020',tamTru:'Q.Bình Thạnh, TP.HCM',vao:'01/03/2025',ketThuc:'',loaiHD:'Lao động chính thức',tt:'Đang làm việc',nghi:'',hocVan:'Đại học',pb:'KINH DOANH',vt:'Sale',anh:'',linkHD:''},
+  {ten:'Trần Thị Hoa',gt:'Nữ',ns:'20/09/2001',sdt:'090x xxx xxx',cccd:'0790xxxxxxxx',ngayCap:'10/01/2022',tamTru:'Q.7, TP.HCM',vao:'02/03/2026',ketThuc:'',loaiHD:'Thử việc',tt:'Đang làm việc',nghi:'',hocVan:'Cao đẳng',pb:'MARKETING',vt:'Tiktok Ads',anh:'',linkHD:''},
+  {ten:'Lê Doãn Khánh',gt:'Nam',ns:'03/07/1994',sdt:'091x xxx xxx',cccd:'0790xxxxxxxx',ngayCap:'20/08/2019',tamTru:'Q.Gò Vấp, TP.HCM',vao:'10/06/2024',ketThuc:'',loaiHD:'Lao động chính thức',tt:'Đang làm việc',nghi:'',hocVan:'Đại học',pb:'KẾ TOÁN',vt:'Kế toán thuế',anh:'',linkHD:''},
+  {ten:'Phạm Nguyễn Quế An',gt:'Nữ',ns:'02/02/1998',sdt:'093x xxx xxx',cccd:'0790xxxxxxxx',ngayCap:'15/05/2020',tamTru:'Q.3, TP.HCM',vao:'02/01/2025',ketThuc:'',loaiHD:'Lao động chính thức',tt:'Đang làm việc',nghi:'',hocVan:'Đại học',pb:'NHÂN SỰ',vt:'HR Specialist',anh:'',linkHD:''},
+  {ten:'Hồ Bảo Trung',gt:'Nam',ns:'18/11/2000',sdt:'094x xxx xxx',cccd:'0790xxxxxxxx',ngayCap:'01/12/2021',tamTru:'TP.Thủ Đức, TP.HCM',vao:'11/11/2025',ketThuc:'',loaiHD:'Lao động chính thức',tt:'Đang làm việc',nghi:'',hocVan:'Đại học',pb:'MARKETING',vt:'Tiktok Ads',anh:'',linkHD:''},
+  {ten:'Ngô Huy',gt:'Nam',ns:'25/04/1999',sdt:'095x xxx xxx',cccd:'0790xxxxxxxx',ngayCap:'08/09/2020',tamTru:'Q.10, TP.HCM',vao:'28/11/2025',ketThuc:'',loaiHD:'Thử việc',tt:'Đang làm việc',nghi:'',hocVan:'Cao đẳng',pb:'MARKETING',vt:'Tiktok Ads',anh:'',linkHD:''},
+  {ten:'Trần Nguyễn Ngọc Việt',gt:'Nam',ns:'09/12/1997',sdt:'096x xxx xxx',cccd:'0790xxxxxxxx',ngayCap:'22/02/2019',tamTru:'Q.Tân Bình, TP.HCM',vao:'15/09/2023',ketThuc:'',loaiHD:'Lao động chính thức',tt:'Đang làm việc',nghi:'',hocVan:'Đại học',pb:'BOOKING',vt:'Booking',anh:'',linkHD:''},
+  {ten:'Phạm Văn Vĩ',gt:'Nam',ns:'14/03/1995',sdt:'097x xxx xxx',cccd:'0790xxxxxxxx',ngayCap:'30/07/2018',tamTru:'Q.4, TP.HCM',vao:'01/01/2024',ketThuc:'',loaiHD:'Lao động chính thức',tt:'Nghỉ việc',nghi:'20/05/2026',hocVan:'Đại học',pb:'ACCOUNT',vt:'Account',anh:'',linkHD:''},
+  {ten:'Lê Minh Thiện',gt:'Nam',ns:'07/10/1997',sdt:'098x xxx xxx',cccd:'0790xxxxxxxx',ngayCap:'11/04/2019',tamTru:'Q.Phú Nhuận, TP.HCM',vao:'05/05/2025',ketThuc:'',loaiHD:'Lao động chính thức',tt:'Nghỉ việc',nghi:'02/07/2026',hocVan:'Cao đẳng',pb:'KINH DOANH',vt:'Sale',anh:'',linkHD:''}
+];
+
+function hsPD(s){ if(!s) return null; const p=String(s).trim().split('/'); if(p.length<3) return null; const d=new Date(+p[2],+p[1]-1,+p[0]); return isNaN(d)?null:d; }
+function hsAge(s){ const d=hsPD(s); if(!d) return null; const n=new Date(); let a=n.getFullYear()-d.getFullYear(); if(n.getMonth()<d.getMonth()||(n.getMonth()===d.getMonth()&&n.getDate()<d.getDate())) a--; return a; }
+function hsActive(e){ return !/ngh/i.test(e.tt||''); }
+function hsTenM(vao,nghi){ const a=hsPD(vao); if(!a) return null; const b=nghi?hsPD(nghi):new Date(); if(!b) return null; return (b.getFullYear()-a.getFullYear())*12+(b.getMonth()-a.getMonth()); }
+function hsTenText(m){ if(m==null) return '—'; const y=Math.floor(m/12), mo=m%12; return (y?y+' năm ':'')+(mo?mo+' tháng':(y?'':'0 tháng')); }
+function hsDC(pb){ const m={'KINH DOANH':['#e6f1fb','#185fa5'],'SALE':['#e6f1fb','#185fa5'],'MARKETING':['#ede9fe','#5b21b6'],'KẾ TOÁN':['#faeeda','#854f0b'],'NHÂN SỰ':['#e1f5ee','#0f6e56'],'ACCOUNT':['#faece7','#993c1d'],'BOOKING':['#fbeaf0','#993556'],'CREATIVE':['#eaf3de','#3b6d11'],'ECOM':['#e6f1fb','#0c447c']}; return m[String(pb||'').toUpperCase()]||['#f1f5f9','#475569']; }
+function hsInit(t){ const w=String(t||'').trim().split(/\s+/); return (((w[w.length-2]||w[0]||'?')[0]||'')+((w[w.length-1]||'')[0]||'')).toUpperCase(); }
+function hsImg(e,px){ const c=hsDC(e.pb); if(e.anh) return '<img src="'+e.anh+'" style="width:'+px+'px;height:'+px+'px;border-radius:50%;object-fit:cover;flex:none;">'; return '<span style="width:'+px+'px;height:'+px+'px;border-radius:50%;background:'+c[0]+';color:'+c[1]+';display:flex;align-items:center;justify-content:center;font-weight:600;font-size:'+Math.round(px*0.36)+'px;flex:none;">'+hsInit(e.ten)+'</span>'; }
+function hsOpen(i){ hsSel=i; hsView='detail'; renderHoSo(); }
+function hsBack(){ hsView='list'; hsSel=null; renderHoSo(); }
+function hsSetDept(d){ hsDept=d; renderHoSo(); }
+function hsSetStatus(s){ hsStatus=s; renderHoSo(); }
+function hsBarRow(lbl,val,mx,col,wl){ const w=mx>0?Math.round(val/mx*100):0; return '<div style="display:flex;align-items:center;gap:8px;font-size:12px;margin-bottom:6px;"><span style="width:'+wl+'px;">'+lbl+'</span><div style="flex:1;height:8px;background:#f1f5f9;border-radius:20px;"><div style="width:'+w+'%;height:8px;background:'+col+';border-radius:20px;"></div></div><span style="width:26px;text-align:right;">'+val+'</span></div>'; }
+
+function hsTrend(){
+  const now=new Date(), cols=[];
+  for(let k=5;k>=0;k--){ const dt=new Date(now.getFullYear(),now.getMonth()-k,1); cols.push({y:dt.getFullYear(),m:dt.getMonth()}); }
+  const inM=(s,c)=>{ const d=hsPD(s); return d&&d.getFullYear()===c.y&&d.getMonth()===c.m; };
+  const mn=['T1','T2','T3','T4','T5','T6','T7','T8','T9','T10','T11','T12'];
+  const data=cols.map(c=>{ const hires=HS_DATA.filter(e=>inM(e.vao,c)).length; const leaves=HS_DATA.filter(e=>inM(e.nghi,c)).length; const end=new Date(c.y,c.m+1,0,23,59,59); const hc=HS_DATA.filter(e=>{ const v=hsPD(e.vao); if(!v||v>end) return false; const n=e.nghi?hsPD(e.nghi):null; return !n||n>end; }).length; return {c,hires,leaves,hc}; });
+  const mx=Math.max(1,...data.map(d=>Math.max(d.hires,d.leaves)));
+  return data.map(d=>'<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;"><div style="font-size:10px;color:#5b21b6;font-weight:600;">'+d.hc+'</div><div style="display:flex;gap:3px;align-items:flex-end;height:80px;"><div style="width:12px;height:'+Math.round(d.hires/mx*76)+'px;min-height:2px;background:#1d9e75;border-radius:3px;"></div><div style="width:12px;height:'+Math.round(d.leaves/mx*76)+'px;min-height:2px;background:#d85a30;border-radius:3px;"></div></div><div style="font-size:11px;color:#94a3b8;">'+mn[d.c.m]+'</div></div>').join('');
+}
+function hsAttrition(){
+  const g={}; HS_DATA.forEach(e=>{ const k=e.pb||'Khác'; if(!g[k])g[k]={t:0,l:0}; g[k].t++; if(!hsActive(e))g[k].l++; });
+  let arr=Object.entries(g).map(([k,v])=>({k,pct:v.t?Math.round(v.l/v.t*100):0,l:v.l})).filter(o=>o.l>0).sort((a,b)=>b.pct-a.pct).slice(0,5);
+  if(!arr.length) return '<div style="font-size:12px;color:#94a3b8;">Chưa có nghỉ việc.</div>';
+  const top=arr[0];
+  let html=arr.map((o,i)=>'<div style="display:flex;align-items:center;gap:8px;font-size:12px;margin-bottom:7px;"><span style="width:74px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+o.k+'</span><div style="flex:1;height:8px;background:#faece7;border-radius:20px;"><div style="width:'+o.pct+'%;height:8px;background:'+(i===0?'#d85a30':'#f0997b')+';border-radius:20px;"></div></div><span style="width:36px;text-align:right;'+(i===0?'color:#993c1d;font-weight:600;':'')+'">'+o.pct+'%</span></div>').join('');
+  html+='<div style="font-size:11px;color:#993c1d;margin-top:8px;"><i class="ti ti-alert-triangle"></i> Cao nhất: '+top.k+' ('+top.pct+'%) · mẫu nhỏ, tham khảo</div>';
+  return html;
+}
+
+function hsFillRows(){
+  const el=document.getElementById('hs-rows'); if(!el) return;
+  let list=HS_DATA.map((e,i)=>({e,i}));
+  if(hsDept!=='all') list=list.filter(o=>o.e.pb===hsDept);
+  if(hsStatus==='active') list=list.filter(o=>hsActive(o.e));
+  if(hsStatus==='left') list=list.filter(o=>!hsActive(o.e));
+  if(hsSearch){ const q=hsSearch.toLowerCase(); list=list.filter(o=>o.e.ten.toLowerCase().includes(q)); }
+  const rows=list.map(o=>{ const e=o.e, st=hsActive(e); return '<div style="display:flex;align-items:center;font-size:12.5px;padding:10px 8px;border-bottom:0.5px solid #f5f7fa;">'
+    +'<span style="flex:2.4;display:flex;align-items:center;gap:10px;min-width:0;">'+hsImg(e,34)+'<span style="min-width:0;"><b style="font-weight:600;">'+e.ten+'</b><br><span style="color:#94a3b8;font-size:11px;">'+e.vt+' · '+e.gt+' · '+(hsAge(e.ns)!=null?hsAge(e.ns)+'t':'—')+'</span></span></span>'
+    +'<span style="flex:1.2;">'+e.pb+'</span>'
+    +'<span style="flex:1;">'+hsTenText(hsTenM(e.vao,e.nghi))+'</span>'
+    +'<span style="flex:1;">'+(st?'<span style="font-size:10px;font-weight:500;color:#0f6e56;background:#e1f5ee;padding:2px 8px;border-radius:20px;">Đang làm</span>':'<span style="font-size:10px;font-weight:500;color:#993c1d;background:#faece7;padding:2px 8px;border-radius:20px;">Nghỉ việc</span>')+'</span>'
+    +'<span style="width:96px;text-align:right;"><span onclick="hsOpen('+o.i+')" style="font-size:11.5px;font-weight:500;color:#5b21b6;border:0.5px solid #c4b5fd;border-radius:8px;padding:5px 10px;cursor:pointer;">Xem hồ sơ</span></span></div>'; }).join('');
+  el.innerHTML=(rows||'<div style="text-align:center;color:#94a3b8;font-size:12.5px;padding:20px;">Không có nhân sự phù hợp bộ lọc.</div>')+'<div style="text-align:center;font-size:12px;color:#94a3b8;padding-top:12px;">Hiển thị '+list.length+' / '+HS_DATA.length+' nhân sự</div>';
+}
+
+function hsField(l,v,it){ return '<div style="display:flex;padding:7px 6px;border-bottom:0.5px dotted #cbd5e1;"><span style="width:170px;color:#475569;'+(it?'font-style:italic;':'')+'">'+l+'</span><span style="flex:1;">'+(v&&String(v).trim()?v:'—')+'</span></div>'; }
+function hsSecBar(t){ return '<div style="background:#7c8bab;color:#fff;font-size:13.5px;font-weight:600;padding:8px 14px;border-radius:6px;margin:16px 0 8px;">'+t+'</div>'; }
+function hsDetailHTML(e){
+  if(!e){ hsView='list'; return ''; }
+  const c=hsDC(e.pb);
+  const photo = e.anh
+    ? '<div style="width:100%;aspect-ratio:3/4;border-radius:8px;overflow:hidden;margin-bottom:14px;"><img src="'+e.anh+'" style="width:100%;height:100%;object-fit:cover;"></div>'
+    : '<div style="width:100%;aspect-ratio:3/4;border-radius:8px;background:'+c[0]+';color:'+c[1]+';display:flex;align-items:center;justify-content:center;margin-bottom:14px;"><i class="ti ti-photo" style="font-size:46px;opacity:.6;"></i></div>';
+  const age=hsAge(e.ns);
+  const loai = /chính thức/i.test(e.loaiHD||'') ? '<span style="color:#0f6e56;font-weight:600;">'+e.loaiHD+'</span>' : (e.loaiHD||'—');
+  const tt = hsActive(e) ? '<span style="color:#0f6e56;">✅ '+(e.tt||'Đang làm việc')+'</span>' : '<span style="color:#993c1d;">⭕️ '+(e.tt||'Nghỉ việc')+'</span>';
+  const link = e.linkHD ? '<span onclick="openLink&&openLink(\''+e.linkHD+'\')" style="color:#5b21b6;cursor:pointer;"><i class="ti ti-file-text"></i> Xem hợp đồng</span>' : '<span style="color:#94a3b8;">Chưa có link</span>';
+  return '<div style="max-width:900px;">'
+    +'<div onclick="hsBack()" style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:#5b21b6;margin-bottom:12px;cursor:pointer;"><i class="ti ti-arrow-left"></i> Quay lại danh sách</div>'
+    +'<div style="display:grid;grid-template-columns:minmax(200px,280px) 1fr;gap:18px;align-items:start;">'
+    +'<div style="background:#fff;border:1px solid #9fe1cb;border-radius:12px;padding:14px;text-align:center;">'+photo
+    +'<div style="font-size:18px;font-weight:600;color:#0f172a;margin-bottom:8px;">'+e.ten+'</div>'
+    +'<div style="font-size:12.5px;color:#475569;line-height:1.9;">Giới tính: '+(e.gt||'—')+'<br>'+(age!=null?age+' tuổi':'— tuổi')+'<br>Phòng '+(e.pb||'—')+'<br>Vị trí '+(e.vt||'—')+'</div></div>'
+    +'<div><div style="font-size:12.5px;">'+hsSecBar('Thông tin cá nhân')
+    +hsField('Ngày sinh:',e.ns,1)+hsField('SĐT:',e.sdt,1)+hsField('Số CCCD:',e.cccd,1)+hsField('Ngày cấp:',e.ngayCap,1)+hsField('Địa chỉ tạm trú:',e.tamTru,1)
+    +hsSecBar('Thông tin công việc')
+    +hsField('Thời gian vào hợp đồng:',e.vao,1)+hsField('Thời gian kết thúc HĐ:',e.ketThuc,1)+hsField('Thâm niên:',hsTenText(hsTenM(e.vao,e.nghi)),1)+hsField('Loại HĐ:',loai,1)+hsField('Trạng thái:',tt,1)+hsField('Ngày nghỉ việc:',e.nghi,1)
+    +hsSecBar('Học vấn')+hsField('Trình độ học vấn:',e.hocVan,1)
+    +hsSecBar('Link hợp đồng')+'<div style="padding:7px 6px;">'+link+'</div>'
+    +'</div></div></div></div>';
+}
+
+function renderHoSo(){
+  const C=document.getElementById('content'); if(!C) return;
+  if(hsView==='detail'){ C.innerHTML=hsDetailHTML(HS_DATA[hsSel]); return; }
+  const D=HS_DATA, total=D.length;
+  const act=D.filter(hsActive), left=D.filter(e=>!hsActive(e));
+  const turnover=total?(left.length/total*100):0;
+  const ages=D.map(e=>hsAge(e.ns)).filter(a=>a!=null);
+  const avgAge=ages.length?Math.round(ages.reduce((s,a)=>s+a,0)/ages.length):0;
+  const tenM=act.map(e=>hsTenM(e.vao,null)).filter(m=>m!=null);
+  const avgTen=tenM.length?(tenM.reduce((s,m)=>s+m,0)/tenM.length/12):0;
+  const nam=D.filter(e=>String(e.gt).trim().toLowerCase()==='nam').length, nu=total-nam;
+  const namP=total?Math.round(nam/total*100):0;
+  const ab=[0,0,0,0]; ages.forEach(a=>{ if(a<25)ab[0]++; else if(a<=30)ab[1]++; else if(a<=35)ab[2]++; else ab[3]++; });
+  const abMx=Math.max(1,...ab);
+  const tb=[0,0,0,0]; act.forEach(e=>{ const m=hsTenM(e.vao,null); if(m==null)return; if(m<6)tb[0]++; else if(m<12)tb[1]++; else if(m<24)tb[2]++; else tb[3]++; });
+  const tbMx=Math.max(1,...tb);
+  const ct=D.filter(e=>/chính thức/i.test(e.loaiHD||'')).length, tv=D.filter(e=>/thử việc/i.test(e.loaiHD||'')).length, ctv=total-ct-tv;
+  const pass=(ct+tv)?Math.round(ct/(ct+tv)*100):0;
+  const depts=[...new Set(D.map(e=>e.pb))];
+  const kpi=(v,l,bg,vc,lc)=>'<div style="background:'+bg+';border-radius:12px;padding:12px;"><div style="font-size:22px;font-weight:600;color:'+vc+';">'+v+'</div><div style="font-size:11px;color:'+lc+';">'+l+'</div></div>';
+  const chip=(l,active,fn)=>'<span onclick="'+fn+'" style="font-size:11.5px;font-weight:'+(active?'500':'400')+';cursor:pointer;background:'+(active?'#5b21b6':'#f1f5f9')+';color:'+(active?'#fff':'#475569')+';padding:6px 12px;border-radius:20px;">'+l+'</span>';
+
+  C.innerHTML=`
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(115px,1fr));gap:10px;margin-bottom:14px;">
+    ${kpi(total,'Tổng NV','#eeedfe','#26215c','#3c3489')}
+    ${kpi(act.length,'Đang làm','#e1f5ee','#04342c','#085041')}
+    ${kpi(left.length,'Đã nghỉ','#faece7','#4a1b0c','#712b13')}
+    ${kpi(turnover.toFixed(1)+'%','Tỉ lệ nghỉ','#faeeda','#412402','#633806')}
+    ${kpi(avgTen.toFixed(1)+'n','Thâm niên TB','#e6f1fb','#042c53','#0c447c')}
+    ${kpi(avgAge,'Tuổi TB','#fbeaf0','#4b1528','#993556')}
+  </div>
+  <div style="background:#fff;border:0.5px solid #e2e8f0;border-radius:12px;padding:1rem 1.25rem;margin-bottom:14px;">
+    <div style="display:flex;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:6px;"><span style="font-size:13px;font-weight:600;color:#1e293b;">Biến động nhân sự theo tháng</span><span style="margin-left:auto;font-size:11px;"><span style="color:#1d9e75;"><i class="ti ti-circle-filled" style="font-size:8px;"></i> Tuyển mới</span> &nbsp; <span style="color:#d85a30;"><i class="ti ti-circle-filled" style="font-size:8px;"></i> Nghỉ</span> &nbsp; <span style="color:#5b21b6;"><i class="ti ti-minus"></i> Headcount</span></span></div>
+    <div style="display:flex;align-items:flex-end;gap:14px;">${hsTrend()}</div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin-bottom:14px;">
+    <div style="background:#fff;border:0.5px solid #e2e8f0;border-radius:12px;padding:1rem 1.25rem;">
+      <div style="font-size:13px;font-weight:600;margin-bottom:12px;">Tỉ lệ nam / nữ</div>
+      <div style="display:flex;height:14px;border-radius:20px;overflow:hidden;margin-bottom:10px;"><div style="width:${namP}%;background:#378add;"></div><div style="width:${100-namP}%;background:#d4537e;"></div></div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;"><span style="color:#185fa5;">Nam · ${nam} (${namP}%)</span><span style="color:#993556;">Nữ · ${nu} (${100-namP}%)</span></div>
+    </div>
+    <div style="background:#fff;border:0.5px solid #e2e8f0;border-radius:12px;padding:1rem 1.25rem;">
+      <div style="font-size:13px;font-weight:600;margin-bottom:12px;">Phân bố độ tuổi</div>
+      ${hsBarRow('&lt;25',ab[0],abMx,'#5b21b6',48)+hsBarRow('25–30',ab[1],abMx,'#5b21b6',48)+hsBarRow('31–35',ab[2],abMx,'#5b21b6',48)+hsBarRow('&gt;35',ab[3],abMx,'#5b21b6',48)}
+    </div>
+    <div style="background:#fff;border:0.5px solid #e2e8f0;border-radius:12px;padding:1rem 1.25rem;">
+      <div style="font-size:13px;font-weight:600;margin-bottom:12px;">Thâm niên (đang làm)</div>
+      ${hsBarRow('&lt;6th',tb[0],tbMx,'#0f6e56',56)+hsBarRow('6–12th',tb[1],tbMx,'#0f6e56',56)+hsBarRow('1–2 năm',tb[2],tbMx,'#0f6e56',56)+hsBarRow('&gt;2 năm',tb[3],tbMx,'#0f6e56',56)}
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;margin-bottom:14px;">
+    <div style="background:#fff;border:0.5px solid #e2e8f0;border-radius:12px;padding:1rem 1.25rem;">
+      <div style="font-size:13px;font-weight:600;margin-bottom:12px;">% nghỉ việc theo phòng ban</div>${hsAttrition()}
+    </div>
+    <div style="background:#fff;border:0.5px solid #e2e8f0;border-radius:12px;padding:1rem 1.25rem;">
+      <div style="font-size:13px;font-weight:600;margin-bottom:12px;">Thử việc & loại hợp đồng</div>
+      <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:12px;"><span style="font-size:26px;font-weight:600;color:#0f6e56;">${pass}%</span><span style="font-size:12px;color:#64748b;">chính thức / (chính thức + thử việc)</span></div>
+      <div style="display:flex;height:12px;border-radius:20px;overflow:hidden;margin-bottom:8px;"><div style="width:${total?ct/total*100:0}%;background:#185fa5;"></div><div style="width:${total?tv/total*100:0}%;background:#ba7517;"></div><div style="width:${total?ctv/total*100:0}%;background:#888780;"></div></div>
+      <div style="display:flex;gap:12px;font-size:11.5px;flex-wrap:wrap;"><span style="color:#185fa5;">Chính thức ${ct}</span><span style="color:#854f0b;">Thử việc ${tv}</span><span style="color:#5f5e5a;">Khác ${ctv}</span></div>
+    </div>
+  </div>
+  <div style="background:#fff;border:0.5px solid #e2e8f0;border-radius:12px;padding:1rem 1.25rem;">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
+      <span style="font-size:14px;font-weight:600;color:#1e293b;">Danh sách nhân sự</span>
+      <input oninput="hsSearch=this.value;hsFillRows()" value="${hsSearch}" placeholder="Tìm tên..." style="margin-left:auto;font-size:12.5px;border:0.5px solid #cbd5e1;border-radius:8px;padding:6px 10px;min-width:160px;outline:none;">
+    </div>
+    <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;">
+      ${chip('Tất cả',hsStatus==='all',"hsSetStatus('all')")}${chip('Đang làm',hsStatus==='active',"hsSetStatus('active')")}${chip('Nghỉ việc',hsStatus==='left',"hsSetStatus('left')")}
+      <span style="width:1px;background:#e2e8f0;margin:0 4px;"></span>
+      ${chip('Mọi phòng',hsDept==='all',"hsSetDept('all')")}${depts.map(d=>chip(d,hsDept===d,"hsSetDept('"+d+"')")).join('')}
+    </div>
+    <div style="display:flex;font-size:11px;color:#94a3b8;padding:0 8px 8px;border-bottom:0.5px solid #eef2f7;"><span style="flex:2.4;">Nhân sự</span><span style="flex:1.2;">Phòng ban</span><span style="flex:1;">Thâm niên</span><span style="flex:1;">Tình trạng</span><span style="width:96px;text-align:right;">Hồ sơ</span></div>
+    <div id="hs-rows"></div>
+  </div>`;
+  hsFillRows();
 }
 
 /* ══════════════════════════════════════════
