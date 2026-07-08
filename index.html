@@ -1467,6 +1467,8 @@ const quyTrinhData=[{
   ]
 },{
   id:'offboarding',ten:'Offboarding nhân sự',loai:'Offboarding',
+  docUrl:'https://docs.google.com/document/d/19L-kfWjEwKX-XU9otDrGdHLbcjeyL-WUTRGHxPzX3NM/edit',
+  formUrl:'https://drive.google.com/drive/folders/1qJMixmHEpjM1r1OUUwKuz9GfFegBZ9-d',
   icon:'ti-user-minus',iconBg:'#fee2e2',iconColor:'#ef4444',tagBg:'#fee2e2',tagColor:'#ef4444',
   steps:[
     {stt:'01',ten:'Tiếp nhận đơn xin nghỉ việc',giaiDoan:'Phê duyệt',moTa:'HR nhận đơn xin nghỉ việc và kiểm tra thời hạn báo trước theo HĐLĐ (thường 30 ngày với HĐ xác định thời hạn).',checklist:['Xác nhận thời hạn báo trước theo HĐLĐ','Ghi nhận ngày nộp đơn chính thức']},
@@ -1539,6 +1541,7 @@ function renderQuyTrinh(){
       <div class="qt-back" onclick="qtBack()"><i class="ti ti-arrow-left"></i>Quay lại danh sách</div>
       <div class="qt-detail-title">${qt.ten}</div>
       <div class="qt-detail-sub">${qt.steps.length} bước · ${[...new Set(qt.steps.map(s=>s.giaiDoan))].length} giai đoạn</div>
+      ${qt.docUrl||qt.formUrl?`<div style="display:flex;gap:8px;flex-wrap:wrap;margin:2px 0 14px;">${qt.docUrl?`<a href="${qt.docUrl}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;background:#fee2e2;color:#b91c1c;font-size:12.5px;font-weight:600;border-radius:8px;text-decoration:none;"><i class="ti ti-file-text"></i>Xem quy trình gốc</a>`:''}${qt.formUrl?`<a href="${qt.formUrl}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;background:#fef3c7;color:#b45309;font-size:12.5px;font-weight:600;border-radius:8px;text-decoration:none;"><i class="ti ti-folder"></i>Biểu mẫu offboarding</a>`:''}</div>`:''}
       <div>${stepRows}</div>
     </div>`;
     return;
