@@ -958,6 +958,15 @@ function tqEmptyBlock(title,icon,accent){
   </div>`;
 }
 
+function tqDept(){
+  var empty='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;height:96px;color:#94a3b8;font-size:12.5px;"><i class="ti ti-database-off" style="font-size:26px;color:#e2e8f0;"></i>Chưa có dữ liệu</div>';
+  if(typeof HS_DATA==='undefined') return empty;
+  var g={}; HS_DATA.forEach(function(e){ if(/ngh/i.test(e.tt||'')) return; var k=e.pb||'Khác'; g[k]=(g[k]||0)+1; });
+  var arr=Object.keys(g).map(function(k){return {k:k,n:g[k]};}); if(!arr.length) return empty;
+  arr.sort(function(a,b){return b.n-a.n;});
+  var mx=Math.max.apply(null,arr.map(function(o){return o.n;}));
+  return arr.map(function(o){var c=hsDC(o.k);return '<div style="display:flex;align-items:center;gap:8px;font-size:12px;margin-bottom:7px;"><span style="width:92px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+o.k+'</span><div style="flex:1;height:8px;background:#f1f5f9;border-radius:20px;"><div style="width:'+Math.round(o.n/mx*100)+'%;height:8px;background:'+c[1]+';border-radius:20px;"></div></div><span style="width:20px;text-align:right;">'+o.n+'</span></div>';}).join('');
+}
 function tqContracts(){
   var empty='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;height:96px;color:#94a3b8;font-size:12.5px;"><i class="ti ti-file-check" style="font-size:26px;color:#e2e8f0;"></i>Không có hợp đồng sắp hết hạn</div>';
   if(typeof HS_DATA==='undefined') return empty;
@@ -1040,7 +1049,7 @@ function renderTongQuan(){
     ${taskCard}
   </div>
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-bottom:16px;">
-    ${tqEmptyBlock('Nhân sự theo phòng ban','ti-building','#1d9e75')}
+    <div style="background:#fff;border:0.5px solid #e2e8f0;border-radius:12px;padding:1rem 1.25rem;"><div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;"><i class="ti ti-building" style="color:#1d9e75;font-size:18px;"></i><span style="font-size:14px;font-weight:500;color:#1e293b;">Nhân sự theo phòng ban</span></div>${tqDept()}</div>
     <div></div>
   </div>
   <div style="background:#fff;border:0.5px solid #e2e8f0;border-radius:12px;padding:1rem 1.25rem;">
@@ -1063,8 +1072,8 @@ let hsView='list', hsSel=null, hsSearch='', hsDept='all', hsStatus='all';
 /* Data thật: tab "Hồ sơ" (bộ phận + phân loại→tt/loaiHD + vao) ghép tab "Data nhân viên"
    (ns/sdt/cccd/ngayCap/tamTru/hocVan/vt). TODO: giới tính (gt), ảnh (anh), link HĐ. */
 const HS_DATA=[
-  {ten:'Nguyễn Văn Vững',gt:'',ns:'',vao:'',vt:'',pb:'Khác',tt:'',loaiHD:'Lao động chính thức'},
-  {ten:'Nguyễn Thị Hạnh Diệu',gt:'',ns:'',vao:'',vt:'',pb:'Khác',tt:'',loaiHD:'Lao động chính thức'},
+  {ten:'Nguyễn Văn Vững',gt:'',ns:'',vao:'',vt:'CEO',pb:'Giám đốc',tt:'',loaiHD:'Lao động chính thức'},
+  {ten:'Nguyễn Thị Hạnh Diệu',gt:'',ns:'',vao:'',vt:'COO',pb:'Giám đốc',tt:'',loaiHD:'Lao động chính thức'},
   {ten:'Nguyễn Thị Thu Uyên',gt:'',ns:'06/02/1998',vao:'',vt:'Nhân viên',pb:'Agency',tt:'',loaiHD:'Lao động chính thức',sdt:'0355818427',cccd:'054198004813',ngayCap:'27/01/2022',tamTru:'Tòa S503-1409 Nguyễn Xiển, P.Long Thạnh Mỹ, Quận 9, TP.HCM',hocVan:'Đại học'},
   {ten:'Trần Nguyễn Ngọc Việt',gt:'',ns:'28/11/2000',vao:'',vt:'Digital Marketing Executive',pb:'Agency',tt:'',loaiHD:'Lao động chính thức',sdt:'0866505467',cccd:'051200003140',ngayCap:'18/08/2021',tamTru:'115/5 Lê Đức Thọ, P.6, Gò Vấp, TP.HCM',hocVan:'Đại học'},
   {ten:'Nguyễn Hoài Nam',gt:'',ns:'05/02/1996',vao:'22/09/2025',vt:'Digital Marketing',pb:'Agency',tt:'',loaiHD:'Lao động chính thức',sdt:'0984230166',cccd:'067096001762',ngayCap:'07/03/2022',tamTru:'Đường N11, KDC Đông Tăng Long, TP.Thủ Đức, HCM',hocVan:'12/12'},
@@ -1077,7 +1086,7 @@ const HS_DATA=[
   {ten:'Trương Thị Thu Vân',gt:'',ns:'16/02/1991',vao:'',vt:'Nhân viên kế toán',pb:'Kế toán',tt:'',loaiHD:'Part-time',sdt:'0349682226',cccd:'052191009795',ngayCap:'15/08/2026',tamTru:'93/21 Đường 385, P.Tăng Nhơn Phú, TP.HCM',hocVan:''},
   {ten:'Tống Thị Kim Dung',gt:'',ns:'02/09/1997',vao:'10/03/2025',vt:'Nhân viên kế toán',pb:'Kế toán',tt:'',loaiHD:'Lao động chính thức',sdt:'0938108796',cccd:'038197027340',ngayCap:'19/02/2022',tamTru:'183/14 Hoàng Hoa Thám, P.6, Bình Thạnh, TP.HCM',hocVan:'Cử nhân'},
   {ten:'Phạm Nguyễn Quế An',gt:'',ns:'19/09/2000',vao:'24/11/2025',vt:'Talent Acquisition',pb:'Nhân sự',tt:'',loaiHD:'Lao động chính thức',sdt:'0796831698',cccd:'049300004989',ngayCap:'04/10/2025',tamTru:'125 Vạn Kiếp, Bình Thạnh, TP.HCM',hocVan:'Đại học'},
-  {ten:'Huỳnh Thị Hoàng Anh',gt:'',ns:'',vao:'',vt:'',pb:'Kinh doanh',tt:'',loaiHD:'Part-time'},
+  {ten:'Huỳnh Thị Hoàng Anh',gt:'',ns:'',vao:'',vt:'CGO',pb:'Giám đốc',tt:'',loaiHD:'Part-time'},
   {ten:'Võ Thị Na Na',gt:'',ns:'18/08/1994',vao:'01/10/2025',vt:'Business Development Executive',pb:'Kinh doanh',tt:'',loaiHD:'Lao động chính thức',sdt:'0818219559',cccd:'051194003886',ngayCap:'20/12/2021',tamTru:'598/66 Điện Biên Phủ, P.Thạnh Mỹ Tây, TP.HCM',hocVan:'Cử nhân'},
   {ten:'Trần Nhật Vi',gt:'',ns:'05/06/2000',vao:'16/10/2025',vt:'Business Development Executive',pb:'Kinh doanh',tt:'Nghỉ việc',loaiHD:'Thử việc',sdt:'0932174027',cccd:'046300012275',ngayCap:'16/06/2025',tamTru:'34 Đường số 15, P.Bình Hưng Hoà, Bình Tân, TP.HCM',hocVan:'Cử nhân'},
   {ten:'Lê Thị Hồng Cúc',gt:'',ns:'01/01/2002',vao:'10/11/2025',vt:'Business Development',pb:'Kinh doanh',tt:'Nghỉ việc',loaiHD:'Thử việc',sdt:'0915157021',cccd:'095300203943',ngayCap:'17/07/2022',tamTru:'79/6 Bạch Đằng, P.2, Tân Bình, TP.HCM',hocVan:'Đại học'},
@@ -1114,7 +1123,7 @@ function hsAge(s){ const d=hsPD(s); if(!d) return null; const n=new Date(); let 
 function hsActive(e){ return !/ngh/i.test(e.tt||''); }
 function hsTenM(vao,nghi){ const a=hsPD(vao); if(!a) return null; const b=nghi?hsPD(nghi):new Date(); if(!b) return null; return (b.getFullYear()-a.getFullYear())*12+(b.getMonth()-a.getMonth()); }
 function hsTenText(m){ if(m==null) return '—'; const y=Math.floor(m/12), mo=m%12; return (y?y+' năm ':'')+(mo?mo+' tháng':(y?'':'0 tháng')); }
-function hsDC(pb){ const m={'KINH DOANH':['#e6f1fb','#185fa5'],'SALE':['#e6f1fb','#185fa5'],'MARKETING':['#ede9fe','#5b21b6'],'KẾ TOÁN':['#faeeda','#854f0b'],'NHÂN SỰ':['#e1f5ee','#0f6e56'],'ACCOUNT':['#faece7','#993c1d'],'BOOKING':['#fbeaf0','#993556'],'AGENCY':['#ede9fe','#5b21b6'],'EDIT':['#e1f5ee','#0f6e56'],'CONTENT':['#eaf3de','#3b6d11'],'TSP':['#fbeaf0','#993556'],'AM':['#faeeda','#854f0b'],'CREATIVE':['#eaf3de','#3b6d11'],'ECOM':['#e6f1fb','#0c447c']}; return m[String(pb||'').toUpperCase()]||['#f1f5f9','#475569']; }
+function hsDC(pb){ const m={'GIÁM ĐỐC':['#eeedfe','#5b21b6'],'KINH DOANH':['#e6f1fb','#185fa5'],'SALE':['#e6f1fb','#185fa5'],'MARKETING':['#ede9fe','#5b21b6'],'KẾ TOÁN':['#faeeda','#854f0b'],'NHÂN SỰ':['#e1f5ee','#0f6e56'],'ACCOUNT':['#faece7','#993c1d'],'BOOKING':['#fbeaf0','#993556'],'AGENCY':['#ede9fe','#5b21b6'],'EDIT':['#e1f5ee','#0f6e56'],'CONTENT':['#eaf3de','#3b6d11'],'TSP':['#fbeaf0','#993556'],'AM':['#faeeda','#854f0b'],'CREATIVE':['#eaf3de','#3b6d11'],'ECOM':['#e6f1fb','#0c447c']}; return m[String(pb||'').toUpperCase()]||['#f1f5f9','#475569']; }
 function hsInit(t){ const w=String(t||'').trim().split(/\s+/); return (((w[w.length-2]||w[0]||'?')[0]||'')+((w[w.length-1]||'')[0]||'')).toUpperCase(); }
 function hsImg(e,px){ const c=hsDC(e.pb); if(e.anh) return '<img src="'+e.anh+'" style="width:'+px+'px;height:'+px+'px;border-radius:50%;object-fit:cover;flex:none;">'; return '<span style="width:'+px+'px;height:'+px+'px;border-radius:50%;background:'+c[0]+';color:'+c[1]+';display:flex;align-items:center;justify-content:center;font-weight:600;font-size:'+Math.round(px*0.36)+'px;flex:none;">'+hsInit(e.ten)+'</span>'; }
 function hsOpen(i){ hsSel=i; hsView='detail'; renderHoSo(); }
