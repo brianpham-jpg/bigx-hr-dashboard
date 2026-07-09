@@ -958,6 +958,20 @@ function tqEmptyBlock(title,icon,accent){
   </div>`;
 }
 
+function tqContracts(){
+  var empty='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;height:96px;color:#94a3b8;font-size:12.5px;"><i class="ti ti-file-check" style="font-size:26px;color:#e2e8f0;"></i>Không có hợp đồng sắp hết hạn</div>';
+  if(typeof HS_DATA==='undefined') return empty;
+  var now=new Date();
+  var arr=HS_DATA.filter(function(e){return e.hetHan && !/ngh/i.test(e.tt||'');}).map(function(e){var d=hsPD(e.hetHan); return d?{e:e,d:d,days:Math.round((d-now)/86400000)}:null;}).filter(function(o){return o;});
+  if(!arr.length) return empty;
+  arr.sort(function(a,b){return a.d-b.d;});
+  return arr.map(function(o){
+    var loai=/thử việc/i.test(o.e.loaiHD||'')?'Thử việc':'HĐLĐ';
+    var badge=o.days<0?('Quá hạn '+(-o.days)+'d'):(o.days+' ngày');
+    var c=(o.days<=14)?['#faece7','#993c1d']:['#faeeda','#854f0b'];
+    return '<div style="display:flex;align-items:center;gap:8px;font-size:12.5px;margin-bottom:10px;"><span style="font-size:10px;font-weight:500;color:#0c447c;background:#e6f1fb;padding:2px 7px;border-radius:20px;white-space:nowrap;">'+loai+'</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+o.e.ten+'</span><span style="color:#94a3b8;white-space:nowrap;">'+o.e.hetHan.slice(0,5)+'</span><span style="font-size:10px;font-weight:500;color:'+c[1]+';background:'+c[0]+';padding:2px 8px;border-radius:20px;white-space:nowrap;">'+badge+'</span></div>';
+  }).join('');
+}
 function tqBirthdays(){
   var empty='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;height:96px;color:#94a3b8;font-size:12.5px;"><i class="ti ti-cake" style="font-size:26px;color:#e2e8f0;"></i>Không có sinh nhật tháng này / tháng sau</div>';
   if(typeof HS_DATA==='undefined') return empty;
@@ -1019,7 +1033,7 @@ function renderTongQuan(){
   </div>
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-bottom:16px;">
     <div style="background:#fff;border:0.5px solid #e2e8f0;border-radius:12px;padding:1rem 1.25rem;"><div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;"><i class="ti ti-cake" style="color:#d4537e;font-size:18px;"></i><span style="font-size:14px;font-weight:500;color:#1e293b;">Sinh nhật sắp tới</span></div>${tqBirthdays()}</div>
-    ${tqEmptyBlock('Sắp hết hạn hợp đồng','ti-file-alert','#d85a30')}
+    <div style="background:#fff;border:0.5px solid #e2e8f0;border-radius:12px;padding:1rem 1.25rem;"><div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;"><i class="ti ti-file-alert" style="color:#d85a30;font-size:18px;"></i><span style="font-size:14px;font-weight:500;color:#1e293b;">Sắp hết hạn hợp đồng</span></div>${tqContracts()}</div>
   </div>
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-bottom:16px;">
     ${recruitCard}
@@ -1092,6 +1106,8 @@ const HS_DATA=[
 ];
 /* Giới tính theo danh sách Nữ của Brian; Trần Thị Tâm & Nguyễn Thị Ngọc Ngân để trống chờ xác nhận */
 (function(){var nu=['Nguyễn Thị Hạnh Diệu','Nguyễn Thị Thu Uyên','Nguyễn Trần Thiên Kim','Trương Thị Thu Vân','Tống Thị Kim Dung','Phạm Nguyễn Quế An','Huỳnh Thị Hoàng Anh','Võ Thị Na Na','Trần Nhật Vi','Lê Thị Hồng Cúc','Đỗ Thục Nhi','Huỳnh Thị Cẩm Tú','Đoàn Thị Kim Loan','Trần Thuỵ Xuân Nghi','Nguyễn Thị Thiết','Hồ Huỳnh Thanh Tâm','Nguyễn Thị Thu Hương','Phan Thụy Trúc Đào','Nguyễn Kim Hưng','Nguyễn Thanh Tâm','Trần Diễm Chi','Nguyễn Ngọc Thảo Vy','Trịnh Thị Ngọc Phụng','Phạm Thị Thu Thủy','Nguyễn Thị Bé','Trần Thị Tâm','Nguyễn Thị Ngọc Ngân'],unk=[];HS_DATA.forEach(function(e){e.gt=nu.indexOf(e.ten)>=0?'Nữ':(unk.indexOf(e.ten)>=0?'':'Nam');});})();
+/* Ngày hết hạn thử việc (= ngày chính thức) từ tab Hồ sơ — cho khối "Sắp hết hạn hợp đồng" */
+(function(){var ht={'Hồ Huỳnh Thanh Tâm':'01/05/2026','Huỳnh Công Nghĩa':'22/05/2026','Trịnh Thị Ngọc Phụng':'03/07/2026','Phạm Thị Thu Thủy':'24/07/2026','Nguyễn Thị Bé':'24/07/2026','Trần Quang':'30/07/2026','Nguyễn Tiến Duyệt':'05/09/2026'};HS_DATA.forEach(function(e){if(ht[e.ten])e.hetHan=ht[e.ten];});})();
 
 function hsPD(s){ if(!s) return null; const p=String(s).trim().split('/'); if(p.length<3) return null; const d=new Date(+p[2],+p[1]-1,+p[0]); return isNaN(d)?null:d; }
 function hsAge(s){ const d=hsPD(s); if(!d) return null; const n=new Date(); let a=n.getFullYear()-d.getFullYear(); if(n.getMonth()<d.getMonth()||(n.getMonth()===d.getMonth()&&n.getDate()<d.getDate())) a--; return a; }
