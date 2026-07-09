@@ -966,7 +966,7 @@ function tqContracts(){
   if(!arr.length) return empty;
   arr.sort(function(a,b){return a.d-b.d;});
   return arr.map(function(o){
-    var loai=/thử việc/i.test(o.e.loaiHD||'')?'Thử việc':'HĐLĐ';
+    var loai=/thử việc/i.test(o.e.loaiHD||'')?'HĐTV':'HĐLĐ';
     var badge=o.days<0?('Quá hạn '+(-o.days)+'d'):(o.days+' ngày');
     var c=(o.days<=14)?['#faece7','#993c1d']:['#faeeda','#854f0b'];
     return '<div style="display:flex;align-items:center;gap:8px;font-size:12.5px;margin-bottom:10px;"><span style="font-size:10px;font-weight:500;color:#0c447c;background:#e6f1fb;padding:2px 7px;border-radius:20px;white-space:nowrap;">'+loai+'</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+o.e.ten+'</span><span style="color:#94a3b8;white-space:nowrap;">'+o.e.hetHan.slice(0,5)+'</span><span style="font-size:10px;font-weight:500;color:'+c[1]+';background:'+c[0]+';padding:2px 8px;border-radius:20px;white-space:nowrap;">'+badge+'</span></div>';
