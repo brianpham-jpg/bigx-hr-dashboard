@@ -958,6 +958,22 @@ function tqEmptyBlock(title,icon,accent){
   </div>`;
 }
 
+function tqBirthdays(){
+  var empty='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;height:96px;color:#94a3b8;font-size:12.5px;"><i class="ti ti-cake" style="font-size:26px;color:#e2e8f0;"></i>Không có sinh nhật tháng này / tháng sau</div>';
+  if(typeof HS_DATA==='undefined') return empty;
+  var now=new Date(), cm=now.getMonth(), nm=(cm+1)%12, today=now.getDate();
+  var mn=['Tháng 1','Tháng 2','Tháng 3','Tháng 4','Tháng 5','Tháng 6','Tháng 7','Tháng 8','Tháng 9','Tháng 10','Tháng 11','Tháng 12'];
+  var arr=HS_DATA.filter(function(e){return e.ns && !/ngh/i.test(e.tt||'');}).map(function(e){var d=hsPD(e.ns); return d?{e:e,m:d.getMonth(),d:d.getDate()}:null;}).filter(function(o){return o && (o.m===cm||o.m===nm);});
+  if(!arr.length) return empty;
+  arr.sort(function(a,b){ var ma=(a.m-cm+12)%12, mb=(b.m-cm+12)%12; return ma-mb || a.d-b.d; });
+  var html='', lastM=-1;
+  arr.forEach(function(o){
+    if(o.m!==lastM){ html+='<div style="font-size:11px;color:#94a3b8;font-weight:600;margin:10px 0 4px;">'+mn[o.m]+(o.m===cm?' (tháng này)':'')+'</div>'; lastM=o.m; }
+    var soon=(o.m===cm && o.d>=today);
+    html+='<div style="display:flex;align-items:center;gap:10px;font-size:12.5px;margin-bottom:8px;">'+hsImg(o.e,28)+'<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+o.e.ten+'</span><span style="font-size:10px;font-weight:500;color:#993556;background:#fbeaf0;padding:2px 8px;border-radius:20px;white-space:nowrap;">'+String(o.d).padStart(2,'0')+'/'+String(o.m+1).padStart(2,'0')+(soon?' · sắp tới':'')+'</span></div>';
+  });
+  return html;
+}
 function renderTongQuan(){
   const C=document.getElementById('content'); if(!C) return;
   const cvs=(rawData&&rawData.cv)||[], viTri=(rawData&&rawData.viTri)||[];
@@ -1002,7 +1018,7 @@ function renderTongQuan(){
     ${kpi('Task đang chạy',taskDataLoaded?runCount:'—','ti-checklist','#faeeda','#854f0b','#633806','#412402')}
   </div>
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-bottom:16px;">
-    ${tqEmptyBlock('Sinh nhật sắp tới','ti-cake','#d4537e')}
+    <div style="background:#fff;border:0.5px solid #e2e8f0;border-radius:12px;padding:1rem 1.25rem;"><div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;"><i class="ti ti-cake" style="color:#d4537e;font-size:18px;"></i><span style="font-size:14px;font-weight:500;color:#1e293b;">Sinh nhật sắp tới</span></div>${tqBirthdays()}</div>
     ${tqEmptyBlock('Sắp hết hạn hợp đồng','ti-file-alert','#d85a30')}
   </div>
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-bottom:16px;">
