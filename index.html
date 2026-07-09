@@ -961,11 +961,18 @@ function tqEmptyBlock(title,icon,accent){
 function tqDept(){
   var empty='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;height:96px;color:#94a3b8;font-size:12.5px;"><i class="ti ti-database-off" style="font-size:26px;color:#e2e8f0;"></i>Chưa có dữ liệu</div>';
   if(typeof HS_DATA==='undefined') return empty;
-  var g={}; HS_DATA.forEach(function(e){ if(/ngh/i.test(e.tt||'')) return; var k=e.pb||'Khác'; g[k]=(g[k]||0)+1; });
+  var g={}; HS_DATA.forEach(function(e){ if(/ngh/i.test(e.tt||'')) return; if(String(e.pb||'').toUpperCase()==='GIÁM ĐỐC') return; var k=e.pb||'Khác'; g[k]=(g[k]||0)+1; });
   var arr=Object.keys(g).map(function(k){return {k:k,n:g[k]};}); if(!arr.length) return empty;
   arr.sort(function(a,b){return b.n-a.n;});
   var mx=Math.max.apply(null,arr.map(function(o){return o.n;}));
   return arr.map(function(o){var c=hsDC(o.k);return '<div style="display:flex;align-items:center;gap:8px;font-size:12px;margin-bottom:7px;"><span style="width:92px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+o.k+'</span><div style="flex:1;height:8px;background:#f1f5f9;border-radius:20px;"><div style="width:'+Math.round(o.n/mx*100)+'%;height:8px;background:'+c[1]+';border-radius:20px;"></div></div><span style="width:20px;text-align:right;">'+o.n+'</span></div>';}).join('');
+}
+function tqBoard(){
+  var empty='<div style="display:flex;align-items:center;justify-content:center;height:96px;color:#94a3b8;font-size:12.5px;">Chưa có dữ liệu</div>';
+  if(typeof HS_DATA==='undefined') return empty;
+  var arr=HS_DATA.filter(function(e){return String(e.pb||'').toUpperCase()==='GIÁM ĐỐC' && !/ngh/i.test(e.tt||'');});
+  if(!arr.length) return empty;
+  return arr.map(function(e){return '<div style="display:flex;align-items:center;gap:10px;font-size:12.5px;margin-bottom:10px;">'+hsImg(e,34)+'<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><b style="font-weight:600;">'+e.ten+'</b></span><span style="font-size:10px;font-weight:600;color:#5b21b6;background:#eeedfe;padding:2px 10px;border-radius:20px;white-space:nowrap;">'+(e.vt||'')+'</span></div>';}).join('');
 }
 function tqContracts(){
   var empty='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;height:96px;color:#94a3b8;font-size:12.5px;"><i class="ti ti-file-check" style="font-size:26px;color:#e2e8f0;"></i>Không có hợp đồng sắp hết hạn</div>';
@@ -1050,7 +1057,7 @@ function renderTongQuan(){
   </div>
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-bottom:16px;">
     <div style="background:#fff;border:0.5px solid #e2e8f0;border-radius:12px;padding:1rem 1.25rem;"><div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;"><i class="ti ti-building" style="color:#1d9e75;font-size:18px;"></i><span style="font-size:14px;font-weight:500;color:#1e293b;">Nhân sự theo phòng ban</span></div>${tqDept()}</div>
-    <div></div>
+    <div style="background:#fff;border:0.5px solid #e2e8f0;border-radius:12px;padding:1rem 1.25rem;"><div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;"><i class="ti ti-crown" style="color:#5b21b6;font-size:18px;"></i><span style="font-size:14px;font-weight:500;color:#1e293b;">Ban giám đốc</span></div>${tqBoard()}</div>
   </div>
   <div style="background:#fff;border:0.5px solid #e2e8f0;border-radius:12px;padding:1rem 1.25rem;">
     <div style="font-size:14px;font-weight:500;color:#1e293b;margin-bottom:12px;">Truy cập nhanh</div>
