@@ -1986,6 +1986,7 @@ const qdDocs=[
     tag:'C&B',tagBg:'#fff7ed',tagColor:'#c2410c',
     icon:'ti-coin',iconBg:'#fff7ed',iconColor:'#f97316',
     updated:'01/09/2023',applyTo:'Toàn thể NLĐ theo HĐLĐ chính thức',
+    docUrl:'https://docs.google.com/document/d/1Nsr9NNwdbBmY3Blej2tcPxg-NZVBxyjS/edit',docLabel:'Xem file gốc',
     sections:[
       {id:'d1',num:'Điều 1',title:'Đối tượng áp dụng',icon:'ti-users',iconBg:'#eff6ff',iconColor:'#3b82f6',badgeBg:'#eff6ff',badgeColor:'#1d4ed8',badge:'Phạm vi',
        items:['Toàn bộ NLĐ làm việc theo <b>HĐLĐ chính thức</b> (xác định và không xác định thời hạn) tại Công ty Bigx.','Không áp dụng cho hợp đồng học việc và thử việc.']},
@@ -2143,7 +2144,7 @@ function renderQuyDinh(){
       <div class="qt-back" onclick="qdBack()"><i class="ti ti-arrow-left"></i>Quay lại danh sách</div>
       <div class="qt-detail-title">${doc.title}</div>
       <div class="qt-detail-sub">${doc.sections.length>0?doc.sections.length+' mục · '+doc.applyTo+' · Cập nhật: '+doc.updated:doc.applyTo+' · Chưa có nội dung'}</div>
-      ${doc.docUrl?`<a href="${doc.docUrl}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;margin:2px 0 14px;padding:7px 14px;background:#ede9fe;color:#5b21b6;font-size:12.5px;font-weight:600;border-radius:8px;text-decoration:none;"><i class="ti ti-file-text"></i>Xem file gốc (PDF)</a>`:''}
+      ${doc.docUrl?`<a href="${doc.docUrl}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;margin:2px 0 14px;padding:7px 14px;background:#ede9fe;color:#5b21b6;font-size:12.5px;font-weight:600;border-radius:8px;text-decoration:none;"><i class="ti ti-file-text"></i>${doc.docLabel||'Xem file gốc (PDF)'}</a>`:''}
       <div>${detailContent}</div>
     </div>`;
     return;
