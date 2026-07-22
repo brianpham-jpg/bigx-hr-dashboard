@@ -638,7 +638,7 @@ async function loadData(){
 
 /* ─── RENDER ─── */
 function render(){
-  const cvs=rawData.cv||[], viTri=rawData.viTri||[];
+  const cvs=rawData.cvs||[], viTri=rawData.positions||[];
   const fCVs=applyFilter(cvs);
   const pCVs=applyPrevFilter(cvs);
 
@@ -1012,7 +1012,7 @@ function tqBirthdays(){
 }
 function renderTongQuan(){
   const C=document.getElementById('content'); if(!C) return;
-  const cvs=(rawData&&rawData.cv)||[], viTri=(rawData&&rawData.viTri)||[];
+  const cvs=(rawData&&rawData.cvs)||[], viTri=(rawData&&rawData.positions)||[];
   const now=new Date();
   const cvThisMonth=cvs.filter(c=>{ const d=parseDate(c['NGAY']); return d&&d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear(); }).length;
   const open=viTri.filter(v=>v['Trang Thai']==='Đang mở').length;
