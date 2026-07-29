@@ -2414,16 +2414,25 @@ function renderCalendar(){
 var khoState={q:'',pos:'',status:''};
 function _khoActive(){var e=document.getElementById('nav-khocv');return !!(e&&e.classList.contains('active'));}
 function khoEsc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function khoParse(s){ if(!s) return null; var p=String(s).trim().split('/'); if(p.length<3) return null; var d=+p[0],m=+p[1],y=+p[2]; if(!d||!m||!y) return null; var dt=new Date(y,m-1,d); return isNaN(dt)?null:dt; }
 function khoSetPos(i){khoState.pos=(i<0)?'':(window._khoPos[i]||'');renderKhoCV();}
 function khoSetStatus(v){khoState.status=(khoState.status===v)?'':v;renderKhoCV();}
-function khoFinalTag(f){
-  f=(f||'').trim();
-  if(f==='TRÚNG TUYỂN') return '<span style="font-size:9px;font-weight:500;padding:2px 8px;border-radius:20px;background:#E1F5EE;color:#0F6E56;">Trúng tuyển</span>';
-  if(f==='TỪ CHỐI OFFER') return '<span style="font-size:9px;font-weight:500;padding:2px 8px;border-radius:20px;background:#FAEEDA;color:#854F0B;">Từ chối offer</span>';
-  if(f==='FAIL') return '<span style="font-size:9px;font-weight:500;padding:2px 8px;border-radius:20px;background:#f1f5f9;color:#64748b;">Trượt</span>';
-  if(f) return '<span style="font-size:9px;font-weight:500;padding:2px 8px;border-radius:20px;background:#f1f5f9;color:#64748b;">'+khoEsc(f)+'</span>';
-  return '<span style="font-size:9px;font-weight:500;padding:2px 8px;border-radius:20px;background:#eff6ff;color:#1d4ed8;">Đang xử lý</span>';
+/* Suy ra ket qua: FINAL co san -> dung; FINAL trong -> theo ngay PV */
+function khoDerive(c){
+  var f=(c['FINAL']||'').trim();
+  if(f==='TRÚNG TUYỂN') return {k:'hired',label:'Trúng tuyển',bg:'#E1F5EE',fg:'#0F6E56'};
+  if(f==='TỪ CHỐI OFFER') return {k:'rejected',label:'Từ chối offer',bg:'#FAEEDA',fg:'#854F0B'};
+  if(f==='FAIL') return {k:'rejected',label:'Trượt',bg:'#f1f5f9',fg:'#64748b'};
+  if(f) return {k:'other',label:f,bg:'#f1f5f9',fg:'#64748b'};
+  var pv=khoParse(c['NGAY LICH PV']);
+  var today=new Date(); today.setHours(0,0,0,0);
+  if(pv){
+    if(pv.getTime()<today.getTime()) return {k:'rejected',label:'Trượt',bg:'#f1f5f9',fg:'#64748b'};
+    return {k:'waiting',label:'Đang đợi kết quả',bg:'#fff7ed',fg:'#c2410c'};
+  }
+  return {k:'processing',label:'Chưa xử lý',bg:'#eff6ff',fg:'#1d4ed8'};
 }
+function khoStatusTag(c){ var d=khoDerive(c); return '<span style="font-size:9px;font-weight:500;padding:2px 8px;border-radius:20px;background:'+d.bg+';color:'+d.fg+';">'+khoEsc(d.label)+'</span>'; }
 function khoDot(v){
   v=(v||'').trim().toUpperCase();
   if(v==='PASS') return '<i class="ti ti-circle-check" style="color:#22c55e;font-size:14px;"></i>';
@@ -2436,12 +2445,7 @@ function khoFilteredCVs(){
   var q=(khoState.q||'').trim().toLowerCase();
   return cvs.filter(function(c){
     if(khoState.pos && (c['VI TRI']||'').trim()!==khoState.pos) return false;
-    if(khoState.status){
-      var f=(c['FINAL']||'').trim();
-      if(khoState.status==='hired' && f!=='TRÚNG TUYỂN') return false;
-      if(khoState.status==='processing' && f) return false;
-      if(khoState.status==='rejected' && !(f==='FAIL'||f==='TỪ CHỐI OFFER')) return false;
-    }
+    if(khoState.status && khoDerive(c).k!==khoState.status) return false;
     if(q){
       var hay=((c['HO VA TEN']||'')+' '+(c['MAIL']||'')+' '+(c['VI TRI']||'')).toLowerCase();
       if(hay.indexOf(q)<0) return false;
@@ -2468,7 +2472,7 @@ function khoRenderRows(){
       '<td style="padding:8px 10px;border-bottom:1px solid #f1f5f9;font-size:11px;color:#64748b;white-space:nowrap;">'+khoEsc(c['NGAY']||'—')+'</td>'+
       '<td style="padding:8px 10px;border-bottom:1px solid #f1f5f9;text-align:center;">'+khoDot(c['KET QUA R1'])+'</td>'+
       '<td style="padding:8px 10px;border-bottom:1px solid #f1f5f9;text-align:center;">'+khoDot(c['KET QUA R2'])+'</td>'+
-      '<td style="padding:8px 10px;border-bottom:1px solid #f1f5f9;">'+khoFinalTag(c['FINAL'])+'</td>'+
+      '<td style="padding:8px 10px;border-bottom:1px solid #f1f5f9;">'+khoStatusTag(c)+'</td>'+
       '<td style="padding:8px 10px;border-bottom:1px solid #f1f5f9;text-align:center;">'+cvcell+'</td>'+
     '</tr>';
   }).join('');
@@ -2480,8 +2484,8 @@ function renderKhoCV(){
   var cvs=(rawData&&rawData.cvs)||[];
   if(!cvs.length){ document.getElementById('content').innerHTML='<div class="loading"><i class="ti ti-loader"></i>Đang tải dữ liệu...</div>'; return; }
   var total=cvs.length;
-  var hired=cvs.filter(function(c){return (c['FINAL']||'').trim()==='TRÚNG TUYỂN';}).length;
-  var processing=cvs.filter(function(c){return !((c['FINAL']||'').trim());}).length;
+  var hired=0, waiting=0;
+  cvs.forEach(function(c){ var k=khoDerive(c).k; if(k==='hired') hired++; else if(k==='waiting') waiting++; });
   var posSet={}; cvs.forEach(function(c){var v=(c['VI TRI']||'').trim(); if(v) posSet[v]=(posSet[v]||0)+1;});
   var posNames=Object.keys(posSet).sort(function(a,b){return posSet[b]-posSet[a];});
   window._khoPos=posNames;
@@ -2492,12 +2496,12 @@ function renderKhoCV(){
     '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;">'+
       khoStat('Tổng CV', total, '#1e293b')+
       khoStat('Trúng tuyển', hired, '#16a34a')+
-      khoStat('Đang xử lý', processing, '#2563eb')+
+      khoStat('Đang đợi KQ', waiting, '#c2410c')+
       khoStat('Số vị trí', posNames.length, '#5b21b6')+
     '</div>'+
     '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;">'+
       '<div style="flex:1;min-width:180px;display:flex;align-items:center;gap:7px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:7px 11px;"><i class="ti ti-search" style="font-size:14px;color:#94a3b8;"></i><input id="kho-search" oninput="khoState.q=this.value;khoRenderRows()" value="'+khoEsc(khoState.q)+'" placeholder="Tìm theo tên, email, vị trí" style="border:none;outline:none;background:none;font-size:12px;color:#334155;flex:1;font-family:inherit;"></div>'+
-      stChip('hired','Trúng tuyển')+stChip('processing','Đang xử lý')+stChip('rejected','Trượt / Từ chối')+
+      stChip('hired','Trúng tuyển')+stChip('waiting','Đang đợi KQ')+stChip('rejected','Trượt / Từ chối')+stChip('processing','Chưa xử lý')+
     '</div>'+
     '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">'+posChips+'</div>'+
     '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;">'+
@@ -2513,7 +2517,7 @@ function renderKhoCV(){
           '<th style="font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:.4px;padding:8px 10px;text-align:center;border-bottom:1px solid #f1f5f9;">CV</th>'+
         '</tr></thead><tbody id="kho-tbody"></tbody></table></div>'+
     '</div>'+
-    '<div style="font-size:10px;color:#94a3b8;margin-top:8px;">R1 / R2: <i class="ti ti-circle-check" style="color:#22c55e;font-size:12px;vertical-align:-2px;"></i> pass · <i class="ti ti-circle-x" style="color:#ef4444;font-size:12px;vertical-align:-2px;"></i> fail · <i class="ti ti-minus" style="color:#cbd5e1;font-size:12px;vertical-align:-2px;"></i> chưa có. Chỉ đọc — dữ liệu từ Sheet.</div>';
+    '<div style="font-size:10px;color:#94a3b8;margin-top:8px;">Kết quả tự suy: đã qua ngày PV mà chưa có kết quả = Trượt · chưa tới ngày PV = Đang đợi. R1/R2: <i class="ti ti-circle-check" style="color:#22c55e;font-size:12px;vertical-align:-2px;"></i> pass · <i class="ti ti-circle-x" style="color:#ef4444;font-size:12px;vertical-align:-2px;"></i> fail · <i class="ti ti-minus" style="color:#cbd5e1;font-size:12px;vertical-align:-2px;"></i> chưa có. Chỉ đọc — dữ liệu từ Sheet.</div>';
   document.getElementById('content').innerHTML=html;
   khoRenderRows();
 }
