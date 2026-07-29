@@ -32,6 +32,7 @@ nav{flex:1;padding:8px 0;}
 .nav-sub{padding:5px 12px 5px 36px;cursor:pointer;display:flex;align-items:center;gap:7px;font-size:11px;color:#b6a7de;border-radius:6px;margin:1px 8px;}
 .nav-sub:hover{background:rgba(255,255,255,.08);color:#fff;}
 .nav-sub i{font-size:13px;}
+.nav-sub.active{background:rgba(255,255,255,.18);color:#fff;font-weight:500;}
 
 .sb-footer{padding:12px 14px;border-top:1px solid rgba(255,255,255,.12);display:flex;align-items:center;gap:9px;flex-shrink:0;}
 .avatar{width:30px;height:30px;background:rgba(255,255,255,.18);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#fff;flex-shrink:0;}
@@ -452,6 +453,7 @@ nav{flex:1;padding:8px 0;}
     <div class="nav-sub" id="nav-qd" onclick="nav('quy-dinh')"><i class="ti ti-book"></i>Quy định</div>
     <div class="nav-sub" id="nav-qt" onclick="nav('quy-trinh')"><i class="ti ti-arrow-guide"></i>Quy trình</div>
     <div class="nav-item" id="nav-td" onclick="nav('tuyen-dung')"><i class="ti ti-file-description"></i>Tuyển dụng</div>
+    <div class="nav-sub" id="nav-khocv" onclick="nav('kho-cv')"><i class="ti ti-folder"></i>Kho CV</div>
     <div class="nav-item" onclick="nav('coming')"><i class="ti ti-file-certificate"></i>Hợp đồng nhân sự</div>
     <div class="nav-sub" onclick="nav('form-hd')"><i class="ti ti-template"></i>Form mẫu HĐ BigX</div>
     <div class="nav-item" id="nav-cv" onclick="nav('cong-viec')"><i class="ti ti-checklist"></i>Công việc nhân sự</div>
@@ -610,7 +612,7 @@ async function loadData(){
   if(cached){
     try{
       rawData=JSON.parse(cached);
-      if(document.getElementById('nav-td').classList.contains('active')) render();
+      if(document.getElementById('nav-td').classList.contains('active')) render(); if(_khoActive()) renderKhoCV();
       document.getElementById('uptime').textContent='Đang làm mới...';
     }catch(_){}
   } else {
@@ -623,7 +625,7 @@ async function loadData(){
     rawData=await r.json();
     localStorage.setItem(CACHE_KEY,JSON.stringify(rawData));
     document.getElementById('uptime').textContent='Cập nhật: '+new Date().toLocaleTimeString('vi-VN');
-    if(document.getElementById('nav-td').classList.contains('active')) render();
+    if(document.getElementById('nav-td').classList.contains('active')) render(); if(_khoActive()) renderKhoCV();
     /* Nếu đang ở tab Công việc thì fetch task data riêng */
     if(document.getElementById('nav-cv').classList.contains('active')){
       loadTaskData();
@@ -858,7 +860,7 @@ function render(){
 }
 
 function nav(v){
-  document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('active'));
+  document.querySelectorAll('.nav-item,.nav-sub').forEach(e=>e.classList.remove('active'));
   const fb=document.getElementById('filter-bar');
   if(v==='coming'){
     document.getElementById('topbar-left').innerHTML='<i class="ti ti-tools"></i> Dashboard <span class="live-tag">● Live</span>';
@@ -871,6 +873,13 @@ function nav(v){
     document.getElementById('topbar-left').innerHTML='<i class="ti ti-file-description"></i> Tuyển dụng <span class="live-tag">● Live</span>';
     fb.classList.remove('hidden');
     if(rawData) render(); else loadData();
+    return;
+  }
+  if(v==='kho-cv'){
+    document.getElementById('nav-khocv').classList.add('active');
+    document.getElementById('topbar-left').innerHTML='<i class="ti ti-folder"></i> Kho CV <span class="live-tag">● Live</span>';
+    fb.classList.add('hidden');
+    loadKhoCV();
     return;
   }
   if(v==='so-do'){
@@ -2397,6 +2406,123 @@ function renderCalendar(){
     </div>
     <div class="cal-up">${ups}</div>
   </div>`;
+}
+
+/* ==========================================================
+   KHO CV — tab con cua Tuyen dung (chi doc, doc rawData.cvs)
+========================================================== */
+var khoState={q:'',pos:'',status:''};
+function _khoActive(){var e=document.getElementById('nav-khocv');return !!(e&&e.classList.contains('active'));}
+function khoEsc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function khoSetPos(i){khoState.pos=(i<0)?'':(window._khoPos[i]||'');renderKhoCV();}
+function khoSetStatus(v){khoState.status=(khoState.status===v)?'':v;renderKhoCV();}
+function khoFinalTag(f){
+  f=(f||'').trim();
+  if(f==='TRÚNG TUYỂN') return '<span style="font-size:9px;font-weight:500;padding:2px 8px;border-radius:20px;background:#E1F5EE;color:#0F6E56;">Trúng tuyển</span>';
+  if(f==='TỪ CHỐI OFFER') return '<span style="font-size:9px;font-weight:500;padding:2px 8px;border-radius:20px;background:#FAEEDA;color:#854F0B;">Từ chối offer</span>';
+  if(f==='FAIL') return '<span style="font-size:9px;font-weight:500;padding:2px 8px;border-radius:20px;background:#f1f5f9;color:#64748b;">Trượt</span>';
+  if(f) return '<span style="font-size:9px;font-weight:500;padding:2px 8px;border-radius:20px;background:#f1f5f9;color:#64748b;">'+khoEsc(f)+'</span>';
+  return '<span style="font-size:9px;font-weight:500;padding:2px 8px;border-radius:20px;background:#eff6ff;color:#1d4ed8;">Đang xử lý</span>';
+}
+function khoDot(v){
+  v=(v||'').trim().toUpperCase();
+  if(v==='PASS') return '<i class="ti ti-circle-check" style="color:#22c55e;font-size:14px;"></i>';
+  if(v==='FAIL') return '<i class="ti ti-circle-x" style="color:#ef4444;font-size:14px;"></i>';
+  if(v) return '<i class="ti ti-circle-dot" style="color:#f59e0b;font-size:14px;"></i>';
+  return '<i class="ti ti-minus" style="color:#cbd5e1;font-size:14px;"></i>';
+}
+function khoFilteredCVs(){
+  var cvs=(rawData&&rawData.cvs)||[];
+  var q=(khoState.q||'').trim().toLowerCase();
+  return cvs.filter(function(c){
+    if(khoState.pos && (c['VI TRI']||'').trim()!==khoState.pos) return false;
+    if(khoState.status){
+      var f=(c['FINAL']||'').trim();
+      if(khoState.status==='hired' && f!=='TRÚNG TUYỂN') return false;
+      if(khoState.status==='processing' && f) return false;
+      if(khoState.status==='rejected' && !(f==='FAIL'||f==='TỪ CHỐI OFFER')) return false;
+    }
+    if(q){
+      var hay=((c['HO VA TEN']||'')+' '+(c['MAIL']||'')+' '+(c['VI TRI']||'')).toLowerCase();
+      if(hay.indexOf(q)<0) return false;
+    }
+    return true;
+  });
+}
+function khoRenderRows(){
+  var rows=khoFilteredCVs();
+  var cnt=document.getElementById('kho-count'); if(cnt) cnt.textContent=rows.length+' hồ sơ';
+  var tb=document.getElementById('kho-tbody'); if(!tb) return;
+  if(!rows.length){ tb.innerHTML='<tr><td colspan="7" style="padding:22px;text-align:center;color:#94a3b8;font-size:12px;">Không có CV phù hợp</td></tr>'; return; }
+  tb.innerHTML=rows.map(function(c){
+    var name=khoEsc(c['HO VA TEN']||'—');
+    var mail=(c['MAIL']||'').trim();
+    var parts=(c['HO VA TEN']||'?').trim().split(/\s+/);
+    var init=parts.slice(-2).map(function(w){return (w&&w[0])?w[0]:'';}).join('').toUpperCase();
+    var cvlink=(c['CV']||'').trim();
+    var cvcell=/^https?:\/\//.test(cvlink)?('<a href="'+khoEsc(cvlink)+'" target="_blank" rel="noopener" style="color:#5b21b6;"><i class="ti ti-external-link" style="font-size:14px;"></i></a>'):'<span style="color:#cbd5e1;">—</span>';
+    var mailcell=mail?khoEsc(mail):'<span style="color:#f59e0b;">thiếu email</span>';
+    return '<tr>'+
+      '<td style="padding:8px 10px;border-bottom:1px solid #f1f5f9;"><div style="display:flex;align-items:center;gap:8px;"><span style="width:26px;height:26px;border-radius:6px;background:#ede9fe;color:#5b21b6;display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;flex-shrink:0;">'+khoEsc(init||'?')+'</span><div style="min-width:0;"><div style="font-size:11.5px;color:#1e293b;">'+name+'</div><div style="font-size:10px;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:170px;">'+mailcell+'</div></div></div></td>'+
+      '<td style="padding:8px 10px;border-bottom:1px solid #f1f5f9;font-size:11px;color:#475569;">'+khoEsc(c['VI TRI']||'—')+'</td>'+
+      '<td style="padding:8px 10px;border-bottom:1px solid #f1f5f9;font-size:11px;color:#64748b;white-space:nowrap;">'+khoEsc(c['NGAY']||'—')+'</td>'+
+      '<td style="padding:8px 10px;border-bottom:1px solid #f1f5f9;text-align:center;">'+khoDot(c['KET QUA R1'])+'</td>'+
+      '<td style="padding:8px 10px;border-bottom:1px solid #f1f5f9;text-align:center;">'+khoDot(c['KET QUA R2'])+'</td>'+
+      '<td style="padding:8px 10px;border-bottom:1px solid #f1f5f9;">'+khoFinalTag(c['FINAL'])+'</td>'+
+      '<td style="padding:8px 10px;border-bottom:1px solid #f1f5f9;text-align:center;">'+cvcell+'</td>'+
+    '</tr>';
+  }).join('');
+}
+function khoStat(lbl,val,color){
+  return '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:11px 14px;"><div style="font-size:9px;color:#94a3b8;text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px;">'+lbl+'</div><div style="font-size:22px;font-weight:600;line-height:1;color:'+color+';">'+val+'</div></div>';
+}
+function renderKhoCV(){
+  var cvs=(rawData&&rawData.cvs)||[];
+  if(!cvs.length){ document.getElementById('content').innerHTML='<div class="loading"><i class="ti ti-loader"></i>Đang tải dữ liệu...</div>'; return; }
+  var total=cvs.length;
+  var hired=cvs.filter(function(c){return (c['FINAL']||'').trim()==='TRÚNG TUYỂN';}).length;
+  var processing=cvs.filter(function(c){return !((c['FINAL']||'').trim());}).length;
+  var posSet={}; cvs.forEach(function(c){var v=(c['VI TRI']||'').trim(); if(v) posSet[v]=(posSet[v]||0)+1;});
+  var posNames=Object.keys(posSet).sort(function(a,b){return posSet[b]-posSet[a];});
+  window._khoPos=posNames;
+  var posChips='<span onclick="khoSetPos(-1)" style="cursor:pointer;font-size:10px;padding:4px 11px;border-radius:20px;border:1px solid '+(khoState.pos===''?'#5b21b6':'#e2e8f0')+';background:'+(khoState.pos===''?'#ede9fe':'#fff')+';color:'+(khoState.pos===''?'#5b21b6':'#64748b')+';">Tất cả vị trí</span>';
+  posNames.forEach(function(p,i){ posChips+='<span onclick="khoSetPos('+i+')" style="cursor:pointer;font-size:10px;padding:4px 11px;border-radius:20px;border:1px solid '+(khoState.pos===p?'#5b21b6':'#e2e8f0')+';background:'+(khoState.pos===p?'#ede9fe':'#fff')+';color:'+(khoState.pos===p?'#5b21b6':'#64748b')+';">'+khoEsc(p)+' ('+posSet[p]+')</span>'; });
+  var stChip=function(v,lbl){ return '<span onclick="khoSetStatus(\''+v+'\')" style="cursor:pointer;font-size:10px;padding:4px 11px;border-radius:20px;border:1px solid '+(khoState.status===v?'#5b21b6':'#e2e8f0')+';background:'+(khoState.status===v?'#ede9fe':'#fff')+';color:'+(khoState.status===v?'#5b21b6':'#64748b')+';">'+lbl+'</span>'; };
+  var html=''+
+    '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;">'+
+      khoStat('Tổng CV', total, '#1e293b')+
+      khoStat('Trúng tuyển', hired, '#16a34a')+
+      khoStat('Đang xử lý', processing, '#2563eb')+
+      khoStat('Số vị trí', posNames.length, '#5b21b6')+
+    '</div>'+
+    '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;">'+
+      '<div style="flex:1;min-width:180px;display:flex;align-items:center;gap:7px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:7px 11px;"><i class="ti ti-search" style="font-size:14px;color:#94a3b8;"></i><input id="kho-search" oninput="khoState.q=this.value;khoRenderRows()" value="'+khoEsc(khoState.q)+'" placeholder="Tìm theo tên, email, vị trí" style="border:none;outline:none;background:none;font-size:12px;color:#334155;flex:1;font-family:inherit;"></div>'+
+      stChip('hired','Trúng tuyển')+stChip('processing','Đang xử lý')+stChip('rejected','Trượt / Từ chối')+
+    '</div>'+
+    '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">'+posChips+'</div>'+
+    '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;">'+
+      '<div style="padding:9px 14px;border-bottom:1px solid #f1f5f9;background:#fafafa;display:flex;align-items:center;justify-content:space-between;"><span style="font-size:11px;font-weight:600;color:#334155;display:flex;align-items:center;gap:7px;"><i class="ti ti-folder" style="font-size:14px;color:#5b21b6;"></i>Kho CV</span><span id="kho-count" style="font-size:10px;padding:2px 9px;border-radius:20px;background:#ede9fe;color:#5b21b6;font-weight:500;">'+total+' hồ sơ</span></div>'+
+      '<div style="overflow-x:auto;"><table style="width:100%;min-width:640px;border-collapse:collapse;">'+
+        '<thead><tr style="background:#fff;">'+
+          '<th style="font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:.4px;padding:8px 10px;text-align:left;border-bottom:1px solid #f1f5f9;">Ứng viên</th>'+
+          '<th style="font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:.4px;padding:8px 10px;text-align:left;border-bottom:1px solid #f1f5f9;">Vị trí</th>'+
+          '<th style="font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:.4px;padding:8px 10px;text-align:left;border-bottom:1px solid #f1f5f9;">Ngày nộp</th>'+
+          '<th style="font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:.4px;padding:8px 10px;text-align:center;border-bottom:1px solid #f1f5f9;">R1</th>'+
+          '<th style="font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:.4px;padding:8px 10px;text-align:center;border-bottom:1px solid #f1f5f9;">R2</th>'+
+          '<th style="font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:.4px;padding:8px 10px;text-align:left;border-bottom:1px solid #f1f5f9;">Kết quả</th>'+
+          '<th style="font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:.4px;padding:8px 10px;text-align:center;border-bottom:1px solid #f1f5f9;">CV</th>'+
+        '</tr></thead><tbody id="kho-tbody"></tbody></table></div>'+
+    '</div>'+
+    '<div style="font-size:10px;color:#94a3b8;margin-top:8px;">R1 / R2: <i class="ti ti-circle-check" style="color:#22c55e;font-size:12px;vertical-align:-2px;"></i> pass · <i class="ti ti-circle-x" style="color:#ef4444;font-size:12px;vertical-align:-2px;"></i> fail · <i class="ti ti-minus" style="color:#cbd5e1;font-size:12px;vertical-align:-2px;"></i> chưa có. Chỉ đọc — dữ liệu từ Sheet.</div>';
+  document.getElementById('content').innerHTML=html;
+  khoRenderRows();
+}
+async function loadKhoCV(){
+  if(rawData){ renderKhoCV(); return; }
+  try{ var c=localStorage.getItem(CACHE_KEY); if(c){ rawData=JSON.parse(c); renderKhoCV(); } }catch(_){}
+  if(!rawData){ document.getElementById('content').innerHTML='<div class="loading"><i class="ti ti-loader"></i>Đang tải dữ liệu...</div>'; }
+  try{ var r=await fetch(API); rawData=await r.json(); localStorage.setItem(CACHE_KEY,JSON.stringify(rawData)); if(_khoActive()) renderKhoCV(); }
+  catch(e){ if(!rawData){ document.getElementById('content').innerHTML='<div class="error-msg"><i class="ti ti-wifi-off"></i>Lỗi kết nối API</div>'; } }
 }
 
 /* init */
