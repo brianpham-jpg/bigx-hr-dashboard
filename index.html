@@ -2480,6 +2480,91 @@ function khoRenderRows(){
 function khoStat(lbl,val,color){
   return '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:11px 14px;"><div style="font-size:9px;color:#94a3b8;text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px;">'+lbl+'</div><div style="font-size:22px;font-weight:600;line-height:1;color:'+color+';">'+val+'</div></div>';
 }
+var khoExtracted=[];
+function khoGetKey(){ try{ return localStorage.getItem('bigx_gemini_key')||''; }catch(_){ return ''; } }
+function khoSaveKey(){ var el=document.getElementById('kho-key-input'); if(el){ var v=el.value.trim(); if(v){ try{ localStorage.setItem('bigx_gemini_key',v); }catch(_){}}} khoState._keybar=false; renderKhoCV(); }
+function khoClearKey(){ try{ localStorage.removeItem('bigx_gemini_key'); }catch(_){} renderKhoCV(); }
+function khoToggleKeyBar(){ khoState._keybar=!khoState._keybar; renderKhoCV(); }
+function khoTriggerFile(){ var f=document.getElementById('kho-file'); if(f) f.click(); }
+function khoFileToB64(file){ return new Promise(function(res,rej){ var fr=new FileReader(); fr.onload=function(){ var s=String(fr.result||''); var i=s.indexOf(','); res(i>=0?s.substring(i+1):s); }; fr.onerror=function(){ rej(new Error('Không đọc được file')); }; fr.readAsDataURL(file); }); }
+async function khoCallGemini(b64,key){
+  var url='https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key='+encodeURIComponent(key);
+  var prompt='Bạn là trợ lý HR. Đọc kỹ CV (PDF) và trích xuất thông tin ứng viên. Chỉ trả về DUY NHẤT một JSON object, không kèm markdown hay giải thích, với các khóa: ho_ten, gioi_tinh, email, sdt, vi_tri, kinh_nghiem, ngay_sinh. Quy tắc: gioi_tinh chỉ nhận "Nam" hoặc "Nữ"; nếu CV KHÔNG ghi rõ giới tính thì để chuỗi rỗng (đừng suy đoán). kinh_nghiem tóm tắt ngắn 1 câu về số năm và vị trí chính. Trường nào không có thì để chuỗi rỗng.';
+  var body={ contents:[{ parts:[ {inline_data:{mime_type:'application/pdf',data:b64}}, {text:prompt} ] }], generationConfig:{ temperature:0, responseMimeType:'application/json' } };
+  var r=await fetch(url,{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+  var j=await r.json();
+  if(j && j.error) throw new Error(j.error.message||('HTTP '+r.status));
+  var cand=(j.candidates||[])[0]||{};
+  var parts=((cand.content||{}).parts)||[];
+  var txt=parts.map(function(p){return p.text||'';}).join('').trim();
+  if(!txt) throw new Error('Gemini không trả nội dung');
+  try{ return JSON.parse(txt); }catch(e){ var m=txt.match(/\{[\s\S]*\}/); if(m) return JSON.parse(m[0]); throw new Error('Không đọc được JSON từ AI'); }
+}
+async function khoHandleFiles(fileList){
+  var key=khoGetKey();
+  if(!key){ khoState._keybar=true; renderKhoCV(); alert('Chưa cài Gemini key. Anh dán key vào ô rồi bấm Lưu trước.'); return; }
+  var files=Array.prototype.slice.call(fileList||[]).filter(function(f){ return /\.pdf$/i.test(f.name)||f.type==='application/pdf'; });
+  if(!files.length){ alert('Chỉ nhận file PDF.'); return; }
+  for(var i=0;i<files.length;i++){
+    var f=files[i];
+    var item={name:f.name,status:'reading',data:null,err:null};
+    khoExtracted.unshift(item); khoRenderExtractList();
+    try{ var b64=await khoFileToB64(f); var d=await khoCallGemini(b64,key); item.status='done'; item.data=d||{}; }
+    catch(e){ item.status='error'; item.err=(e&&e.message)||'Lỗi không rõ'; }
+    khoRenderExtractList();
+  }
+}
+function khoField(lbl,val,warn){
+  var v=(val==null?'':String(val)).trim();
+  var body = v ? khoEsc(v) : (warn?'<span style="color:#f59e0b;">'+warn+'</span>':'<span style="color:#cbd5e1;">—</span>');
+  return '<div><div style="font-size:10px;color:#94a3b8;margin-bottom:2px;">'+lbl+'</div><div style="font-size:12px;color:#1e293b;word-break:break-word;">'+body+'</div></div>';
+}
+function khoCopyRow(i){
+  var d=(khoExtracted[i]||{}).data||{};
+  var row=[d.ho_ten||'',d.gioi_tinh||'',d.email||'',d.sdt||'',d.vi_tri||'',d.kinh_nghiem||''].join('\t');
+  try{ navigator.clipboard.writeText(row); }catch(_){}
+}
+function khoRenderExtractList(){
+  var box=document.getElementById('kho-extract-list'); if(!box) return;
+  if(!khoExtracted.length){ box.innerHTML=''; return; }
+  box.innerHTML=khoExtracted.map(function(it,i){
+    if(it.status==='reading') return '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;margin-bottom:8px;display:flex;align-items:center;gap:8px;font-size:12px;color:#64748b;"><i class="ti ti-loader" style="color:#5b21b6;"></i> AI đang đọc <b style="font-weight:600;color:#334155;">'+khoEsc(it.name)+'</b>...</div>';
+    if(it.status==='error') return '<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:10px 14px;margin-bottom:8px;font-size:12px;color:#b91c1c;"><i class="ti ti-alert-triangle" style="vertical-align:-2px;"></i> Lỗi đọc <b>'+khoEsc(it.name)+'</b>: '+khoEsc(it.err)+'</div>';
+    var d=it.data||{};
+    return '<div style="background:#fff;border:1px solid #c4b5fd;border-radius:10px;padding:12px 14px;margin-bottom:8px;">'+
+      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;"><span style="font-size:10px;font-weight:500;padding:2px 8px;border-radius:20px;background:#f0fdf4;color:#15803d;"><i class="ti ti-sparkles" style="vertical-align:-2px;"></i> AI đã đọc</span><span style="font-size:11px;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+khoEsc(it.name)+'</span><span onclick="khoCopyRow('+i+')" style="margin-left:auto;cursor:pointer;font-size:10px;padding:3px 10px;border-radius:20px;border:1px solid #e2e8f0;color:#5b21b6;"><i class="ti ti-copy" style="vertical-align:-2px;"></i> Sao chép dòng</span></div>'+
+      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;">'+
+        khoField('Họ và tên',d.ho_ten,'thiếu')+
+        khoField('Giới tính',d.gioi_tinh,'CV không ghi')+
+        khoField('Email',d.email,'thiếu')+
+        khoField('Số điện thoại',d.sdt,'thiếu')+
+        khoField('Vị trí (theo CV)',d.vi_tri,'')+
+        khoField('Ngày sinh',d.ngay_sinh,'')+
+      '</div>'+
+      (d.kinh_nghiem?'<div style="margin-top:8px;font-size:11.5px;color:#475569;"><span style="color:#94a3b8;">Kinh nghiệm: </span>'+khoEsc(d.kinh_nghiem)+'</div>':'')+
+    '</div>';
+  }).join('');
+}
+function khoPanelHTML(){
+  var hasKey=!!khoGetKey();
+  var keyBar;
+  if(khoState._keybar){
+    keyBar='<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:8px;"><input id="kho-key-input" type="password" placeholder="Dán Gemini API key vào đây" style="flex:1;min-width:200px;border:1px solid #e2e8f0;border-radius:8px;padding:6px 10px;font-size:12px;font-family:inherit;"><span onclick="khoSaveKey()" style="cursor:pointer;font-size:11px;padding:6px 14px;border-radius:8px;background:#5b21b6;color:#fff;">Lưu</span><span onclick="khoToggleKeyBar()" style="cursor:pointer;font-size:11px;padding:6px 12px;border-radius:8px;border:1px solid #e2e8f0;color:#64748b;">Huỷ</span></div><div style="font-size:10px;color:#94a3b8;margin-top:5px;">Key lưu trong trình duyệt của anh, không gửi đi đâu ngoài Google.</div>';
+  } else {
+    keyBar='<div style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:11px;">'+(hasKey?'<span style="color:#15803d;"><i class="ti ti-circle-check" style="vertical-align:-2px;"></i> Đã cài Gemini key</span><span onclick="khoToggleKeyBar()" style="cursor:pointer;color:#5b21b6;">Đổi key</span><span onclick="khoClearKey()" style="cursor:pointer;color:#94a3b8;">Xoá</span>':'<span style="color:#c2410c;"><i class="ti ti-alert-triangle" style="vertical-align:-2px;"></i> Chưa cài Gemini key</span><span onclick="khoToggleKeyBar()" style="cursor:pointer;color:#5b21b6;font-weight:500;">Nhập key</span>')+'</div>';
+  }
+  return '<div style="background:#faf5ff;border:1px solid #e9d5ff;border-radius:12px;padding:14px 16px;margin-bottom:14px;">'+
+    '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;"><i class="ti ti-sparkles" style="font-size:16px;color:#7e22ce;"></i><span style="font-size:13px;font-weight:600;color:#1e293b;">Thêm CV bằng AI</span></div>'+
+    '<input type="file" id="kho-file" accept="application/pdf" multiple style="display:none" onchange="khoHandleFiles(this.files)">'+
+    '<div onclick="khoTriggerFile()" ondragover="event.preventDefault();this.style.borderColor=&quot;#7e22ce&quot;" ondragleave="this.style.borderColor=&quot;#c4b5fd&quot;" ondrop="event.preventDefault();this.style.borderColor=&quot;#c4b5fd&quot;;khoHandleFiles(event.dataTransfer.files)" style="cursor:pointer;border:1.5px dashed #c4b5fd;border-radius:10px;padding:16px;text-align:center;background:#fff;margin-top:8px;">'+
+      '<i class="ti ti-cloud-upload" style="font-size:26px;color:#7e22ce;"></i>'+
+      '<div style="font-size:13px;font-weight:500;color:#1e293b;margin-top:4px;">Kéo thả CV (PDF) vào đây hoặc bấm để chọn</div>'+
+      '<div style="font-size:11px;color:#94a3b8;margin-top:2px;">Thả nhiều file cùng lúc · AI tự bóc tên, email, SĐT, vị trí, kinh nghiệm</div>'+
+    '</div>'+
+    keyBar+
+    '<div id="kho-extract-list" style="margin-top:10px;"></div>'+
+  '</div>';
+}
 function renderKhoCV(){
   var cvs=(rawData&&rawData.cvs)||[];
   if(!cvs.length){ document.getElementById('content').innerHTML='<div class="loading"><i class="ti ti-loader"></i>Đang tải dữ liệu...</div>'; return; }
@@ -2493,6 +2578,7 @@ function renderKhoCV(){
   posNames.forEach(function(p,i){ posChips+='<span onclick="khoSetPos('+i+')" style="cursor:pointer;font-size:10px;padding:4px 11px;border-radius:20px;border:1px solid '+(khoState.pos===p?'#5b21b6':'#e2e8f0')+';background:'+(khoState.pos===p?'#ede9fe':'#fff')+';color:'+(khoState.pos===p?'#5b21b6':'#64748b')+';">'+khoEsc(p)+' ('+posSet[p]+')</span>'; });
   var stChip=function(v,lbl){ return '<span onclick="khoSetStatus(\''+v+'\')" style="cursor:pointer;font-size:10px;padding:4px 11px;border-radius:20px;border:1px solid '+(khoState.status===v?'#5b21b6':'#e2e8f0')+';background:'+(khoState.status===v?'#ede9fe':'#fff')+';color:'+(khoState.status===v?'#5b21b6':'#64748b')+';">'+lbl+'</span>'; };
   var html=''+
+    khoPanelHTML()+
     '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;">'+
       khoStat('Tổng CV', total, '#1e293b')+
       khoStat('Trúng tuyển', hired, '#16a34a')+
@@ -2520,6 +2606,7 @@ function renderKhoCV(){
     '<div style="font-size:10px;color:#94a3b8;margin-top:8px;">Kết quả tự suy: đã qua ngày PV mà chưa có kết quả = Trượt · chưa tới ngày PV = Đang đợi. R1/R2: <i class="ti ti-circle-check" style="color:#22c55e;font-size:12px;vertical-align:-2px;"></i> pass · <i class="ti ti-circle-x" style="color:#ef4444;font-size:12px;vertical-align:-2px;"></i> fail · <i class="ti ti-minus" style="color:#cbd5e1;font-size:12px;vertical-align:-2px;"></i> chưa có. Chỉ đọc — dữ liệu từ Sheet.</div>';
   document.getElementById('content').innerHTML=html;
   khoRenderRows();
+  khoRenderExtractList();
 }
 async function loadKhoCV(){
   if(rawData){ renderKhoCV(); return; }
