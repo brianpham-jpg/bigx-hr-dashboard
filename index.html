@@ -2529,17 +2529,30 @@ function khoStat(lbl,val,color){
 var khoExtracted=[];
 var KHO_WRITE_API='https://script.google.com/macros/s/AKfycbyNSR08nM0f5pDqEB2Qgyq3VNo9wyfvzMCn3EuADDRXTI4BUVqSOoTeVCFERMWIX0S00Q/exec';
 function khoToday(){ var d=new Date(); function p(n){return (n<10?'0':'')+n;} return p(d.getDate())+'/'+p(d.getMonth()+1)+'/'+d.getFullYear(); }
+function khoParseFilename(name){
+  var base=String(name||'').replace(/\.[^.]+$/,'');
+  var parts=base.split(' - ');
+  if(parts.length<3) return null;
+  var ten=(parts[0]||'').trim();
+  var vitri=(parts[1]||'').trim();
+  var dpart=(parts[parts.length-1]||'').trim();
+  var m=dpart.match(/^(\d{1,2})[.\/\-](\d{1,2})[.\/\-](\d{2,4})$/);
+  var ngay='';
+  if(m){ var dd=('0'+m[1]).slice(-2), mm=('0'+m[2]).slice(-2), yy=(m[3].length===2?('20'+m[3]):m[3]); ngay=dd+'/'+mm+'/'+yy; }
+  if(!ten||!vitri) return null;
+  return { ho_ten:ten, vi_tri:vitri, ngay:ngay };
+}
 async function khoSaveToKho(i){
   var it=khoExtracted[i]; if(!it||!it.data||it.saved||it.saving) return;
   it.saving=true; it.saveErr=''; khoRenderExtractList();
   var d=it.data;
-  var payload={ ho_ten:d.ho_ten||'', gioi_tinh:d.gioi_tinh||'', email:d.email||'', sdt:d.sdt||'', vi_tri:d.vi_tri||'', cv:d.cv||'', portfolio:d.portfolio||'', ngay:'' };
+  var payload={ ho_ten:d.ho_ten||'', gioi_tinh:d.gioi_tinh||'', email:d.email||'', sdt:d.sdt||'', vi_tri:d.vi_tri||'', cv:d.cv||'', portfolio:d.portfolio||'', ngay:d.ngay||'' };
   try{
     var r=await fetch(KHO_WRITE_API,{ method:'POST', body:JSON.stringify(payload) });
     var t=await r.text(); var j={}; try{ j=JSON.parse(t); }catch(_){}
     if(j && j.ok){
       it.saving=false; it.saved=true; it.stt=j.stt;
-      var rec={ '3':j.stt, 'NGAY':khoToday(), 'VI TRI':d.vi_tri||'', 'MAIL':d.email||'', 'HO VA TEN':d.ho_ten||'', 'GIOI TINH':d.gioi_tinh||'', 'CV':d.cv||'', 'HR REVIEW CV':'', 'LINE MANAGER REVIEW':'', 'NGAY LICH PV':'', 'KET QUA R1':'', 'KET QUA R2':'', 'FINAL':'', 'NGÀY NHẬN VIỆC':'' };
+      var rec={ '3':j.stt, 'NGAY':d.ngay||khoToday(), 'VI TRI':d.vi_tri||'', 'MAIL':d.email||'', 'HO VA TEN':d.ho_ten||'', 'GIOI TINH':d.gioi_tinh||'', 'CV':d.cv||'', 'HR REVIEW CV':'', 'LINE MANAGER REVIEW':'', 'NGAY LICH PV':'', 'KET QUA R1':'', 'KET QUA R2':'', 'FINAL':'', 'NGÀY NHẬN VIỆC':'' };
       if(rawData && rawData.cvs){ rawData.cvs.push(rec); try{ localStorage.setItem(CACHE_KEY, JSON.stringify(rawData)); }catch(_){} }
       renderKhoCV();
     } else {
@@ -2581,7 +2594,7 @@ async function khoHandleFiles(fileList){
     var f=files[i];
     var item={name:f.name,status:'reading',data:null,err:null};
     khoExtracted.unshift(item); khoRenderExtractList();
-    try{ var b64=await khoFileToB64(f); var d=await khoCallGemini(b64,key); item.status='done'; item.data=d||{}; }
+    try{ var b64=await khoFileToB64(f); var d=await khoCallGemini(b64,key); item.status='done'; item.data=d||{}; var _fn=khoParseFilename(f.name); if(_fn){ if(_fn.ho_ten) item.data.ho_ten=_fn.ho_ten; if(_fn.vi_tri) item.data.vi_tri=_fn.vi_tri; if(_fn.ngay) item.data.ngay=_fn.ngay; item.fromFilename=true; } }
     catch(e){ item.status='error'; item.err=(e&&e.message)||'Lỗi không rõ'; }
     khoRenderExtractList();
   }
@@ -2610,10 +2623,12 @@ function khoRenderExtractList(){
         khoField('Giới tính',d.gioi_tinh,'CV không ghi')+
         khoField('Email',d.email,'thiếu')+
         khoField('Số điện thoại',d.sdt,'thiếu')+
-        khoField('Vị trí (theo CV)',d.vi_tri,'')+
+        khoField('Vị trí',d.vi_tri,'')+
+        khoField('Ngày nhận CV',d.ngay,'')+
         khoField('Ngày sinh',d.ngay_sinh,'')+
       '</div>'+
       (d.kinh_nghiem?'<div style="margin-top:8px;font-size:11.5px;color:#475569;"><span style="color:#94a3b8;">Kinh nghiệm: </span>'+khoEsc(d.kinh_nghiem)+'</div>':'')+
+      (it.fromFilename?'<div style="margin-top:6px;font-size:10px;color:#7e22ce;"><i class="ti ti-file-text" style="vertical-align:-2px;"></i> Tên / Vị trí / Ngày lấy từ tên file</div>':'')+
       khoSaveFooter(it,i)+
     '</div>';
   }).join('');
