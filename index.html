@@ -2450,6 +2450,11 @@ function khoSelect(stt,field,cur,opts){
   for(var i=0;i<list.length;i++){ var o=list[i], lbl=(o===''?'—':o); svg+='<option value="'+khoEsc(o)+'"'+(o===cur?' selected':'')+'>'+khoEsc(lbl)+'</option>'; }
   return svg+'</select>';
 }
+function khoDateInput(stt,cur){
+  cur=(cur==null?'':String(cur)).trim();
+  if(stt==null||String(stt).trim()==='') return '<span style="font-size:11px;color:#94a3b8;">'+(cur?khoEsc(cur):'—')+'</span>';
+  return '<input type="text" value="'+khoEsc(cur)+'" data-prev="'+khoEsc(cur)+'" placeholder="dd/mm/yyyy" onchange="khoUpdateResult(this,\''+String(stt)+'\',\'nhanviec\')" style="font-size:11px;padding:3px 6px;border:1px solid #e2e8f0;border-radius:6px;width:94px;color:#334155;">';
+}
 async function khoUpdateResult(el,stt,field){
   var val=el.value, old=el.getAttribute('data-prev')||'';
   el.disabled=true; el.style.borderColor='#c4b5fd';
@@ -2459,7 +2464,7 @@ async function khoUpdateResult(el,stt,field){
     var t=await r.text(); var j={}; try{ j=JSON.parse(t); }catch(_){}
     if(j&&j.ok){
       var recs=(rawData&&rawData.cvs)||[];
-      for(var i=0;i<recs.length;i++){ if(String(recs[i]['3'])===String(stt)){ if(field==='r1')recs[i]['KET QUA R1']=val; else if(field==='r2')recs[i]['KET QUA R2']=val; else recs[i]['FINAL']=val; break; } }
+      for(var i=0;i<recs.length;i++){ if(String(recs[i]['3'])===String(stt)){ if(field==='r1')recs[i]['KET QUA R1']=val; else if(field==='r2')recs[i]['KET QUA R2']=val; else if(field==='final')recs[i]['FINAL']=val; else if(field==='nhanviec')recs[i]['NGÀY NHẬN VIỆC']=val; break; } }
       try{ localStorage.setItem(CACHE_KEY,JSON.stringify(rawData)); }catch(_){}
       el.style.borderColor='#22c55e'; el.setAttribute('data-prev',val); el.title='Đã lưu';
     } else { el.value=old; el.style.borderColor='#ef4444'; el.title='Lỗi: '+((j&&j.error)||''); }
@@ -2507,7 +2512,7 @@ function khoRenderRows(){
   var rows=khoFilteredCVs();
   var cnt=document.getElementById('kho-count'); if(cnt) cnt.textContent=rows.length+' hồ sơ';
   var tb=document.getElementById('kho-tbody'); if(!tb) return;
-  if(!rows.length){ tb.innerHTML='<tr><td colspan="8" style="padding:22px;text-align:center;color:#94a3b8;font-size:12px;">Không có CV phù hợp</td></tr>'; return; }
+  if(!rows.length){ tb.innerHTML='<tr><td colspan="9" style="padding:22px;text-align:center;color:#94a3b8;font-size:12px;">Không có CV phù hợp</td></tr>'; return; }
   tb.innerHTML=rows.map(function(c){
     var name=khoEsc(c['HO VA TEN']||'—');
     var stt=c['3'];
@@ -2524,6 +2529,7 @@ function khoRenderRows(){
       '<td style="padding:6px 8px;border-bottom:1px solid #f1f5f9;text-align:center;">'+khoSelect(stt,'r1',c['KET QUA R1'],khoR12)+'</td>'+
       '<td style="padding:6px 8px;border-bottom:1px solid #f1f5f9;text-align:center;">'+khoSelect(stt,'r2',c['KET QUA R2'],khoR12)+'</td>'+
       '<td style="padding:6px 8px;border-bottom:1px solid #f1f5f9;">'+khoSelect(stt,'final',c['FINAL'],khoFIN)+'</td>'+
+      '<td style="padding:6px 8px;border-bottom:1px solid #f1f5f9;">'+khoDateInput(stt,c['NGÀY NHẬN VIỆC'])+'</td>'+
       '<td style="padding:8px 10px;border-bottom:1px solid #f1f5f9;text-align:center;">'+cvcell+'</td>'+
       '<td style="padding:6px 8px;border-bottom:1px solid #f1f5f9;">'+khoWarnCell(c)+'</td>'+
     '</tr>';
@@ -2696,6 +2702,7 @@ function renderKhoCV(){
           '<th style="font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:.4px;padding:8px 10px;text-align:center;border-bottom:1px solid #f1f5f9;">R1</th>'+
           '<th style="font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:.4px;padding:8px 10px;text-align:center;border-bottom:1px solid #f1f5f9;">R2</th>'+
           '<th style="font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:.4px;padding:8px 10px;text-align:left;border-bottom:1px solid #f1f5f9;">Kết quả</th>'+
+          '<th style="font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:.4px;padding:8px 10px;text-align:left;border-bottom:1px solid #f1f5f9;">Nhận việc</th>'+
           '<th style="font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:.4px;padding:8px 10px;text-align:center;border-bottom:1px solid #f1f5f9;">CV</th>'+
           '<th style="font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:.4px;padding:8px 10px;text-align:left;border-bottom:1px solid #f1f5f9;">Cảnh báo</th>'+
         '</tr></thead><tbody id="kho-tbody"></tbody></table></div>'+
