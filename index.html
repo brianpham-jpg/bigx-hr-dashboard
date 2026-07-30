@@ -2455,6 +2455,11 @@ function khoDateInput(stt,cur){
   if(stt==null||String(stt).trim()==='') return '<span style="font-size:11px;color:#94a3b8;">'+(cur?khoEsc(cur):'—')+'</span>';
   return '<input type="text" value="'+khoEsc(cur)+'" data-prev="'+khoEsc(cur)+'" placeholder="dd/mm/yyyy" onchange="khoUpdateResult(this,\''+String(stt)+'\',\'nhanviec\')" style="font-size:11px;padding:3px 6px;border:1px solid #e2e8f0;border-radius:6px;width:94px;color:#334155;">';
 }
+function khoTextInput(stt,field,cur,ph,w){
+  cur=(cur==null?'':String(cur)).trim();
+  if(stt==null||String(stt).trim()==='') return '<span style="font-size:11px;color:#94a3b8;">'+(cur?khoEsc(cur):'—')+'</span>';
+  return '<input type="text" value="'+khoEsc(cur)+'" data-prev="'+khoEsc(cur)+'" placeholder="'+ph+'" onchange="khoUpdateResult(this,\''+String(stt)+'\',\''+field+'\')" style="font-size:11px;padding:3px 6px;border:1px solid #e2e8f0;border-radius:6px;width:'+w+'px;color:#334155;">';
+}
 async function khoUpdateResult(el,stt,field){
   var val=el.value, old=el.getAttribute('data-prev')||'';
   el.disabled=true; el.style.borderColor='#c4b5fd';
@@ -2464,7 +2469,7 @@ async function khoUpdateResult(el,stt,field){
     var t=await r.text(); var j={}; try{ j=JSON.parse(t); }catch(_){}
     if(j&&j.ok){
       var recs=(rawData&&rawData.cvs)||[];
-      for(var i=0;i<recs.length;i++){ if(String(recs[i]['3'])===String(stt)){ if(field==='r1')recs[i]['KET QUA R1']=val; else if(field==='r2')recs[i]['KET QUA R2']=val; else if(field==='final')recs[i]['FINAL']=val; else if(field==='nhanviec')recs[i]['NGÀY NHẬN VIỆC']=val; break; } }
+      for(var i=0;i<recs.length;i++){ if(String(recs[i]['3'])===String(stt)){ if(field==='r1')recs[i]['KET QUA R1']=val; else if(field==='r2')recs[i]['KET QUA R2']=val; else if(field==='final')recs[i]['FINAL']=val; else if(field==='nhanviec')recs[i]['NGÀY NHẬN VIỆC']=val; else if(field==='sdt')recs[i]['SĐT']=val; break; } }
       try{ localStorage.setItem(CACHE_KEY,JSON.stringify(rawData)); }catch(_){}
       el.style.borderColor='#22c55e'; el.setAttribute('data-prev',val); el.title='Đã lưu';
     } else { el.value=old; el.style.borderColor='#ef4444'; el.title='Lỗi: '+((j&&j.error)||''); }
@@ -2512,7 +2517,7 @@ function khoRenderRows(){
   var rows=khoFilteredCVs();
   var cnt=document.getElementById('kho-count'); if(cnt) cnt.textContent=rows.length+' hồ sơ';
   var tb=document.getElementById('kho-tbody'); if(!tb) return;
-  if(!rows.length){ tb.innerHTML='<tr><td colspan="9" style="padding:22px;text-align:center;color:#94a3b8;font-size:12px;">Không có CV phù hợp</td></tr>'; return; }
+  if(!rows.length){ tb.innerHTML='<tr><td colspan="10" style="padding:22px;text-align:center;color:#94a3b8;font-size:12px;">Không có CV phù hợp</td></tr>'; return; }
   tb.innerHTML=rows.map(function(c){
     var name=khoEsc(c['HO VA TEN']||'—');
     var stt=c['3'];
@@ -2525,6 +2530,7 @@ function khoRenderRows(){
     return '<tr>'+
       '<td style="padding:8px 10px;border-bottom:1px solid #f1f5f9;"><div style="display:flex;align-items:center;gap:8px;"><span style="width:26px;height:26px;border-radius:6px;background:#ede9fe;color:#5b21b6;display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;flex-shrink:0;">'+khoEsc(init||'?')+'</span><div style="min-width:0;"><div style="font-size:11.5px;color:#1e293b;">'+name+'</div><div style="font-size:10px;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:170px;">'+mailcell+'</div></div></div></td>'+
       '<td style="padding:8px 10px;border-bottom:1px solid #f1f5f9;font-size:11px;color:#475569;">'+khoEsc(c['VI TRI']||'—')+'</td>'+
+      '<td style="padding:6px 8px;border-bottom:1px solid #f1f5f9;">'+khoTextInput(stt,'sdt',c['SĐT'],'SĐT','104')+'</td>'+
       '<td style="padding:8px 10px;border-bottom:1px solid #f1f5f9;font-size:11px;color:#64748b;white-space:nowrap;">'+khoEsc(c['NGAY']||'—')+'</td>'+
       '<td style="padding:6px 8px;border-bottom:1px solid #f1f5f9;text-align:center;">'+khoSelect(stt,'r1',c['KET QUA R1'],khoR12)+'</td>'+
       '<td style="padding:6px 8px;border-bottom:1px solid #f1f5f9;text-align:center;">'+khoSelect(stt,'r2',c['KET QUA R2'],khoR12)+'</td>'+
@@ -2565,7 +2571,7 @@ async function khoSaveToKho(i){
     var t=await r.text(); var j={}; try{ j=JSON.parse(t); }catch(_){}
     if(j && j.ok){
       it.saving=false; it.saved=true; it.stt=j.stt;
-      var rec={ '3':j.stt, 'NGAY':d.ngay||khoToday(), 'VI TRI':d.vi_tri||'', 'MAIL':d.email||'', 'HO VA TEN':d.ho_ten||'', 'GIOI TINH':d.gioi_tinh||'', 'CV':d.cv||'', 'HR REVIEW CV':'', 'LINE MANAGER REVIEW':'', 'NGAY LICH PV':'', 'KET QUA R1':'', 'KET QUA R2':'', 'FINAL':'', 'NGÀY NHẬN VIỆC':'' };
+      var rec={ '3':j.stt, 'SĐT':d.sdt||'', 'NGAY':d.ngay||khoToday(), 'VI TRI':d.vi_tri||'', 'MAIL':d.email||'', 'HO VA TEN':d.ho_ten||'', 'GIOI TINH':d.gioi_tinh||'', 'CV':d.cv||'', 'HR REVIEW CV':'', 'LINE MANAGER REVIEW':'', 'NGAY LICH PV':'', 'KET QUA R1':'', 'KET QUA R2':'', 'FINAL':'', 'NGÀY NHẬN VIỆC':'' };
       if(rawData && rawData.cvs){ rawData.cvs.push(rec); try{ localStorage.setItem(CACHE_KEY, JSON.stringify(rawData)); }catch(_){} }
       renderKhoCV();
     } else {
@@ -2699,6 +2705,7 @@ function renderKhoCV(){
         '<thead><tr style="background:#fff;">'+
           '<th style="font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:.4px;padding:8px 10px;text-align:left;border-bottom:1px solid #f1f5f9;">Ứng viên</th>'+
           '<th style="font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:.4px;padding:8px 10px;text-align:left;border-bottom:1px solid #f1f5f9;">Vị trí</th>'+
+          '<th style="font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:.4px;padding:8px 10px;text-align:left;border-bottom:1px solid #f1f5f9;">SĐT</th>'+
           '<th style="font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:.4px;padding:8px 10px;text-align:left;border-bottom:1px solid #f1f5f9;">Ngày nộp</th>'+
           '<th style="font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:.4px;padding:8px 10px;text-align:center;border-bottom:1px solid #f1f5f9;">R1</th>'+
           '<th style="font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:.4px;padding:8px 10px;text-align:center;border-bottom:1px solid #f1f5f9;">R2</th>'+
