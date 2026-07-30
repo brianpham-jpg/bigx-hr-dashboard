@@ -2484,6 +2484,12 @@ function khoWarnCell(c){
   if(!w.length) return '<span style="font-size:11px;color:#cbd5e1;">—</span>';
   return w.map(function(x){ return '<span style="font-size:9px;font-weight:500;padding:2px 7px;border-radius:20px;background:#fef2f2;color:#b91c1c;white-space:nowrap;display:inline-block;margin:1px;">'+khoEsc(x)+'</span>'; }).join(' ');
 }
+function khoSortRecent(a,b){
+  var da=khoParse(a['NGAY']), db=khoParse(b['NGAY']);
+  var ta=da?da.getTime():-1, tb=db?db.getTime():-1;
+  if(tb!==ta) return tb-ta;
+  return (parseInt(b['3'],10)||0)-(parseInt(a['3'],10)||0);
+}
 function khoFilteredCVs(){
   var cvs=(rawData&&rawData.cvs)||[];
   var q=(khoState.q||'').trim().toLowerCase();
@@ -2495,7 +2501,7 @@ function khoFilteredCVs(){
       if(hay.indexOf(q)<0) return false;
     }
     return true;
-  });
+  }).sort(khoSortRecent);
 }
 function khoRenderRows(){
   var rows=khoFilteredCVs();
