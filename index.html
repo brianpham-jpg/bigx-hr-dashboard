@@ -2610,10 +2610,10 @@ function khoClearKey(){ try{ localStorage.removeItem('bigx_gemini_key'); }catch(
 function khoToggleKeyBar(){ khoState._keybar=!khoState._keybar; renderKhoCV(); }
 function khoTriggerFile(){ var f=document.getElementById('kho-file'); if(f) f.click(); }
 function khoFileToB64(file){ return new Promise(function(res,rej){ var fr=new FileReader(); fr.onload=function(){ var s=String(fr.result||''); var i=s.indexOf(','); res(i>=0?s.substring(i+1):s); }; fr.onerror=function(){ rej(new Error('Không đọc được file')); }; fr.readAsDataURL(file); }); }
-async function khoCallGemini(b64,key){
+async function khoCallGemini(b64,key,mime){
   var url='https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key='+encodeURIComponent(key);
   var prompt='Bạn là trợ lý HR. Đọc kỹ CV (PDF) và trích xuất thông tin ứng viên. Chỉ trả về DUY NHẤT một JSON object, không kèm markdown hay giải thích, với các khóa: ho_ten, gioi_tinh, email, sdt, vi_tri, kinh_nghiem, ngay_sinh. Quy tắc: gioi_tinh chỉ nhận "Nam" hoặc "Nữ"; nếu CV KHÔNG ghi rõ giới tính thì để chuỗi rỗng (đừng suy đoán). kinh_nghiem tóm tắt ngắn 1 câu về số năm và vị trí chính. Trường nào không có thì để chuỗi rỗng.';
-  var body={ contents:[{ parts:[ {inline_data:{mime_type:'application/pdf',data:b64}}, {text:prompt} ] }], generationConfig:{ temperature:0, responseMimeType:'application/json' } };
+  var body={ contents:[{ parts:[ {inline_data:{mime_type:(mime||'application/pdf'),data:b64}}, {text:prompt} ] }], generationConfig:{ temperature:0, responseMimeType:'application/json' } };
   var r=await fetch(url,{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
   var j=await r.json();
   if(j && j.error) throw new Error(j.error.message||('HTTP '+r.status));
@@ -2626,13 +2626,13 @@ async function khoCallGemini(b64,key){
 async function khoHandleFiles(fileList){
   var key=khoGetKey();
   if(!key){ khoState._keybar=true; renderKhoCV(); alert('Chưa cài Gemini key. Anh dán key vào ô rồi bấm Lưu trước.'); return; }
-  var files=Array.prototype.slice.call(fileList||[]).filter(function(f){ return /\.pdf$/i.test(f.name)||f.type==='application/pdf'; });
-  if(!files.length){ alert('Chỉ nhận file PDF.'); return; }
+  var files=Array.prototype.slice.call(fileList||[]).filter(function(f){ return /\.(pdf|png|jpe?g|webp|heic|heif)$/i.test(f.name)||f.type==='application/pdf'||/^image\//.test(f.type||''); });
+  if(!files.length){ alert('Chỉ nhận file PDF hoặc ảnh (PNG/JPG).'); return; }
   for(var i=0;i<files.length;i++){
     var f=files[i];
     var item={name:f.name,status:'reading',data:null,err:null};
     khoExtracted.unshift(item); khoRenderExtractList();
-    try{ var b64=await khoFileToB64(f); var d=await khoCallGemini(b64,key); item.status='done'; item.data=d||{}; var _fn=khoParseFilename(f.name); if(_fn){ if(_fn.ho_ten) item.data.ho_ten=_fn.ho_ten; if(_fn.vi_tri) item.data.vi_tri=_fn.vi_tri; if(_fn.ngay) item.data.ngay=_fn.ngay; item.fromFilename=true; } }
+    try{ var b64=await khoFileToB64(f); var d=await khoCallGemini(b64,key,f.type||'application/pdf'); item.status='done'; item.data=d||{}; var _fn=khoParseFilename(f.name); if(_fn){ if(_fn.ho_ten) item.data.ho_ten=_fn.ho_ten; if(_fn.vi_tri) item.data.vi_tri=_fn.vi_tri; if(_fn.ngay) item.data.ngay=_fn.ngay; item.fromFilename=true; } }
     catch(e){ item.status='error'; item.err=(e&&e.message)||'Lỗi không rõ'; }
     khoRenderExtractList();
   }
@@ -2681,10 +2681,10 @@ function khoPanelHTML(){
   }
   return '<div style="background:#faf5ff;border:1px solid #e9d5ff;border-radius:12px;padding:14px 16px;margin-bottom:14px;">'+
     '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;"><i class="ti ti-sparkles" style="font-size:16px;color:#7e22ce;"></i><span style="font-size:13px;font-weight:600;color:#1e293b;">Thêm CV bằng AI</span></div>'+
-    '<input type="file" id="kho-file" accept="application/pdf" multiple style="display:none" onchange="khoHandleFiles(this.files)">'+
+    '<input type="file" id="kho-file" accept="application/pdf,image/*" multiple style="display:none" onchange="khoHandleFiles(this.files)">'+
     '<div onclick="khoTriggerFile()" ondragover="event.preventDefault();this.style.borderColor=&quot;#7e22ce&quot;" ondragleave="this.style.borderColor=&quot;#c4b5fd&quot;" ondrop="event.preventDefault();this.style.borderColor=&quot;#c4b5fd&quot;;khoHandleFiles(event.dataTransfer.files)" style="cursor:pointer;border:1.5px dashed #c4b5fd;border-radius:10px;padding:16px;text-align:center;background:#fff;margin-top:8px;">'+
       '<i class="ti ti-cloud-upload" style="font-size:26px;color:#7e22ce;"></i>'+
-      '<div style="font-size:13px;font-weight:500;color:#1e293b;margin-top:4px;">Kéo thả CV (PDF) vào đây hoặc bấm để chọn</div>'+
+      '<div style="font-size:13px;font-weight:500;color:#1e293b;margin-top:4px;">Kéo thả CV (PDF hoặc ảnh) vào đây hoặc bấm để chọn</div>'+
       '<div style="font-size:11px;color:#94a3b8;margin-top:2px;">Thả nhiều file cùng lúc · AI tự bóc tên, email, SĐT, vị trí, kinh nghiệm</div>'+
     '</div>'+
     keyBar+
