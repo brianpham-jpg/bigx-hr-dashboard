@@ -2441,6 +2441,37 @@ function khoDot(v){
   if(v) return '<i class="ti ti-circle-dot" style="color:#f59e0b;font-size:14px;"></i>';
   return '<i class="ti ti-minus" style="color:#cbd5e1;font-size:14px;"></i>';
 }
+var KHO_SCAN_PASS=60;
+function khoApplyScan(d){
+  if(!d) return;
+  var sc=d.scan; d.scan_verdict=''; d.scan_percent=null; d.scan_skills=''; d.scan_reason=''; d.scan_pos='';
+  if(!sc || !sc.matched_position) return;
+  var pct=parseInt(sc.percent,10); if(isNaN(pct)) pct=0;
+  var must=(sc.must_met===true||sc.must_met==='true');
+  var v=(!must)?'Không đạt':(pct>=KHO_SCAN_PASS?'Pass':(pct>=40?'Cân nhắc':'Không đạt'));
+  d.scan_pos=sc.matched_position; d.scan_verdict=v; d.scan_percent=pct; d.scan_skills=sc.skills_summary||''; d.scan_reason=sc.reason||'';
+}
+function khoScanBadge(c){
+  var v=(c['Scan HR']||'').trim(); if(!v) return '';
+  var pv=c['% phù hợp']; var pct=(pv!=null&&String(pv).trim()!=='')?(' '+(parseInt(pv,10)||0)+'%'):'';
+  var reason=khoEsc((c['Lý do']||'').trim()); var lv=v.toLowerCase(); var bg,fg,ic,txt;
+  if(lv.indexOf('pass')>=0){bg='#dcfce7';fg='#15803d';ic='ti-circle-check';txt='Scan HR Pass';}
+  else if(lv.indexOf('cân nhắc')>=0||lv.indexOf('can nhac')>=0){bg='#fef3c7';fg='#b45309';ic='ti-help-circle';txt='Cân nhắc';}
+  else {bg='#f1f5f9';fg='#64748b';ic='ti-circle-x';txt='Không đạt';}
+  return '<span title="'+reason+'" style="font-size:9px;font-weight:600;padding:2px 8px;border-radius:20px;background:'+bg+';color:'+fg+';display:inline-flex;align-items:center;gap:3px;margin-top:3px;white-space:nowrap;"><i class="ti '+ic+'" style="font-size:11px;"></i>'+txt+pct+'</span>';
+}
+function khoScanPreview(d){
+  if(!d||!d.scan_verdict) return '';
+  var v=d.scan_verdict, pct=(d.scan_percent!=null?d.scan_percent+'%':''), lv=v.toLowerCase(), bg,fg,ic;
+  if(lv.indexOf('pass')>=0){bg='#f0fdf4';fg='#15803d';ic='ti-circle-check';}
+  else if(lv.indexOf('cân nhắc')>=0){bg='#fffbeb';fg='#b45309';ic='ti-help-circle';}
+  else {bg='#f8fafc';fg='#64748b';ic='ti-circle-x';}
+  return '<div style="margin-top:10px;padding:10px 12px;border-radius:8px;background:'+bg+';">'+
+    '<div style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:'+fg+';"><i class="ti '+ic+'"></i> Scan HR: '+khoEsc(v)+(pct?' · '+pct+' phù hợp':'')+'</div>'+
+    (d.scan_skills?'<div style="margin-top:5px;font-size:11px;color:#475569;"><span style="color:#94a3b8;">Kỹ năng: </span>'+khoEsc(d.scan_skills)+'</div>':'')+
+    (d.scan_reason?'<div style="margin-top:3px;font-size:11px;color:#475569;"><span style="color:#94a3b8;">Nhận xét: </span>'+khoEsc(d.scan_reason)+'</div>':'')+
+  '</div>';
+}
 var khoR12=['','PASS','FAIL','KHÔNG THAM GIA'];
 var khoFIN=['','TRÚNG TUYỂN','FAIL','TỪ CHỐI OFFER'];
 function khoSelect(stt,field,cur,opts){
@@ -2506,7 +2537,7 @@ function khoFilteredCVs(){
   var q=(khoState.q||'').trim().toLowerCase();
   return cvs.filter(function(c){
     if(khoState.pos && (c['VI TRI']||'').trim()!==khoState.pos) return false;
-    if(khoState.status){ if(khoState.status==='warn'){ if(khoWarnings(c).length===0) return false; } else if(khoDerive(c).k!==khoState.status) return false; }
+    if(khoState.status){ if(khoState.status==='warn'){ if(khoWarnings(c).length===0) return false; } else if(khoState.status==='scanpass'){ if((c['Scan HR']||'').toLowerCase().indexOf('pass')<0) return false; } else if(khoDerive(c).k!==khoState.status) return false; }
     if(q){
       var hay=((c['HO VA TEN']||'')+' '+(c['MAIL']||'')+' '+(c['VI TRI']||'')).toLowerCase();
       if(hay.indexOf(q)<0) return false;
@@ -2547,7 +2578,7 @@ function khoRenderRows(){
     var cvcell=/^https?:\/\//.test(cvlink)?('<a href="'+khoEsc(cvlink)+'" target="_blank" rel="noopener" style="color:#5b21b6;"><i class="ti ti-external-link" style="font-size:14px;"></i></a>'):'<span style="color:#cbd5e1;">—</span>';
     var mailcell=khoTextInput(stt,'mail',mail,'+ email','160');
     return '<tr>'+
-      '<td style="padding:8px 10px;border-bottom:1px solid #f1f5f9;"><div style="display:flex;align-items:center;gap:8px;"><span style="width:26px;height:26px;border-radius:6px;background:#ede9fe;color:#5b21b6;display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;flex-shrink:0;">'+khoEsc(init||'?')+'</span><div style="min-width:0;"><div style="font-size:11.5px;color:#1e293b;">'+name+'</div><div style="font-size:10px;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:170px;">'+mailcell+'</div></div></div></td>'+
+      '<td style="padding:8px 10px;border-bottom:1px solid #f1f5f9;"><div style="display:flex;align-items:center;gap:8px;"><span style="width:26px;height:26px;border-radius:6px;background:#ede9fe;color:#5b21b6;display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;flex-shrink:0;">'+khoEsc(init||'?')+'</span><div style="min-width:0;"><div style="font-size:11.5px;color:#1e293b;">'+name+'</div>'+khoScanBadge(c)+'<div style="font-size:10px;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:170px;">'+mailcell+'</div></div></div></td>'+
       '<td style="padding:8px 10px;border-bottom:1px solid #f1f5f9;font-size:11px;color:#475569;">'+khoEsc(c['VI TRI']||'—')+'</td>'+
       '<td style="padding:6px 8px;border-bottom:1px solid #f1f5f9;">'+khoTextInput(stt,'sdt',c['SĐT'],'SĐT','104')+'</td>'+
       '<td style="padding:8px 10px;border-bottom:1px solid #f1f5f9;font-size:11px;color:#64748b;white-space:nowrap;">'+khoEsc(c['NGAY']||'—')+'</td>'+
@@ -2584,13 +2615,13 @@ async function khoSaveToKho(i){
   var it=khoExtracted[i]; if(!it||!it.data||it.saved||it.saving) return;
   it.saving=true; it.saveErr=''; khoRenderExtractList();
   var d=it.data;
-  var payload={ ho_ten:d.ho_ten||'', gioi_tinh:d.gioi_tinh||'', email:d.email||'', sdt:d.sdt||'', vi_tri:d.vi_tri||'', cv:d.cv||'', portfolio:d.portfolio||'', ngay:d.ngay||'' };
+  var payload={ ho_ten:d.ho_ten||'', gioi_tinh:d.gioi_tinh||'', email:d.email||'', sdt:d.sdt||'', vi_tri:d.vi_tri||'', cv:d.cv||'', portfolio:d.portfolio||'', ngay:d.ngay||'', skills:d.scan_skills||'', scan:d.scan_verdict||'', percent:(d.scan_verdict?(d.scan_percent!=null?d.scan_percent:''):''), reason:d.scan_reason||'' };
   try{
     var r=await fetch(KHO_WRITE_API,{ method:'POST', body:JSON.stringify(payload) });
     var t=await r.text(); var j={}; try{ j=JSON.parse(t); }catch(_){}
     if(j && j.ok){
       it.saving=false; it.saved=true; it.stt=j.stt;
-      var rec={ '3':j.stt, 'SĐT':d.sdt||'', 'NGAY':d.ngay||khoToday(), 'VI TRI':d.vi_tri||'', 'MAIL':d.email||'', 'HO VA TEN':d.ho_ten||'', 'GIOI TINH':d.gioi_tinh||'', 'CV':d.cv||'', 'HR REVIEW CV':'', 'LINE MANAGER REVIEW':'', 'NGAY LICH PV':'', 'KET QUA R1':'', 'KET QUA R2':'', 'FINAL':'', 'NGÀY NHẬN VIỆC':'' };
+      var rec={ '3':j.stt, 'SĐT':d.sdt||'', 'NGAY':d.ngay||khoToday(), 'VI TRI':d.vi_tri||'', 'MAIL':d.email||'', 'HO VA TEN':d.ho_ten||'', 'GIOI TINH':d.gioi_tinh||'', 'CV':d.cv||'', 'HR REVIEW CV':'', 'LINE MANAGER REVIEW':'', 'NGAY LICH PV':'', 'KET QUA R1':'', 'KET QUA R2':'', 'FINAL':'', 'NGÀY NHẬN VIỆC':'', 'Tóm tắt kỹ năng':d.scan_skills||'', 'Scan HR':d.scan_verdict||'', '% phù hợp':(d.scan_verdict&&d.scan_percent!=null?String(d.scan_percent):''), 'Lý do':d.scan_reason||'' };
       if(rawData && rawData.cvs){ rawData.cvs.push(rec); try{ localStorage.setItem(CACHE_KEY, JSON.stringify(rawData)); }catch(_){} }
       renderKhoCV();
     } else {
@@ -2612,7 +2643,7 @@ function khoTriggerFile(){ var f=document.getElementById('kho-file'); if(f) f.cl
 function khoFileToB64(file){ return new Promise(function(res,rej){ var fr=new FileReader(); fr.onload=function(){ var s=String(fr.result||''); var i=s.indexOf(','); res(i>=0?s.substring(i+1):s); }; fr.onerror=function(){ rej(new Error('Không đọc được file')); }; fr.readAsDataURL(file); }); }
 async function khoCallGemini(b64,key,mime){
   var url='https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key='+encodeURIComponent(key);
-  var prompt='Bạn là trợ lý HR. Đọc kỹ CV (PDF) và trích xuất thông tin ứng viên. Chỉ trả về DUY NHẤT một JSON object, không kèm markdown hay giải thích, với các khóa: ho_ten, gioi_tinh, email, sdt, vi_tri, kinh_nghiem, ngay_sinh. Quy tắc: gioi_tinh chỉ nhận "Nam" hoặc "Nữ"; nếu CV KHÔNG ghi rõ giới tính thì để chuỗi rỗng (đừng suy đoán). kinh_nghiem tóm tắt ngắn 1 câu về số năm và vị trí chính. Trường nào không có thì để chuỗi rỗng.';
+  var prompt='Bạn là trợ lý HR của BigX. Đọc kỹ CV và trả về DUY NHẤT một JSON object (không markdown, không giải thích) với các khóa: ho_ten, gioi_tinh, email, sdt, vi_tri, kinh_nghiem, ngay_sinh, scan. Quy tắc trích xuất: gioi_tinh chỉ nhận "Nam" hoặc "Nữ", nếu CV không ghi rõ để "". kinh_nghiem tóm tắt ngắn 1 câu (số năm + vị trí chính). Trường nào không có để "". scan là object {matched_position, skills_summary, must_met, percent, reason}. Cách chấm: xác định vị trí ứng tuyển của CV; nếu khớp một BỘ TIÊU CHÍ bên dưới thì chấm, nếu không khớp bộ nào thì matched_position="", skills_summary="", must_met=false, percent=0, reason="". BỘ TIÊU CHÍ: 1) matched_position="Booking KOC/KOL Executive" — khớp khi vị trí ứng tuyển liên quan booking / KOC / KOL / influencer marketing. Bắt buộc (thiếu 1 trong 2 thì must_met=false): (a) có kinh nghiệm booking KOC/KOL hoặc Influencer Marketing từ 6 tháng trở lên; (b) am hiểu nền tảng TikTok (video, livestream, affiliate). Tính percent theo tổng trọng số đạt được (0-100): kinh nghiệm booking hoặc Influencer >= 6 tháng = 30; am hiểu TikTok = 25; từng chịu KPI doanh thu/GMV (không chỉ làm content) = 15; có sẵn network KOC/KOL, ưu tiên thời trang = 10; kỹ năng giao tiếp/thương lượng/xây quan hệ = 10; biết Excel/Google Sheets = 5; chủ động, chịu áp lực deadline = 5. skills_summary: 1-2 câu tóm tắt kỹ năng/kinh nghiệm nổi bật liên quan vị trí. reason: 1 câu ngắn vì sao đạt hay chưa đạt. must_met là true/false cho cặp bắt buộc của bộ khớp.';
   var body={ contents:[{ parts:[ {inline_data:{mime_type:(mime||'application/pdf'),data:b64}}, {text:prompt} ] }], generationConfig:{ temperature:0, responseMimeType:'application/json' } };
   var r=await fetch(url,{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
   var j=await r.json();
@@ -2632,7 +2663,7 @@ async function khoHandleFiles(fileList){
     var f=files[i];
     var item={name:f.name,status:'reading',data:null,err:null};
     khoExtracted.unshift(item); khoRenderExtractList();
-    try{ var b64=await khoFileToB64(f); var d=await khoCallGemini(b64,key,f.type||'application/pdf'); item.status='done'; item.data=d||{}; var _fn=khoParseFilename(f.name); if(_fn){ if(_fn.ho_ten) item.data.ho_ten=_fn.ho_ten; if(_fn.vi_tri) item.data.vi_tri=_fn.vi_tri; if(_fn.ngay) item.data.ngay=_fn.ngay; item.fromFilename=true; } }
+    try{ var b64=await khoFileToB64(f); var d=await khoCallGemini(b64,key,f.type||'application/pdf'); item.status='done'; item.data=d||{}; var _fn=khoParseFilename(f.name); if(_fn){ if(_fn.ho_ten) item.data.ho_ten=_fn.ho_ten; if(_fn.vi_tri) item.data.vi_tri=_fn.vi_tri; if(_fn.ngay) item.data.ngay=_fn.ngay; item.fromFilename=true; } khoApplyScan(item.data); }
     catch(e){ item.status='error'; item.err=(e&&e.message)||'Lỗi không rõ'; }
     khoRenderExtractList();
   }
@@ -2667,6 +2698,7 @@ function khoRenderExtractList(){
       '</div>'+
       (d.kinh_nghiem?'<div style="margin-top:8px;font-size:11.5px;color:#475569;"><span style="color:#94a3b8;">Kinh nghiệm: </span>'+khoEsc(d.kinh_nghiem)+'</div>':'')+
       (it.fromFilename?'<div style="margin-top:6px;font-size:10px;color:#7e22ce;"><i class="ti ti-file-text" style="vertical-align:-2px;"></i> Tên / Vị trí / Ngày lấy từ tên file</div>':'')+
+      khoScanPreview(it.data)+
       khoSaveFooter(it,i)+
     '</div>';
   }).join('');
@@ -2695,9 +2727,9 @@ function renderKhoCV(){
   var cvs=(rawData&&rawData.cvs)||[];
   if(!cvs.length){ document.getElementById('content').innerHTML='<div class="loading"><i class="ti ti-loader"></i>Đang tải dữ liệu...</div>'; return; }
   var total=cvs.length;
-  var hired=0, waiting=0;
+  var hired=0, waiting=0, scanPass=0;
   var warn=0;
-  cvs.forEach(function(c){ var k=khoDerive(c).k; if(k==='hired') hired++; else if(k==='waiting') waiting++; if(khoWarnings(c).length>0) warn++; });
+  cvs.forEach(function(c){ var k=khoDerive(c).k; if(k==='hired') hired++; else if(k==='waiting') waiting++; if(khoWarnings(c).length>0) warn++; if((c['Scan HR']||'').toLowerCase().indexOf('pass')>=0) scanPass++; });
   var posSet={}; cvs.forEach(function(c){var v=(c['VI TRI']||'').trim(); if(v) posSet[v]=(posSet[v]||0)+1;});
   var posNames=Object.keys(posSet).sort(function(a,b){return posSet[b]-posSet[a];});
   window._khoPos=posNames;
@@ -2708,6 +2740,7 @@ function renderKhoCV(){
     khoPanelHTML()+
     '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:14px;">'+
       khoStat('Tổng CV', total, '#1e293b')+
+      khoStat('Scan HR Pass', scanPass, '#15803d')+
       khoStat('Trúng tuyển', hired, '#16a34a')+
       khoStat('Đang đợi KQ', waiting, '#c2410c')+
       khoStat('Cần cảnh báo', warn, '#b91c1c')+
@@ -2715,7 +2748,7 @@ function renderKhoCV(){
     '</div>'+
     '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;">'+
       '<div style="flex:1;min-width:180px;display:flex;align-items:center;gap:7px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:7px 11px;"><i class="ti ti-search" style="font-size:14px;color:#94a3b8;"></i><input id="kho-search" oninput="khoState.q=this.value;khoState.page=0;khoRenderRows()" value="'+khoEsc(khoState.q)+'" placeholder="Tìm theo tên, email, vị trí" style="border:none;outline:none;background:none;font-size:12px;color:#334155;flex:1;font-family:inherit;"></div>'+
-      stChip('warn','⚠ Cảnh báo')+stChip('hired','Trúng tuyển')+stChip('waiting','Đang đợi KQ')+stChip('rejected','Trượt / Từ chối')+stChip('processing','Chưa xử lý')+
+      stChip('scanpass','✓ Scan Pass')+stChip('warn','⚠ Cảnh báo')+stChip('hired','Trúng tuyển')+stChip('waiting','Đang đợi KQ')+stChip('rejected','Trượt / Từ chối')+stChip('processing','Chưa xử lý')+
     '</div>'+
     '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">'+posChips+'</div>'+
     '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;">'+
