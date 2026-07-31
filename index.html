@@ -2442,6 +2442,30 @@ function khoDot(v){
   return '<i class="ti ti-minus" style="color:#cbd5e1;font-size:14px;"></i>';
 }
 var KHO_SCAN_PASS=60;
+var KHO_RULES=[
+ {id:'sales_mgr', label:'Sales Manager', match:['sales manager','trưởng phòng kinh doanh','trưởng phòng sales','trưởng phòng bán hàng','quản lý kinh doanh','trưởng nhóm kinh doanh'],
+  block:'Tiêu chí BẮT BUỘC (đủ cả 2): (a) >= 3 năm kinh nghiệm quản lý/lãnh đạo đội ngũ kinh doanh có kết quả; (b) tư duy chiến lược, biết xây hệ thống bán hàng B2B bài bản. Trọng số điểm: 3-5 năm quản lý đội sales có kết quả=30; tư duy chiến lược & xây quy trình bán hàng=20; KN B2B/khách SMB/kinh doanh online-ecommerce=15; am hiểu TikTok Shop & TikTok Ads=10; kỹ năng lãnh đạo/đào tạo/tạo động lực đội=10; phân tích dữ liệu/quản trị KPI/CRM=10; chịu áp lực doanh số & đàm phán=5.'},
+ {id:'booking', label:'Booking KOC/KOL Executive', match:['booking','koc','kol','influencer'],
+  block:'Tiêu chí BẮT BUỘC (đủ cả 2): (a) kinh nghiệm booking KOC/KOL hoặc Influencer Marketing >= 6 tháng; (b) am hiểu TikTok (video, livestream, affiliate). Trọng số điểm: KN booking/Influencer >=6 tháng=30; am hiểu TikTok=25; từng chịu KPI doanh thu/GMV không chỉ content=15; có sẵn network KOC/KOL ưu tiên thời trang=10; giao tiếp/thương lượng/xây quan hệ=10; biết Excel/Google Sheets=5; chủ động chịu áp lực=5.'},
+ {id:'content_b2b', label:'B2B Content Marketer', match:['content marketer','content marketing','b2b content','content b2b','inbound'],
+  block:'Tiêu chí BẮT BUỘC (đủ cả 2): (a) >= 2 năm kinh nghiệm Content B2B (SaaS/agency/fintech/ecommerce), KHÔNG phải content giải trí/influencer; (b) có portfolio B2B (blog SEO / case study / whitepaper / email funnel). Trọng số điểm: >=2-3 năm Content B2B=25; portfolio blog SEO B2B + case study/whitepaper/email funnel=20; copywriting B2B thuyết phục=15; hiểu phễu TOFU/MOFU/BOFU đo bằng organic MQL/form/time-on-page=15; SEO on-page (keyword research/meta/internal link)=10; storytelling case study từ số liệu=10; data-driven & phối hợp Sales=5.'},
+ {id:'digital_mkt', label:'Digital Marketing Executive', match:['digital marketing','digital mkt','chạy quảng cáo','ads executive','performance marketing','digital'],
+  block:'Tiêu chí BẮT BUỘC (đủ cả 2): (a) >= 1 năm kinh nghiệm Digital Marketing, trong đó >= 1 năm chạy quảng cáo TikTok; (b) tư duy data-driven và hiểu nền tảng TikTok. Trọng số điểm: >=1 năm Digital Marketing + >=1 năm chạy TikTok Ads=30; tư duy data-driven, phân tích/trực quan hóa dữ liệu quảng cáo=20; tối ưu ngân sách & hiệu quả chiến dịch=15; nghiên cứu insight/hành vi khách trên TikTok=12; lập kế hoạch & báo cáo ngày/tuần/tháng=10; thành thạo MS Office/Google Workspace & trình bày=8; sáng tạo/chủ động/teamwork=5.'},
+ {id:'creative_video', label:'Creative Video Content Executive', match:['creative video','video content','sáng tạo video','content executive','creative'],
+  block:'Tiêu chí BẮT BUỘC (đủ cả 2): (a) 1-3 năm kinh nghiệm sản xuất/sáng tạo video TikTok/Reels/Shorts; (b) có portfolio sản phẩm thực tế và hiểu người dùng TikTok. Trọng số điểm: 1-3 năm KN sáng tạo video TikTok/Reels/Shorts=25; portfolio sản phẩm thực tế=15; tư duy nội dung & hiểu hành vi người dùng TikTok=15; gu thẩm mỹ thời trang & nhạy trend=15; kịch bản/storytelling bằng hình ảnh=10; KN thời trang/lifestyle=10; tư duy ứng dụng AI & bắt trend=10.'},
+ {id:'edit_capcut', label:'Edit Video CapCut Senior', match:['edit video','capcut','video editor','senior edit','dựng video','editor'],
+  block:'Tiêu chí BẮT BUỘC (đủ cả 2): (a) >= 1 năm kinh nghiệm video editing (ít nhất 6 tháng short-form); (b) thành thạo CapCut trên cả PC và Mobile. Trọng số điểm: >=1 năm editing & >=6 tháng short-form=25; thành thạo CapCut PC & Mobile=20; tính năng nâng cao Keyframe/Masking/Chroma Key=15; bố cục 9:16/typography/tạo Hook=12; dựng nhanh đáp ứng deadline & thẩm mỹ=10; hiểu thuật toán & hành vi người dùng TikTok=10; xử lý âm thanh/SFX/color grading & review Junior=8.'},
+ {id:'ke_toan_thue', label:'Kế toán Thuế Doanh Nghiệp', match:['kế toán thuế','kế toán','ke toan','accountant','kiểm toán'],
+  block:'Tiêu chí BẮT BUỘC (đủ cả 2): (a) >= 3 năm kinh nghiệm Kế toán thuế hoặc kế toán tổng hợp có làm thuế; (b) nắm vững Luật thuế và Thông tư 200/133/99. Trọng số điểm: 3-5 năm KN kế toán thuế/tổng hợp có làm thuế=30; nắm vững luật thuế & thông tư=20; kê khai GTGT/TNCN/TNDN, báo cáo & quyết toán thuế=15; hạch toán/hóa đơn/BHXH-BHYT-BHTN=12; thành thạo phần mềm kế toán & Excel=10; tốt nghiệp CĐ/ĐH Kế toán-Kiểm toán-Tài chính=8; tỉ mỉ & làm việc với cơ quan thuế=5.'},
+ {id:'sales_exec', label:'B2B Sales Executive', match:['sales executive','business development','b2b sales','bd executive','nhân viên kinh doanh','sales','kinh doanh'],
+  block:'Tiêu chí BẮT BUỘC (đủ cả 2): (a) 6 tháng - 2 năm kinh nghiệm sales B2B; (b) kỹ năng tư vấn/thuyết phục và chủ động tìm kiếm khách hàng. Đây là cấp NHÂN VIÊN (executive), không phải quản lý. Trọng số điểm: 6 tháng-2 năm sales B2B=30; tư vấn/thuyết phục/lắng nghe nhu cầu=20; chủ động phát triển khách mới (inbound/outbound)=15; KN marketing/truyền thông/TMĐT/agency=12; am hiểu TikTok Shop/TikTok Ads=10; tư duy kinh doanh & chịu áp lực doanh số=13.'}
+];
+function khoFindRule(vitri){
+  var v=(vitri==null?'':String(vitri)).toLowerCase().trim(); if(!v) return null;
+  for(var i=0;i<KHO_RULES.length;i++){ var m=KHO_RULES[i].match; for(var j=0;j<m.length;j++){ if(v.indexOf(m[j])>=0) return KHO_RULES[i]; } }
+  return null;
+}
+
 function khoApplyScan(d){
   if(!d) return;
   var sc=d.scan; d.scan_verdict=''; d.scan_percent=null; d.scan_skills=''; d.scan_reason=''; d.scan_pos='';
@@ -2641,9 +2665,11 @@ function khoClearKey(){ try{ localStorage.removeItem('bigx_gemini_key'); }catch(
 function khoToggleKeyBar(){ khoState._keybar=!khoState._keybar; renderKhoCV(); }
 function khoTriggerFile(){ var f=document.getElementById('kho-file'); if(f) f.click(); }
 function khoFileToB64(file){ return new Promise(function(res,rej){ var fr=new FileReader(); fr.onload=function(){ var s=String(fr.result||''); var i=s.indexOf(','); res(i>=0?s.substring(i+1):s); }; fr.onerror=function(){ rej(new Error('Không đọc được file')); }; fr.readAsDataURL(file); }); }
-async function khoCallGemini(b64,key,mime){
+async function khoCallGemini(b64,key,mime,rule){
   var url='https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key='+encodeURIComponent(key);
-  var prompt='Bạn là trợ lý HR của BigX. Đọc kỹ CV và trả về DUY NHẤT một JSON object (không markdown, không giải thích) với các khóa: ho_ten, gioi_tinh, email, sdt, vi_tri, kinh_nghiem, ngay_sinh, scan. Quy tắc trích xuất: gioi_tinh chỉ nhận "Nam" hoặc "Nữ", nếu CV không ghi rõ để "". kinh_nghiem tóm tắt ngắn 1 câu (số năm + vị trí chính). Trường nào không có để "". scan là object {matched_position, skills_summary, must_met, percent, reason}. Cách chấm: xác định vị trí ứng tuyển của CV; nếu khớp một BỘ TIÊU CHÍ bên dưới thì chấm, nếu không khớp bộ nào thì matched_position="", skills_summary="", must_met=false, percent=0, reason="". BỘ TIÊU CHÍ: 1) matched_position="Booking KOC/KOL Executive" — khớp khi vị trí ứng tuyển liên quan booking / KOC / KOL / influencer marketing. Bắt buộc (thiếu 1 trong 2 thì must_met=false): (a) có kinh nghiệm booking KOC/KOL hoặc Influencer Marketing từ 6 tháng trở lên; (b) am hiểu nền tảng TikTok (video, livestream, affiliate). Tính percent theo tổng trọng số đạt được (0-100): kinh nghiệm booking hoặc Influencer >= 6 tháng = 30; am hiểu TikTok = 25; từng chịu KPI doanh thu/GMV (không chỉ làm content) = 15; có sẵn network KOC/KOL, ưu tiên thời trang = 10; kỹ năng giao tiếp/thương lượng/xây quan hệ = 10; biết Excel/Google Sheets = 5; chủ động, chịu áp lực deadline = 5. skills_summary: 1-2 câu tóm tắt kỹ năng/kinh nghiệm nổi bật liên quan vị trí. reason: 1 câu ngắn vì sao đạt hay chưa đạt. must_met là true/false cho cặp bắt buộc của bộ khớp.';
+  var base='Bạn là trợ lý HR của BigX. Đọc kỹ CV và trả về DUY NHẤT một JSON object (không markdown, không giải thích) với các khóa: ho_ten, gioi_tinh, email, sdt, vi_tri, kinh_nghiem, ngay_sinh'+(rule?', scan':'')+'. Quy tắc trích xuất: gioi_tinh chỉ nhận "Nam" hoặc "Nữ", nếu CV không ghi rõ để "". kinh_nghiem tóm tắt ngắn 1 câu (số năm + vị trí chính). Trường nào không có để "".';
+  var scan = rule ? (' scan là object {relevant, skills_summary, must_met, percent, reason}. Đang xét vị trí: "'+rule.label+'". Nếu CV KHÔNG thực sự phù hợp nhóm vị trí này thì relevant=false và để skills_summary="", must_met=false, percent=0, reason="". Nếu relevant=true thì chấm theo tiêu chí sau. '+rule.block+' must_met=false nếu thiếu bất kỳ tiêu chí BẮT BUỘC nào. percent = tổng trọng số đạt được (0-100, số nguyên). skills_summary: 1-2 câu tóm tắt kỹ năng/kinh nghiệm nổi bật. reason: 1 câu ngắn vì sao đạt hay chưa đạt.') : '';
+  var prompt=base+scan;
   var body={ contents:[{ parts:[ {inline_data:{mime_type:(mime||'application/pdf'),data:b64}}, {text:prompt} ] }], generationConfig:{ temperature:0, responseMimeType:'application/json' } };
   var r=await fetch(url,{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
   var j=await r.json();
@@ -2663,7 +2689,7 @@ async function khoHandleFiles(fileList){
     var f=files[i];
     var item={name:f.name,status:'reading',data:null,err:null};
     khoExtracted.unshift(item); khoRenderExtractList();
-    try{ var b64=await khoFileToB64(f); var d=await khoCallGemini(b64,key,f.type||'application/pdf'); item.status='done'; item.data=d||{}; var _fn=khoParseFilename(f.name); if(_fn){ if(_fn.ho_ten) item.data.ho_ten=_fn.ho_ten; if(_fn.vi_tri) item.data.vi_tri=_fn.vi_tri; if(_fn.ngay) item.data.ngay=_fn.ngay; item.fromFilename=true; } khoApplyScan(item.data); }
+    try{ var b64=await khoFileToB64(f); var _fn=khoParseFilename(f.name); var _rule=khoFindRule((_fn&&_fn.vi_tri)||''); var d=await khoCallGemini(b64,key,f.type||'application/pdf',_rule); item.status='done'; item.data=d||{}; if(_fn){ if(_fn.ho_ten) item.data.ho_ten=_fn.ho_ten; if(_fn.vi_tri) item.data.vi_tri=_fn.vi_tri; if(_fn.ngay) item.data.ngay=_fn.ngay; item.fromFilename=true; } if(_rule && item.data.scan){ item.data.scan.matched_position=(item.data.scan.relevant===false)?'':_rule.label; } khoApplyScan(item.data); }
     catch(e){ item.status='error'; item.err=(e&&e.message)||'Lỗi không rõ'; }
     khoRenderExtractList();
   }
