@@ -2411,12 +2411,13 @@ function renderCalendar(){
 /* ==========================================================
    KHO CV — tab con cua Tuyen dung (chi doc, doc rawData.cvs)
 ========================================================== */
-var khoState={q:'',pos:'',status:''};
+var khoState={q:'',pos:'',status:'',page:0};
 function _khoActive(){var e=document.getElementById('nav-khocv');return !!(e&&e.classList.contains('active'));}
 function khoEsc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function khoParse(s){ if(!s) return null; var p=String(s).trim().split('/'); if(p.length<3) return null; var d=+p[0],m=+p[1],y=+p[2]; if(!d||!m||!y) return null; var dt=new Date(y,m-1,d); return isNaN(dt)?null:dt; }
-function khoSetPos(i){khoState.pos=(i<0)?'':(window._khoPos[i]||'');renderKhoCV();}
-function khoSetStatus(v){khoState.status=(khoState.status===v)?'':v;renderKhoCV();}
+function khoGoPage(n){ khoState.page=n; khoRenderRows(); }
+function khoSetPos(i){khoState.pos=(i<0)?'':(window._khoPos[i]||'');khoState.page=0;renderKhoCV();}
+function khoSetStatus(v){khoState.status=(khoState.status===v)?'':v;khoState.page=0;renderKhoCV();}
 /* Suy ra ket qua: FINAL co san -> dung; FINAL trong -> theo ngay PV */
 function khoDerive(c){
   var f=(c['FINAL']||'').trim();
@@ -2514,8 +2515,26 @@ function khoFilteredCVs(){
   }).sort(khoSortRecent);
 }
 function khoRenderRows(){
-  var rows=khoFilteredCVs();
-  var cnt=document.getElementById('kho-count'); if(cnt) cnt.textContent=rows.length+' hồ sơ';
+  var all=khoFilteredCVs();
+  var total=all.length, size=30, pages=Math.max(1,Math.ceil(total/size));
+  if(khoState.page>=pages) khoState.page=pages-1; if(khoState.page<0) khoState.page=0;
+  var start=khoState.page*size, rows=all.slice(start,start+size);
+  var cnt=document.getElementById('kho-count'); if(cnt) cnt.textContent=total+' hồ sơ';
+  var pg=document.getElementById('kho-pager');
+  if(pg){
+    if(total<=size){ pg.innerHTML=''; }
+    else {
+      var from=total?start+1:0, to=Math.min(start+size,total);
+      var prevC=(khoState.page<=0?'#cbd5e1':'#5b21b6'), nextC=(khoState.page>=pages-1?'#cbd5e1':'#5b21b6');
+      pg.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 4px;flex-wrap:wrap;gap:8px;">'+
+        '<span style="font-size:11px;color:#94a3b8;">Hiện '+from+'–'+to+' / '+total+' hồ sơ</span>'+
+        '<div style="display:flex;align-items:center;gap:8px;">'+
+          '<span onclick="khoGoPage('+(khoState.page-1)+')" style="cursor:pointer;font-size:11px;padding:5px 12px;border-radius:6px;border:1px solid #e2e8f0;color:'+prevC+';">← Trước</span>'+
+          '<span style="font-size:11px;color:#334155;">Trang '+(khoState.page+1)+' / '+pages+'</span>'+
+          '<span onclick="khoGoPage('+(khoState.page+1)+')" style="cursor:pointer;font-size:11px;padding:5px 12px;border-radius:6px;border:1px solid #e2e8f0;color:'+nextC+';">Sau →</span>'+
+        '</div></div>';
+    }
+  }
   var tb=document.getElementById('kho-tbody'); if(!tb) return;
   if(!rows.length){ tb.innerHTML='<tr><td colspan="10" style="padding:22px;text-align:center;color:#94a3b8;font-size:12px;">Không có CV phù hợp</td></tr>'; return; }
   tb.innerHTML=rows.map(function(c){
@@ -2695,7 +2714,7 @@ function renderKhoCV(){
       khoStat('Số vị trí', posNames.length, '#5b21b6')+
     '</div>'+
     '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;">'+
-      '<div style="flex:1;min-width:180px;display:flex;align-items:center;gap:7px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:7px 11px;"><i class="ti ti-search" style="font-size:14px;color:#94a3b8;"></i><input id="kho-search" oninput="khoState.q=this.value;khoRenderRows()" value="'+khoEsc(khoState.q)+'" placeholder="Tìm theo tên, email, vị trí" style="border:none;outline:none;background:none;font-size:12px;color:#334155;flex:1;font-family:inherit;"></div>'+
+      '<div style="flex:1;min-width:180px;display:flex;align-items:center;gap:7px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:7px 11px;"><i class="ti ti-search" style="font-size:14px;color:#94a3b8;"></i><input id="kho-search" oninput="khoState.q=this.value;khoState.page=0;khoRenderRows()" value="'+khoEsc(khoState.q)+'" placeholder="Tìm theo tên, email, vị trí" style="border:none;outline:none;background:none;font-size:12px;color:#334155;flex:1;font-family:inherit;"></div>'+
       stChip('warn','⚠ Cảnh báo')+stChip('hired','Trúng tuyển')+stChip('waiting','Đang đợi KQ')+stChip('rejected','Trượt / Từ chối')+stChip('processing','Chưa xử lý')+
     '</div>'+
     '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">'+posChips+'</div>'+
@@ -2715,6 +2734,7 @@ function renderKhoCV(){
           '<th style="font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:.4px;padding:8px 10px;text-align:left;border-bottom:1px solid #f1f5f9;">Cảnh báo</th>'+
         '</tr></thead><tbody id="kho-tbody"></tbody></table></div>'+
     '</div>'+
+    '<div id="kho-pager"></div>'+
     '<div style="font-size:10px;color:#94a3b8;margin-top:8px;">Kết quả tự suy: đã qua ngày PV mà chưa có kết quả = Trượt · chưa tới ngày PV = Đang đợi. R1/R2: <i class="ti ti-circle-check" style="color:#22c55e;font-size:12px;vertical-align:-2px;"></i> pass · <i class="ti ti-circle-x" style="color:#ef4444;font-size:12px;vertical-align:-2px;"></i> fail · <i class="ti ti-minus" style="color:#cbd5e1;font-size:12px;vertical-align:-2px;"></i> chưa có. Chỉ đọc — dữ liệu từ Sheet.</div>';
   document.getElementById('content').innerHTML=html;
   khoRenderRows();
