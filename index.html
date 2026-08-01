@@ -2665,11 +2665,12 @@ function khoClearKey(){ try{ localStorage.removeItem('bigx_gemini_key'); }catch(
 function khoToggleKeyBar(){ khoState._keybar=!khoState._keybar; renderKhoCV(); }
 function khoTriggerFile(){ var f=document.getElementById('kho-file'); if(f) f.click(); }
 function khoFileToB64(file){ return new Promise(function(res,rej){ var fr=new FileReader(); fr.onload=function(){ var s=String(fr.result||''); var i=s.indexOf(','); res(i>=0?s.substring(i+1):s); }; fr.onerror=function(){ rej(new Error('Không đọc được file')); }; fr.readAsDataURL(file); }); }
-async function khoCallGemini(b64,key,mime,rule){
+async function khoCallGemini(b64,key,mime){
   var url='https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key='+encodeURIComponent(key);
-  var base='Bạn là trợ lý HR của BigX. Đọc kỹ CV và trả về DUY NHẤT một JSON object (không markdown, không giải thích) với các khóa: ho_ten, gioi_tinh, email, sdt, vi_tri, kinh_nghiem, ngay_sinh'+(rule?', scan':'')+'. Quy tắc trích xuất: gioi_tinh chỉ nhận "Nam" hoặc "Nữ", nếu CV không ghi rõ để "". kinh_nghiem tóm tắt ngắn 1 câu (số năm + vị trí chính). Trường nào không có để "".';
-  var scan = rule ? (' scan là object {relevant, skills_summary, must_met, percent, reason}. Đang xét vị trí: "'+rule.label+'". Nếu CV KHÔNG thực sự phù hợp nhóm vị trí này thì relevant=false và để skills_summary="", must_met=false, percent=0, reason="". Nếu relevant=true thì chấm theo tiêu chí sau. '+rule.block+' must_met=false nếu thiếu bất kỳ tiêu chí BẮT BUỘC nào. percent = tổng trọng số đạt được (0-100, số nguyên). skills_summary: 1-2 câu tóm tắt kỹ năng/kinh nghiệm nổi bật. reason: 1 câu ngắn vì sao đạt hay chưa đạt.') : '';
-  var prompt=base+scan;
+  var cat='';
+  for(var i=0;i<KHO_RULES.length;i++){ var R=KHO_RULES[i]; cat+=' '+(i+1)+') matched_position="'+R.label+'" — khớp khi vị trí ứng tuyển liên quan: '+R.match.join(', ')+'. '+R.block; }
+  var prompt='Bạn là trợ lý HR của BigX. Đọc kỹ CV và trả về DUY NHẤT một JSON object (không markdown, không giải thích) với các khóa: ho_ten, gioi_tinh, email, sdt, vi_tri, kinh_nghiem, ngay_sinh, scan. Quy tắc trích xuất: gioi_tinh chỉ nhận "Nam" hoặc "Nữ", nếu CV không ghi rõ để "". kinh_nghiem tóm tắt ngắn 1 câu (số năm + vị trí chính). Trường nào không có để "". '
+    +'scan là object {matched_position, skills_summary, must_met, percent, reason}. Hãy xác định vị trí ứng tuyển của ứng viên (dựa vào mục tiêu nghề nghiệp, vị trí gần nhất, kỹ năng chính trong CV). Nếu khớp MỘT trong các BỘ TIÊU CHÍ dưới đây thì đặt matched_position = đúng nhãn của bộ đó và chấm theo bộ đó; nếu không khớp bộ nào thì matched_position="", skills_summary="", must_met=false, percent=0, reason="". must_met=false nếu thiếu bất kỳ tiêu chí BẮT BUỘC nào của bộ khớp. percent = tổng trọng số đạt được (0-100, số nguyên). skills_summary: 1-2 câu tóm tắt kỹ năng/kinh nghiệm nổi bật. reason: 1 câu ngắn vì sao đạt hay chưa đạt. BỘ TIÊU CHÍ:'+cat;
   var body={ contents:[{ parts:[ {inline_data:{mime_type:(mime||'application/pdf'),data:b64}}, {text:prompt} ] }], generationConfig:{ temperature:0, responseMimeType:'application/json' } };
   var r=await fetch(url,{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
   var j=await r.json();
@@ -2689,7 +2690,7 @@ async function khoHandleFiles(fileList){
     var f=files[i];
     var item={name:f.name,status:'reading',data:null,err:null};
     khoExtracted.unshift(item); khoRenderExtractList();
-    try{ var b64=await khoFileToB64(f); var _fn=khoParseFilename(f.name); var _rule=khoFindRule((_fn&&_fn.vi_tri)||''); var d=await khoCallGemini(b64,key,f.type||'application/pdf',_rule); item.status='done'; item.data=d||{}; if(_fn){ if(_fn.ho_ten) item.data.ho_ten=_fn.ho_ten; if(_fn.vi_tri) item.data.vi_tri=_fn.vi_tri; if(_fn.ngay) item.data.ngay=_fn.ngay; item.fromFilename=true; } if(_rule && item.data.scan){ item.data.scan.matched_position=(item.data.scan.relevant===false)?'':_rule.label; } khoApplyScan(item.data); }
+    try{ var b64=await khoFileToB64(f); var d=await khoCallGemini(b64,key,f.type||'application/pdf'); item.status='done'; item.data=d||{}; var _fn=khoParseFilename(f.name); if(_fn){ if(_fn.ho_ten) item.data.ho_ten=_fn.ho_ten; if(_fn.vi_tri) item.data.vi_tri=_fn.vi_tri; if(_fn.ngay) item.data.ngay=_fn.ngay; item.fromFilename=true; } khoApplyScan(item.data); }
     catch(e){ item.status='error'; item.err=(e&&e.message)||'Lỗi không rõ'; }
     khoRenderExtractList();
   }
