@@ -2635,12 +2635,40 @@ function khoParseFilename(name){
   if(!ten||!vitri) return null;
   return { ho_ten:ten, vi_tri:vitri, ngay:ngay };
 }
+function khoNorm(x){ return String(x==null?'':x).toLowerCase().replace(/\s+/g,' ').trim(); }
+function khoNormPhone(x){ return String(x==null?'':x).replace(/[^0-9]/g,'').replace(/^84/,'0'); }
+function khoFindDuplicate(d){
+  var cvs=(rawData&&rawData.cvs)||[];
+  var em=khoNorm(d.email), ph=khoNormPhone(d.sdt), nm=khoNorm(d.ho_ten), vt=khoNorm(d.vi_tri);
+  var i;
+  if(em){ for(i=0;i<cvs.length;i++){ if(khoNorm(cvs[i]['MAIL'])===em) return cvs[i]; } }
+  if(ph && ph.length>=8){ for(i=0;i<cvs.length;i++){ if(khoNormPhone(cvs[i]['SĐT'])===ph) return cvs[i]; } }
+  if(nm && vt){ for(i=0;i<cvs.length;i++){ if(khoNorm(cvs[i]['HO VA TEN'])===nm && khoNorm(cvs[i]['VI TRI'])===vt) return cvs[i]; } }
+  return null;
+}
 async function khoSaveToKho(i){
   var it=khoExtracted[i]; if(!it||!it.data||it.saved||it.saving) return;
   it.saving=true; it.saveErr=''; khoRenderExtractList();
   var d=it.data;
-  var payload={ ho_ten:d.ho_ten||'', gioi_tinh:d.gioi_tinh||'', email:d.email||'', sdt:d.sdt||'', vi_tri:d.vi_tri||'', cv:d.cv||'', portfolio:d.portfolio||'', ngay:d.ngay||'', skills:d.scan_skills||'', scan:d.scan_verdict||'', percent:(d.scan_verdict?(d.scan_percent!=null?d.scan_percent:''):''), reason:d.scan_reason||'' };
+  var pct=(d.scan_verdict?(d.scan_percent!=null?d.scan_percent:''):'');
+  var dup=khoFindDuplicate(d);
   try{
+    if(dup){
+      var up={ action:'update', stt:String(dup['3']), skills:d.scan_skills||'', scan:d.scan_verdict||'', percent:pct, reason:d.scan_reason||'' };
+      if(!((dup['MAIL']||'').trim()) && d.email) up.mail=d.email;
+      if(!((dup['SĐT']||'').trim()) && d.sdt) up.sdt=d.sdt;
+      var ru=await fetch(KHO_WRITE_API,{ method:'POST', body:JSON.stringify(up) });
+      var tu=await ru.text(); var ju={}; try{ ju=JSON.parse(tu); }catch(_){}
+      if(ju && ju.ok){
+        it.saving=false; it.saved=true; it.updated=true; it.stt=dup['3'];
+        dup['Tóm tắt kỹ năng']=d.scan_skills||''; dup['Scan HR']=d.scan_verdict||''; dup['% phù hợp']=(d.scan_verdict&&d.scan_percent!=null?String(d.scan_percent):''); dup['Lý do']=d.scan_reason||'';
+        if(up.mail) dup['MAIL']=d.email; if(up.sdt) dup['SĐT']=d.sdt;
+        try{ localStorage.setItem(CACHE_KEY, JSON.stringify(rawData)); }catch(_){}
+        renderKhoCV();
+      } else { it.saving=false; it.saveErr='Cập nhật lỗi: '+((ju&&ju.error)||(tu||'').slice(0,80)); khoRenderExtractList(); }
+      return;
+    }
+    var payload={ ho_ten:d.ho_ten||'', gioi_tinh:d.gioi_tinh||'', email:d.email||'', sdt:d.sdt||'', vi_tri:d.vi_tri||'', cv:d.cv||'', portfolio:d.portfolio||'', ngay:d.ngay||'', skills:d.scan_skills||'', scan:d.scan_verdict||'', percent:pct, reason:d.scan_reason||'' };
     var r=await fetch(KHO_WRITE_API,{ method:'POST', body:JSON.stringify(payload) });
     var t=await r.text(); var j={}; try{ j=JSON.parse(t); }catch(_){}
     if(j && j.ok){
@@ -2648,13 +2676,11 @@ async function khoSaveToKho(i){
       var rec={ '3':j.stt, 'SĐT':d.sdt||'', 'NGAY':d.ngay||khoToday(), 'VI TRI':d.vi_tri||'', 'MAIL':d.email||'', 'HO VA TEN':d.ho_ten||'', 'GIOI TINH':d.gioi_tinh||'', 'CV':d.cv||'', 'HR REVIEW CV':'', 'LINE MANAGER REVIEW':'', 'NGAY LICH PV':'', 'KET QUA R1':'', 'KET QUA R2':'', 'FINAL':'', 'NGÀY NHẬN VIỆC':'', 'Tóm tắt kỹ năng':d.scan_skills||'', 'Scan HR':d.scan_verdict||'', '% phù hợp':(d.scan_verdict&&d.scan_percent!=null?String(d.scan_percent):''), 'Lý do':d.scan_reason||'' };
       if(rawData && rawData.cvs){ rawData.cvs.push(rec); try{ localStorage.setItem(CACHE_KEY, JSON.stringify(rawData)); }catch(_){} }
       renderKhoCV();
-    } else {
-      it.saving=false; it.saveErr='Ghi lỗi: '+((j&&j.error)||(t||'').slice(0,80)); khoRenderExtractList();
-    }
+    } else { it.saving=false; it.saveErr='Ghi lỗi: '+((j&&j.error)||(t||'').slice(0,80)); khoRenderExtractList(); }
   }catch(e){ it.saving=false; it.saveErr=(e&&e.message)||'Lỗi kết nối'; khoRenderExtractList(); }
 }
 function khoSaveFooter(it,i){
-  if(it.saved) return '<div style="margin-top:10px;font-size:12px;color:#15803d;"><i class="ti ti-circle-check" style="vertical-align:-2px;"></i> Đã lưu vào kho'+(it.stt?' (STT '+it.stt+')':'')+' — đã ghi xuống Sheet</div>';
+  if(it.saved) return '<div style="margin-top:10px;font-size:12px;color:#15803d;"><i class="ti ti-circle-check" style="vertical-align:-2px;"></i> '+(it.updated?'Đã cập nhật hồ sơ có sẵn':'Đã lưu vào kho')+(it.stt?' (STT '+it.stt+')':'')+' — đã ghi xuống Sheet</div>';
   if(it.saving) return '<div style="margin-top:10px;font-size:12px;color:#64748b;"><i class="ti ti-loader" style="vertical-align:-2px;"></i> Đang lưu...</div>';
   var err=it.saveErr?'<div style="margin-top:6px;font-size:11px;color:#b91c1c;">'+khoEsc(it.saveErr)+'</div>':'';
   return '<div style="margin-top:10px;"><span onclick="khoSaveToKho('+i+')" style="cursor:pointer;font-size:12px;padding:6px 14px;border-radius:8px;background:#5b21b6;color:#fff;"><i class="ti ti-download" style="vertical-align:-2px;"></i> Lưu vào kho</span></div>'+err;
