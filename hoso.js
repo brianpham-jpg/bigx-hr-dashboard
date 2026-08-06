@@ -5,7 +5,8 @@ function hsTenM(vao,nghi){ const a=hsPD(vao); if(!a) return null; const b=nghi?h
 function hsTenText(m){ if(m==null) return '—'; const y=Math.floor(m/12), mo=m%12; return (y?y+' năm ':'')+(mo?mo+' tháng':(y?'':'0 tháng')); }
 function hsDC(pb){ const m={'GIÁM ĐỐC':['#eeedfe','#5b21b6'],'KINH DOANH':['#e6f1fb','#185fa5'],'SALE':['#e6f1fb','#185fa5'],'MARKETING':['#ede9fe','#5b21b6'],'KẾ TOÁN':['#faeeda','#854f0b'],'NHÂN SỰ':['#e1f5ee','#0f6e56'],'ACCOUNT':['#faece7','#993c1d'],'BOOKING':['#fbeaf0','#993556'],'AGENCY':['#ede9fe','#5b21b6'],'EDIT':['#e1f5ee','#0f6e56'],'CONTENT':['#eaf3de','#3b6d11'],'TSP':['#fbeaf0','#993556'],'AM':['#faeeda','#854f0b'],'CREATIVE':['#eaf3de','#3b6d11'],'ECOM':['#e6f1fb','#0c447c']}; return m[String(pb||'').toUpperCase()]||['#f1f5f9','#475569']; }
 function hsInit(t){ const w=String(t||'').trim().split(/\s+/); return (((w[w.length-2]||w[0]||'?')[0]||'')+((w[w.length-1]||'')[0]||'')).toUpperCase(); }
-function hsImg(e,px){ const c=hsDC(e.pb); if(e.anh) return '<img src="'+e.anh+'" style="width:'+px+'px;height:'+px+'px;border-radius:50%;object-fit:cover;flex:none;">'; return '<span style="width:'+px+'px;height:'+px+'px;border-radius:50%;background:'+c[0]+';color:'+c[1]+';display:flex;align-items:center;justify-content:center;font-weight:600;font-size:'+Math.round(px*0.36)+'px;flex:none;">'+hsInit(e.ten)+'</span>'; }
+function hsPhoto(e){ return (e&&e.anh)||(window.__PHOTOS&&window.__PHOTOS[((e&&e.ten)||'').trim()])||''; }
+function hsImg(e,px){ const c=hsDC(e.pb); const _a=hsPhoto(e); if(_a) return '<img src="'+_a+'" style="width:'+px+'px;height:'+px+'px;border-radius:50%;object-fit:cover;flex:none;">'; return '<span style="width:'+px+'px;height:'+px+'px;border-radius:50%;background:'+c[0]+';color:'+c[1]+';display:flex;align-items:center;justify-content:center;font-weight:600;font-size:'+Math.round(px*0.36)+'px;flex:none;">'+hsInit(e.ten)+'</span>'; }
 function hsOpen(i){ hsSel=i; hsView='detail'; renderHoSo(); }
 function hsBack(){ hsView='list'; hsSel=null; renderHoSo(); }
 function hsSetDept(d){ hsDept=d; renderHoSo(); }
@@ -141,8 +142,9 @@ function hsHDSectionHTML(e){
 function hsDetailHTML(e){
   if(!e){ hsView='list'; return ''; }
   const c=hsDC(e.pb);
-  const photo = e.anh
-    ? '<div style="width:100%;aspect-ratio:3/4;border-radius:8px;overflow:hidden;margin-bottom:14px;"><img src="'+e.anh+'" style="width:100%;height:100%;object-fit:cover;"></div>'
+  const _pa = hsPhoto(e);
+  const photo = _pa
+    ? '<div style="width:100%;aspect-ratio:3/4;border-radius:8px;overflow:hidden;margin-bottom:14px;"><img src="'+_pa+'" style="width:100%;height:100%;object-fit:cover;"></div>'
     : '<div style="width:100%;aspect-ratio:3/4;border-radius:8px;background:'+c[0]+';color:'+c[1]+';display:flex;align-items:center;justify-content:center;margin-bottom:14px;"><i class="ti ti-photo" style="font-size:46px;opacity:.6;"></i></div>';
   const age=hsAge(e.ns);
   const _curHD=hsCurrentHD(e); const loai = _curHD ? '<span style="color:#185fa5;font-weight:600;">'+_curHD.loai+' '+_curHD.han+'</span>' : (e.loaiHD||'—');
