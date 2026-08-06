@@ -417,6 +417,7 @@ function nav(v){
     document.getElementById('topbar-left').innerHTML='<i class="ti ti-id-badge"></i> Hồ sơ nhân sự <span class="live-tag">● Live</span>';
     fb.classList.add('hidden');
     renderHoSo();
+    loadHS();
     return;
   }
   if(v==='overview'){

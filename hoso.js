@@ -164,7 +164,7 @@ function hsDetailHTML(e){
     +'</div></div></div></div>';
 }
 
-fetch('https://script.google.com/macros/s/AKfycby_WeDpvih5B6sq7LP_P-qKZTBXDKrG6JHhWLv33JLKRyf_K9HiTJS5BJ6ncQFh9sqc/exec').then(r=>r.json()).then(d=>{if(Array.isArray(d)&&d.length){HS_DATA.length=0;d.forEach(x=>HS_DATA.push(x));if(document.getElementById('nav-hs')?.classList.contains('active'))renderHoSo();}}).catch(e=>console.warn('loadHS',e));function renderHoSo(){
+let hsLiveLoaded=false;function loadHS(){if(hsLiveLoaded)return;hsLiveLoaded=true;fetch('https://script.google.com/macros/s/AKfycby_WeDpvih5B6sq7LP_P-qKZTBXDKrG6JHhWLv33JLKRyf_K9HiTJS5BJ6ncQFh9sqc/exec').then(r=>r.json()).then(d=>{if(Array.isArray(d)&&d.length){HS_DATA.length=0;d.forEach(x=>HS_DATA.push(x));if(document.getElementById('nav-hs')?.classList.contains('active'))renderHoSo();}}).catch(e=>console.warn('loadHS',e));}function renderHoSo(){
   const C=document.getElementById('content'); if(!C) return;
   if(hsView==='detail'){ C.innerHTML=hsDetailHTML(HS_DATA[hsSel]); return; }
   const D=HS_DATA, total=D.length;
