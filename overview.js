@@ -15,7 +15,8 @@ async function loadOverview(){
     if(c){ try{ applyTaskData(JSON.parse(c)); }catch(_){ applyTaskData(null); } } else { applyTaskData(null); }
     taskDataLoaded=true;
     if(tqIsActive()) renderTongQuan();
-    fetch(TASK_API).then(r=>r.json()).then(d=>{ applyTaskData(d); localStorage.setItem(TASK_CACHE_KEY,JSON.stringify({taskLH:rawTaskLH,taskCD:rawTaskCD})); if(tqIsActive()) renderTongQuan(); }).catch(()=>{});
+    if(rawData&&rawData.taskLH){ applyTaskData(rawData); try{localStorage.setItem(TASK_CACHE_KEY,JSON.stringify({taskLH:rawTaskLH,taskCD:rawTaskCD}));}catch(_){} if(tqIsActive()) renderTongQuan(); }
+    else { fetch(TASK_API).then(r=>r.json()).then(d=>{ applyTaskData(d); localStorage.setItem(TASK_CACHE_KEY,JSON.stringify({taskLH:rawTaskLH,taskCD:rawTaskCD})); if(tqIsActive()) renderTongQuan(); }).catch(()=>{}); }
   }
 }
 

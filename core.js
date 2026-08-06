@@ -119,6 +119,7 @@ async function loadData(){
     const r=await fetch(API);
     rawData=await r.json();
     localStorage.setItem(CACHE_KEY,JSON.stringify(rawData));
+    if(rawData&&rawData.taskLH){ applyTaskData(rawData); try{localStorage.setItem(TASK_CACHE_KEY,JSON.stringify({taskLH:rawTaskLH,taskCD:rawTaskCD}));}catch(_){} taskDataLoaded=true; }
     document.getElementById('uptime').textContent='Cập nhật: '+new Date().toLocaleTimeString('vi-VN');
     if(document.getElementById('nav-td').classList.contains('active')) render(); if(_khoActive()) renderKhoCV();
     /* Nếu đang ở tab Công việc thì fetch task data riêng */

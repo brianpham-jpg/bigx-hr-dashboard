@@ -155,8 +155,9 @@ async function loadTaskData(force){
   }
   /* 2) Fetch mới ngầm rồi cập nhật lại (chỉ render nếu vẫn đang ở tab) */
   try{
-    const r=await fetch(TASK_API);
-    const d=await r.json();
+    let d;
+    if(rawData&&rawData.taskLH){ d=rawData; }
+    else { const r=await fetch(TASK_API); d=await r.json(); }
     applyTaskData(d);
     localStorage.setItem(TASK_CACHE_KEY,JSON.stringify({taskLH:rawTaskLH,taskCD:rawTaskCD}));
     taskDataLoaded=true;
