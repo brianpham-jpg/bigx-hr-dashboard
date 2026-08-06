@@ -278,21 +278,42 @@ function khoClearKey(){ try{ localStorage.removeItem('bigx_gemini_key'); }catch(
 function khoToggleKeyBar(){ khoState._keybar=!khoState._keybar; renderKhoCV(); }
 function khoTriggerFile(){ var f=document.getElementById('kho-file'); if(f) f.click(); }
 function khoFileToB64(file){ return new Promise(function(res,rej){ var fr=new FileReader(); fr.onload=function(){ var s=String(fr.result||''); var i=s.indexOf(','); res(i>=0?s.substring(i+1):s); }; fr.onerror=function(){ rej(new Error('Không đọc được file')); }; fr.readAsDataURL(file); }); }
-async function khoCallGemini(b64,key,mime){
+function khoSleep(ms){ return new Promise(function(res){ setTimeout(res,ms); }); }
+async function khoCallGemini(b64,key,mime,onRetry){
   var url='https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key='+encodeURIComponent(key);
   var cat='';
   for(var i=0;i<KHO_RULES.length;i++){ var R=KHO_RULES[i]; cat+=' '+(i+1)+') matched_position="'+R.label+'" — khớp khi vị trí ứng tuyển liên quan: '+R.match.join(', ')+'. '+R.block; }
   var prompt='Bạn là trợ lý HR của BigX. Đọc kỹ CV và trả về DUY NHẤT một JSON object (không markdown, không giải thích) với các khóa: ho_ten, gioi_tinh, email, sdt, vi_tri, kinh_nghiem, ngay_sinh, scan. Quy tắc trích xuất: gioi_tinh chỉ nhận "Nam" hoặc "Nữ", nếu CV không ghi rõ để "". kinh_nghiem tóm tắt ngắn 1 câu (số năm + vị trí chính). Trường nào không có để "". '
     +'scan là object {matched_position, skills_summary, must_met, percent, reason}. Hãy xác định vị trí ứng tuyển của ứng viên (dựa vào mục tiêu nghề nghiệp, vị trí gần nhất, kỹ năng chính trong CV). Nếu khớp MỘT trong các BỘ TIÊU CHÍ dưới đây thì đặt matched_position = đúng nhãn của bộ đó và chấm theo bộ đó; nếu không khớp bộ nào thì matched_position="", skills_summary="", must_met=false, percent=0, reason="". must_met=false nếu thiếu bất kỳ tiêu chí BẮT BUỘC nào của bộ khớp. percent = tổng trọng số đạt được (0-100, số nguyên). skills_summary: 1-2 câu tóm tắt kỹ năng/kinh nghiệm nổi bật. reason: 1 câu ngắn vì sao đạt hay chưa đạt. BỘ TIÊU CHÍ:'+cat;
   var body={ contents:[{ parts:[ {inline_data:{mime_type:(mime||'application/pdf'),data:b64}}, {text:prompt} ] }], generationConfig:{ temperature:0, responseMimeType:'application/json' } };
-  var r=await fetch(url,{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
-  var j=await r.json();
-  if(j && j.error) throw new Error(j.error.message||('HTTP '+r.status));
-  var cand=(j.candidates||[])[0]||{};
-  var parts=((cand.content||{}).parts)||[];
-  var txt=parts.map(function(p){return p.text||'';}).join('').trim();
-  if(!txt) throw new Error('Gemini không trả nội dung');
-  try{ return JSON.parse(txt); }catch(e){ var m=txt.match(/\{[\s\S]*\}/); if(m) return JSON.parse(m[0]); throw new Error('Không đọc được JSON từ AI'); }
+  var maxRetry=5;
+  for(var attempt=0;;attempt++){
+    var r=await fetch(url,{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+    var isLimit=(r.status===429||r.status===503);
+    if(isLimit && attempt<maxRetry){
+      var wait=Math.min(60,Math.round(Math.pow(2,attempt)*5)); // 5,10,20,40,60s
+      var ra=parseInt((r.headers&&r.headers.get&&r.headers.get('Retry-After'))||'',10); if(ra>0) wait=Math.min(90,ra);
+      if(typeof onRetry==='function') onRetry('Chạm giới hạn Gemini — chờ '+wait+'s rồi tự thử lại ('+(attempt+1)+'/'+maxRetry+')...');
+      await khoSleep(wait*1000);
+      continue;
+    }
+    var j=await r.json();
+    if(j && j.error){
+      var code=j.error.code||r.status;
+      if((code===429||code===503) && attempt<maxRetry){
+        var w=Math.min(60,Math.round(Math.pow(2,attempt)*5));
+        if(typeof onRetry==='function') onRetry('Chạm giới hạn Gemini — chờ '+w+'s rồi tự thử lại ('+(attempt+1)+'/'+maxRetry+')...');
+        await khoSleep(w*1000);
+        continue;
+      }
+      throw new Error(j.error.message||('HTTP '+r.status));
+    }
+    var cand=(j.candidates||[])[0]||{};
+    var parts=((cand.content||{}).parts)||[];
+    var txt=parts.map(function(p){return p.text||'';}).join('').trim();
+    if(!txt) throw new Error('Gemini không trả nội dung');
+    try{ return JSON.parse(txt); }catch(e){ var m=txt.match(/\{[\s\S]*\}/); if(m) return JSON.parse(m[0]); throw new Error('Không đọc được JSON từ AI'); }
+  }
 }
 async function khoHandleFiles(fileList){
   var key=khoGetKey();
@@ -303,9 +324,10 @@ async function khoHandleFiles(fileList){
     var f=files[i];
     var item={name:f.name,status:'reading',data:null,err:null};
     khoExtracted.unshift(item); khoRenderExtractList();
-    try{ var b64=await khoFileToB64(f); var d=await khoCallGemini(b64,key,f.type||'application/pdf'); item.status='done'; item.data=d||{}; var _fn=khoParseFilename(f.name); if(_fn){ if(_fn.ho_ten) item.data.ho_ten=_fn.ho_ten; if(_fn.vi_tri) item.data.vi_tri=_fn.vi_tri; if(_fn.ngay) item.data.ngay=_fn.ngay; item.fromFilename=true; } khoApplyScan(item.data); }
-    catch(e){ item.status='error'; item.err=(e&&e.message)||'Lỗi không rõ'; }
+    try{ var b64=await khoFileToB64(f); var d=await khoCallGemini(b64,key,f.type||'application/pdf',function(msg){ item.note=msg; khoRenderExtractList(); }); item.note=''; item.status='done'; item.data=d||{}; var _fn=khoParseFilename(f.name); if(_fn){ if(_fn.ho_ten) item.data.ho_ten=_fn.ho_ten; if(_fn.vi_tri) item.data.vi_tri=_fn.vi_tri; if(_fn.ngay) item.data.ngay=_fn.ngay; item.fromFilename=true; } khoApplyScan(item.data); }
+    catch(e){ item.note=''; item.status='error'; item.err=(e&&e.message)||'Lỗi không rõ'; }
     khoRenderExtractList();
+    if(i<files.length-1){ await khoSleep(4000); } // giãn nhịp giữa các file để tránh chạm giới hạn/phút
   }
 }
 function khoField(lbl,val,warn){
@@ -322,7 +344,7 @@ function khoRenderExtractList(){
   var box=document.getElementById('kho-extract-list'); if(!box) return;
   if(!khoExtracted.length){ box.innerHTML=''; return; }
   box.innerHTML=khoExtracted.map(function(it,i){
-    if(it.status==='reading') return '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;margin-bottom:8px;display:flex;align-items:center;gap:8px;font-size:12px;color:#64748b;"><i class="ti ti-loader" style="color:#5b21b6;"></i> AI đang đọc <b style="font-weight:600;color:#334155;">'+khoEsc(it.name)+'</b>...</div>';
+    if(it.status==='reading') return '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;margin-bottom:8px;display:flex;align-items:center;gap:8px;font-size:12px;color:#64748b;"><i class="ti ti-loader" style="color:#5b21b6;"></i> '+(it.note?('<span style="color:#b45309;">'+khoEsc(it.note)+'</span> <b style="font-weight:600;color:#334155;">'+khoEsc(it.name)+'</b>'):('AI đang đọc <b style="font-weight:600;color:#334155;">'+khoEsc(it.name)+'</b>...'))+'</div>';
     if(it.status==='error') return '<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:10px 14px;margin-bottom:8px;font-size:12px;color:#b91c1c;"><i class="ti ti-alert-triangle" style="vertical-align:-2px;"></i> Lỗi đọc <b>'+khoEsc(it.name)+'</b>: '+khoEsc(it.err)+'</div>';
     var d=it.data||{};
     return '<div style="background:#fff;border:1px solid #c4b5fd;border-radius:10px;padding:12px 14px;margin-bottom:8px;">'+
