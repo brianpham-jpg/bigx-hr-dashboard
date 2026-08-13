@@ -330,7 +330,7 @@ function hsExportExcel(){
 /* Chèn nút vào đầu tab Hồ sơ và tự gắn lại sau mỗi lần render */
 (function(){
   function ensureBtn(){
-    var sec = document.getElementById('ho-so'); if(!sec) return;
+    var sec = document.getElementById('hs-rows'); if(!sec) return;
     if(document.getElementById('hsExportBtn')) return;
     var b = document.createElement('button');
     b.id = 'hsExportBtn'; b.type = 'button'; b.innerHTML = '⬇ Xuất Excel';
