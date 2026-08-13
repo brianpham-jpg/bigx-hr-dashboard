@@ -279,7 +279,6 @@ Cloud
 
 
 
-Hoso nut xuat excel · JS
 /* =============================================================
    BigX HR — NÚT "XUẤT EXCEL" cho tab Hồ sơ nhân sự
    Xuất TOÀN BỘ nhân viên ra file .xlsx (đủ các cột đang có).
