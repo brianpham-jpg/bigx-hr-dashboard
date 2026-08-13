@@ -248,3 +248,108 @@ let hsLiveLoaded=false;function loadHS(){if(hsLiveLoaded)return;hsLiveLoaded=tru
 /* ══════════════════════════════════════════
    CÔNG VIỆC NHÂN SỰ — Data & Render
 ══════════════════════════════════════════ */
+
+
+Cloud
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Hoso nut xuat excel · JS
+/* =============================================================
+   BigX HR — NÚT "XUẤT EXCEL" cho tab Hồ sơ nhân sự
+   Xuất TOÀN BỘ nhân viên ra file .xlsx (đủ các cột đang có).
+ 
+   CÁCH DÙNG: dán TOÀN BỘ đoạn này vào CUỐI file hoso.js rồi Commit.
+   (Không cần sửa gì phía trên — chỉ thêm vào cuối.)
+   ============================================================= */
+function hsExportExcel(){
+  try{
+    var COLS = [
+      ['Họ tên','ten'],['Giới tính','gt'],['Ngày sinh','ns'],['SĐT','sdt'],
+      ['Phòng ban','pb'],['Chức vụ','vt'],['Ngày vào làm','vao'],['Trạng thái','__tt'],
+      ['Loại hợp đồng','loaiHD'],['Ngày hết hạn HĐ','hetHan'],['Số CCCD','cccd'],
+      ['Ngày cấp CCCD','ngayCap'],['Địa chỉ thường trú','tamTru'],['Trình độ','hocVan'],
+      ['Ngày nghỉ việc','nghi']
+    ];
+    function tt(r){ return r.tt==='Nghỉ việc' ? 'Nghỉ việc' : (r.loaiHD==='Thử việc' ? 'Thử việc' : 'Đang làm việc'); }
+    var aoa = [ COLS.map(function(c){ return c[0]; }) ];
+    (HS_DATA||[]).forEach(function(r){
+      aoa.push(COLS.map(function(c){
+        if(c[1]==='__tt') return tt(r);
+        var v = r[c[1]]; return (v==null)?'':String(v);
+      }));
+    });
+    function build(){
+      var ws = XLSX.utils.aoa_to_sheet(aoa);
+      // ép mọi ô thành text để không mất số 0 đầu (SĐT / CCCD)
+      var range = XLSX.utils.decode_range(ws['!ref']);
+      for(var R=0;R<=range.e.r;R++){ for(var C=0;C<=range.e.c;C++){
+        var cell = ws[XLSX.utils.encode_cell({r:R,c:C})]; if(cell){ cell.t='s'; }
+      }}
+      ws['!cols'] = COLS.map(function(c){ return { wch: Math.max(12, c[0].length + 2) }; });
+      var wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Hồ sơ nhân sự');
+      var d = new Date();
+      var name = 'BigX_HoSoNhanSu_' + d.getFullYear() + ('0'+(d.getMonth()+1)).slice(-2) + ('0'+d.getDate()).slice(-2) + '.xlsx';
+      XLSX.writeFile(wb, name);
+    }
+    if(typeof XLSX === 'undefined'){
+      var s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+      s.onload = build;
+      s.onerror = function(){ alert('Không tải được thư viện xuất Excel, thử lại.'); };
+      document.head.appendChild(s);
+    } else { build(); }
+  } catch(e){ console.error('hsExportExcel', e); alert('Lỗi khi xuất Excel: ' + e.message); }
+}
+ 
+/* Chèn nút vào đầu tab Hồ sơ và tự gắn lại sau mỗi lần render */
+(function(){
+  function ensureBtn(){
+    var sec = document.getElementById('ho-so'); if(!sec) return;
+    if(document.getElementById('hsExportBtn')) return;
+    var b = document.createElement('button');
+    b.id = 'hsExportBtn'; b.type = 'button'; b.innerHTML = '⬇ Xuất Excel';
+    b.style.cssText = 'display:inline-flex;align-items:center;gap:6px;margin:0 0 12px 0;padding:8px 16px;background:#1F4E79;color:#fff;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-family:inherit;font-size:13px;';
+    b.onmouseover = function(){ b.style.opacity = '.9'; };
+    b.onmouseout  = function(){ b.style.opacity = '1'; };
+    b.onclick = hsExportExcel;
+    sec.insertBefore(b, sec.firstChild);
+  }
+  if(typeof renderHoSo === 'function'){
+    var _r = renderHoSo;
+    renderHoSo = function(){ var x = _r.apply(this, arguments); try{ ensureBtn(); }catch(e){} return x; };
+    try{ window.renderHoSo = renderHoSo; }catch(e){}
+  }
+  if(document.readyState !== 'loading') ensureBtn();
+  document.addEventListener('DOMContentLoaded', ensureBtn);
+})();
+ 
+
+
+
