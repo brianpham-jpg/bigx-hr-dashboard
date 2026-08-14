@@ -299,8 +299,8 @@ let hsLiveLoaded=false;function loadHS(){if(hsLiveLoaded)return;hsLiveLoaded=tru
     ${kpi(avgAge,'Tuổi TB','#fbeaf0','#4b1528','#993556')}
   </div>
   <div style="background:#fff;border:0.5px solid #e2e8f0;border-radius:12px;padding:1rem 1.25rem;margin-bottom:14px;">
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;"><i class="ti ti-alert-triangle" style="font-size:17px;color:#993c1d;"></i><span style="font-size:13px;font-weight:600;color:#1e293b;">Hợp đồng sắp hết hạn / cần gia hạn</span><span style="margin-left:auto;font-size:11px;color:#94a3b8;">ngưỡng ≤ 30 ngày</span></div>
-    ${hsAlertHTML()}
+    <div onclick="hsAlertToggle(this)" style="display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;"><i class="ti ti-alert-triangle" style="font-size:17px;color:#993c1d;"></i><span style="font-size:13px;font-weight:600;color:#1e293b;">Hợp đồng sắp hết hạn / cần gia hạn</span><span style="font-size:11px;font-weight:600;color:#993c1d;background:#faece7;padding:1px 8px;border-radius:20px;">${hsAlertCount()}</span><span style="margin-left:auto;font-size:11px;color:#94a3b8;">ngưỡng ≤ 30 ngày</span><span class="hsAlArrow" style="font-size:13px;color:#94a3b8;margin-left:10px;transition:transform .15s;">▸</span></div>
+    <div id="hsAlertBody" style="display:none;margin-top:12px;">${hsAlertHTML()}</div>
   </div>
   <div style="background:#fff;border:0.5px solid #e2e8f0;border-radius:12px;padding:1rem 1.25rem;margin-bottom:14px;">
     <div style="display:flex;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:6px;"><span style="font-size:13px;font-weight:600;color:#1e293b;">Biến động nhân sự theo tháng</span><span style="margin-left:auto;font-size:11px;"><span style="color:#1d9e75;"><i class="ti ti-circle-filled" style="font-size:8px;"></i> Tuyển mới</span> &nbsp; <span style="color:#d85a30;"><i class="ti ti-circle-filled" style="font-size:8px;"></i> Nghỉ</span> &nbsp; <span style="color:#5b21b6;"><i class="ti ti-minus"></i> Headcount</span></span></div>
@@ -450,3 +450,9 @@ function hsExportExcel(){
 
 
 
+
+/* Thu gọn mục "Hợp đồng sắp hết hạn" — mặc định gập, bấm mũi tên mới bung */
+function hsAlertCount(){ var t=new Date();t.setHours(0,0,0,0); var n=0;
+  (HS_DATA||[]).forEach(function(e){ if(!hsActive(e))return; var c=hsCurrentHD(e); if(!c||!c.den)return; if(Math.round((c.den-t)/86400000)<=30)n++; }); return n; }
+function hsAlertToggle(el){ var b=document.getElementById('hsAlertBody'); if(!b)return; var open=b.style.display!=='none';
+  b.style.display=open?'none':'block'; var a=el.querySelector('.hsAlArrow'); if(a){ a.textContent=open?'▸':'▾'; } }
