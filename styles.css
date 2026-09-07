@@ -269,6 +269,9 @@ table.dt tbody tr:hover{background:var(--paper-2);}
 .dt-muted{color:var(--muted);}
 .dt-empty{text-align:center;color:var(--muted);padding:24px!important;}
 .pill.gray{background:#E9E6DE;color:#6E6A5F;}
+table.dt td.nw{white-space:nowrap;}
+.dt-date{color:var(--text);font-variant-numeric:tabular-nums;}
+.tag-new{font-size:9px;font-weight:600;letter-spacing:.4px;text-transform:uppercase;color:var(--teal);background:rgba(53,101,91,.14);padding:1px 5px;border-radius:4px;margin-left:6px;vertical-align:1px;}
 
 /* loader spin */
 .empty-icon .ti-loader{animation:spin 1s linear infinite;}

@@ -114,6 +114,14 @@ function statusPill(tt){
   return '<span class="pill '+cls+'">'+esc(tt||'—')+'</span>';
 }
 function parseDMY(s){ var p=String(s||'').split('/'); return p.length===3? new Date(+p[2],+p[1]-1,+p[0]) : null; }
+function loaiHDShort(s){ return s==='Lao động chính thức' ? 'Chính thức' : (s||'—'); }
+function isNewHire(ngayVao){ var d=parseDMY(ngayVao); if(!d) return false; var days=(Date.now()-d.getTime())/86400000; return days>=0 && days<=45; }
+/* sắp theo ngày vào giảm dần (mới nhất trên đầu); thiếu ngày xuống cuối */
+function byNgayVaoDesc(a,b){
+  var da=parseDMY(a.ngayVao), db=parseDMY(b.ngayVao);
+  if(!da && !db) return 0; if(!da) return 1; if(!db) return -1;
+  return db.getTime()-da.getTime();
+}
 
 /* ---- Skeleton (khung gợi ý) ---- */
 function skeleton(kind){
@@ -194,7 +202,7 @@ function hsOn(){
 function hsRenderBody(){
   var body=document.getElementById('hs-body'); if(!body) return;
   var q=hsFilter.q.trim().toLowerCase();
-  var rows = HR.nhansu.slice().sort(function(a,b){ return String(a.maNV).localeCompare(String(b.maNV)); }).filter(function(e){
+  var rows = HR.nhansu.slice().sort(byNgayVaoDesc).filter(function(e){
     if(hsFilter.phong && e.phong!==hsFilter.phong) return false;
     if(hsFilter.tt && e.tinhTrang!==hsFilter.tt) return false;
     if(q){ var hay=((e.hoTen||'')+' '+(e.maNV||'')).toLowerCase(); if(hay.indexOf(q)<0) return false; }
@@ -203,16 +211,17 @@ function hsRenderBody(){
   var cnt=document.getElementById('hs-count'); if(cnt) cnt.textContent = rows.length+' người';
   if(!rows.length){ body.innerHTML='<tr><td colspan="9" class="dt-empty">Không có nhân sự khớp bộ lọc.</td></tr>'; return; }
   body.innerHTML = rows.map(function(e){
+    var moi = isNewHire(e.ngayVao) ? ' <span class="tag-new">Mới</span>' : '';
     return '<tr>'+
       '<td class="dt-mono">'+esc(e.maNV||'—')+'</td>'+
       '<td class="dt-name">'+esc(e.hoTen||'—')+'</td>'+
-      '<td>'+esc(e.phong||'—')+'</td>'+
+      '<td class="nw">'+esc(e.phong||'—')+'</td>'+
       '<td class="dt-muted">'+esc(e.chucVu||'—')+'</td>'+
-      '<td>'+statusPill(e.tinhTrang)+'</td>'+
-      '<td class="dt-muted">'+esc(e.ngayVao||'—')+'</td>'+
-      '<td class="dt-muted">'+esc(e.thamNien||'—')+'</td>'+
-      '<td class="dt-muted">'+esc(e.loaiHD||'—')+'</td>'+
-      '<td class="dt-muted">'+esc(e.sinhNhat||'—')+'</td>'+
+      '<td class="nw">'+statusPill(e.tinhTrang)+'</td>'+
+      '<td class="dt-date nw">'+esc(e.ngayVao||'—')+moi+'</td>'+
+      '<td class="dt-muted nw">'+esc(e.thamNien||'—')+'</td>'+
+      '<td class="dt-muted nw">'+esc(loaiHDShort(e.loaiHD))+'</td>'+
+      '<td class="dt-muted nw">'+esc(e.sinhNhat||'—')+'</td>'+
     '</tr>';
   }).join('');
 }
