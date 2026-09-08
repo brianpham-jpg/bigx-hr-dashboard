@@ -114,6 +114,13 @@ function statusPill(tt){
   return '<span class="pill '+cls+'">'+esc(tt||'—')+'</span>';
 }
 function parseDMY(s){ var p=String(s||'').split('/'); return p.length===3? new Date(+p[2],+p[1]-1,+p[0]) : null; }
+function hoSoBadge(s){
+  if(!s) return '<span class="pill gray">—</span>';
+  if(/thiếu/i.test(s)) return '<span class="pill clay">Thiếu</span>';
+  if(/đủ/i.test(s)) return '<span class="pill teal">Đủ</span>';
+  return '<span class="pill gray">'+esc(s)+'</span>';
+}
+function conLaiNum(v){ var n=parseInt(String(v).replace(/[^\-0-9]/g,''),10); return isNaN(n)?null:n; }
 function loaiHDShort(s){ return s==='Lao động chính thức' ? 'Chính thức' : (s||'—'); }
 function isNewHire(ngayVao){ var d=parseDMY(ngayVao); if(!d) return false; var days=(Date.now()-d.getTime())/86400000; return days>=0 && days<=45; }
 /* sắp theo ngày vào giảm dần (mới nhất trên đầu); thiếu ngày xuống cuối */
@@ -162,14 +169,15 @@ function renderHoSo(){
   var nghi = ns.filter(function(e){ return e.tinhTrang==='Nghỉ việc'; }).length;
   var phongList = []; ns.forEach(function(e){ if(e.phong && phongList.indexOf(e.phong)<0) phongList.push(e.phong); });
   var ttList = []; ns.forEach(function(e){ if(e.tinhTrang && ttList.indexOf(e.tinhTrang)<0) ttList.push(e.tinhTrang); });
+  var thieuHS = ns.filter(function(e){ return e.tinhTrang!=='Nghỉ việc' && /thiếu/i.test(e.tinhTrangHoSo||''); }).length;
 
   var kpis = [
-    ['Tổng nhân sự', tong, 'ti-users'],
-    ['Đang làm', dangLam, 'ti-user-check'],
-    ['Nghỉ việc', nghi, 'ti-user-off'],
-    ['Phòng ban', phongList.length, 'ti-building']
+    ['Tổng nhân sự', tong, 'ti-users', ''],
+    ['Đang làm', dangLam, 'ti-user-check', ''],
+    ['Nghỉ việc', nghi, 'ti-user-off', ''],
+    ['Thiếu hồ sơ', thieuHS, 'ti-file-alert', thieuHS>0?'warn':'']
   ].map(function(k){
-    return '<div class="stat"><div class="stat-top"><span class="stat-lbl">'+k[0]+'</span><i class="ti '+k[2]+'"></i></div><div class="stat-val">'+k[1]+'</div></div>';
+    return '<div class="stat'+(k[3]==='warn'?' stat-warn':'')+'"><div class="stat-top"><span class="stat-lbl">'+k[0]+'</span><i class="ti '+k[2]+'"></i></div><div class="stat-val">'+k[1]+'</div></div>';
   }).join('');
 
   var opt = function(list, sel){ return '<option value="">Tất cả</option>'+list.map(function(x){return '<option value="'+esc(x)+'"'+(sel===x?' selected':'')+'>'+esc(x)+'</option>';}).join(''); };
@@ -185,7 +193,7 @@ function renderHoSo(){
       '<span class="tb-count" id="hs-count"></span>'+
     '</div>'+
     '<div class="table-wrap"><table class="dt"><thead><tr>'+
-      '<th>Mã NV</th><th>Họ tên</th><th>Phòng ban</th><th>Chức vụ</th><th>Trạng thái</th><th>Ngày vào</th><th>Thâm niên</th><th>Loại HĐ</th><th>Sinh nhật</th>'+
+      '<th>Mã NV</th><th>Họ tên</th><th>Phòng ban</th><th>Chức vụ</th><th>Trạng thái</th><th>Ngày vào</th><th>Thâm niên</th><th>Loại HĐ</th><th>Sinh nhật</th><th>Hồ sơ</th>'+
     '</tr></thead><tbody id="hs-body"></tbody></table></div>';
 
   setTimeout(hsRenderBody, 0);
@@ -209,7 +217,7 @@ function hsRenderBody(){
     return true;
   });
   var cnt=document.getElementById('hs-count'); if(cnt) cnt.textContent = rows.length+' người';
-  if(!rows.length){ body.innerHTML='<tr><td colspan="9" class="dt-empty">Không có nhân sự khớp bộ lọc.</td></tr>'; return; }
+  if(!rows.length){ body.innerHTML='<tr><td colspan="10" class="dt-empty">Không có nhân sự khớp bộ lọc.</td></tr>'; return; }
   body.innerHTML = rows.map(function(e){
     var moi = isNewHire(e.ngayVao) ? ' <span class="tag-new">Mới</span>' : '';
     return '<tr>'+
@@ -222,6 +230,92 @@ function hsRenderBody(){
       '<td class="dt-muted nw">'+esc(e.thamNien||'—')+'</td>'+
       '<td class="dt-muted nw">'+esc(loaiHDShort(e.loaiHD))+'</td>'+
       '<td class="dt-muted nw">'+esc(e.sinhNhat||'—')+'</td>'+
+      '<td class="nw">'+hoSoBadge(e.tinhTrangHoSo)+'</td>'+
+    '</tr>';
+  }).join('');
+}
+
+/* ============================================================
+   TAB: HỢP ĐỒNG (chỉ nhân sự đang làm)
+   ============================================================ */
+var hdFilter = { q:'', phong:'' };
+
+function hdActive(){ return HR.nhansu.filter(function(e){ return e.tinhTrang!=='Nghỉ việc'; }); }
+function conLaiCell(v){
+  var n=conLaiNum(v);
+  if(n===null) return '<span class="dt-muted">—</span>';
+  if(n<0) return '<span class="hd-over">Quá hạn '+(-n)+' ngày</span>';
+  if(n<=30) return '<span class="hd-soon">Còn '+n+' ngày</span>';
+  return '<span class="dt-muted">Còn '+n+' ngày</span>';
+}
+
+function renderHopDong(){
+  if(HR.error) return errorBox();
+  if(!HR.loaded) return loadingBox();
+  var act = hdActive();
+  var soon=0, over=0, thieu=0;
+  act.forEach(function(e){
+    var n=conLaiNum(e.ngayConLai);
+    if(n!==null && n<0) over++;
+    else if(n!==null && n<=30) soon++;
+    if(/thiếu/i.test(e.tinhTrangHoSo||'')) thieu++;
+  });
+  var phongList=[]; act.forEach(function(e){ if(e.phong && phongList.indexOf(e.phong)<0) phongList.push(e.phong); });
+
+  var kpis=[
+    ['Đang theo dõi', act.length, 'ti-file-certificate',''],
+    ['Sắp hết hạn (≤30 ngày)', soon, 'ti-clock-exclamation', soon>0?'warn':''],
+    ['Đã quá hạn', over, 'ti-alert-triangle', over>0?'danger':''],
+    ['Thiếu hồ sơ', thieu, 'ti-file-alert', thieu>0?'warn':'']
+  ].map(function(k){
+    return '<div class="stat'+(k[3]==='warn'?' stat-warn':(k[3]==='danger'?' stat-danger':''))+'"><div class="stat-top"><span class="stat-lbl">'+k[0]+'</span><i class="ti '+k[2]+'"></i></div><div class="stat-val">'+k[1]+'</div></div>';
+  }).join('');
+
+  var html=
+    '<div class="page-head"><div class="page-h1">Hợp đồng</div>'+
+    '<div class="page-lead">Theo dõi hợp đồng nhân sự đang làm — loại HĐ hiện hành, hạn còn lại, số bản đã ký. Sắp xếp theo mức khẩn (quá hạn / sắp hết hạn lên đầu).</div></div>'+
+    '<div class="stat-row">'+kpis+'</div>'+
+    '<div class="toolbar">'+
+      '<div class="tb-search"><i class="ti ti-search"></i><input id="hd-q" placeholder="Tìm tên hoặc mã NV…" value="'+esc(hdFilter.q)+'" oninput="hdOn()"></div>'+
+      '<select id="hd-phong" onchange="hdOn()"><option value="">Tất cả phòng</option>'+phongList.map(function(x){return '<option value="'+esc(x)+'"'+(hdFilter.phong===x?' selected':'')+'>'+esc(x)+'</option>';}).join('')+'</select>'+
+      '<span class="tb-count" id="hd-count"></span>'+
+    '</div>'+
+    '<div class="table-wrap"><table class="dt"><thead><tr>'+
+      '<th>Mã NV</th><th>Họ tên</th><th>Phòng ban</th><th>Loại HĐ hiện hành</th><th>Ngày hết hạn</th><th>Còn lại</th><th style="text-align:center;">Bản đã ký</th><th>Hồ sơ</th>'+
+    '</tr></thead><tbody id="hd-body"></tbody></table></div>';
+
+  setTimeout(hdRenderBody,0);
+  return html;
+}
+function hdOn(){
+  hdFilter.q=(document.getElementById('hd-q')||{}).value||'';
+  hdFilter.phong=(document.getElementById('hd-phong')||{}).value||'';
+  hdRenderBody();
+}
+function hdRenderBody(){
+  var body=document.getElementById('hd-body'); if(!body) return;
+  var q=hdFilter.q.trim().toLowerCase();
+  var rows=hdActive().filter(function(e){
+    if(hdFilter.phong && e.phong!==hdFilter.phong) return false;
+    if(q){ var hay=((e.hoTen||'')+' '+(e.maNV||'')).toLowerCase(); if(hay.indexOf(q)<0) return false; }
+    return true;
+  }).sort(function(a,b){
+    var na=conLaiNum(a.ngayConLai), nb=conLaiNum(b.ngayConLai);
+    if(na===null && nb===null) return 0; if(na===null) return 1; if(nb===null) return -1;
+    return na-nb; // khẩn nhất (số nhỏ / âm) lên đầu
+  });
+  var cnt=document.getElementById('hd-count'); if(cnt) cnt.textContent=rows.length+' người';
+  if(!rows.length){ body.innerHTML='<tr><td colspan="8" class="dt-empty">Không có nhân sự khớp bộ lọc.</td></tr>'; return; }
+  body.innerHTML=rows.map(function(e){
+    return '<tr>'+
+      '<td class="dt-mono">'+esc(e.maNV||'—')+'</td>'+
+      '<td class="dt-name">'+esc(e.hoTen||'—')+'</td>'+
+      '<td class="nw">'+esc(e.phong||'—')+'</td>'+
+      '<td class="dt-muted nw">'+esc(loaiHDShort(e.loaiHD))+'</td>'+
+      '<td class="dt-date nw">'+esc(e.ngayHetHan||'—')+'</td>'+
+      '<td class="nw">'+conLaiCell(e.ngayConLai)+'</td>'+
+      '<td style="text-align:center;">'+esc(e.soBanKy||'—')+'</td>'+
+      '<td class="nw">'+hoSoBadge(e.tinhTrangHoSo)+'</td>'+
     '</tr>';
   }).join('');
 }
@@ -242,6 +336,7 @@ function go(id){
 
   var content=document.getElementById('content');
   if(id==='ho-so') content.innerHTML=renderHoSo();
+  else if(id==='hop-dong') content.innerHTML=renderHopDong();
   else content.innerHTML='<div class="page-head"><div class="page-h1">'+esc(item.label)+'</div><div class="page-lead">'+esc(item.lead||'')+'</div></div>'+emptyState(item, group);
   content.scrollTop=0;
 }
