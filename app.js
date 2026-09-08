@@ -357,6 +357,8 @@ function kcvPick(ev){
 function kcvRemove(i){ kcvFiles.splice(i,1); kcvRenderList(); }
 function kcvName(i,v){ if(kcvFiles[i]) kcvFiles[i].hoTen=v; kcvValid(); }
 function kcvEmail(i,v){ if(kcvFiles[i]) kcvFiles[i].email=v; }
+function kcvGT(i,v){ if(kcvFiles[i]) kcvFiles[i].gt=v; }
+function kcvSDT(i,v){ if(kcvFiles[i]) kcvFiles[i].sdt=v; }
 function kcvRenderList(){
   var el=document.getElementById('kcv-list'); if(!el) return;
   if(!kcvFiles.length){ el.innerHTML=''; kcvValid(); return; }
@@ -365,6 +367,8 @@ function kcvRenderList(){
       '<span class="kcv-fname" title="'+esc(f.file.name)+'">'+esc(f.file.name)+'</span>'+
       '<input class="kcv-hoten" value="'+esc(f.hoTen)+'" placeholder="Họ tên ứng viên" oninput="kcvName('+i+',this.value)">'+
       '<input class="kcv-hoten kcv-email" value="'+esc(f.email||'')+'" placeholder="Email (nếu có)" oninput="kcvEmail('+i+',this.value)">'+
+      '<select class="kcv-gt" onchange="kcvGT('+i+',this.value)"><option value="">Giới tính</option><option'+(f.gt==='Nam'?' selected':'')+'>Nam</option><option'+(f.gt==='Nữ'?' selected':'')+'>Nữ</option></select>'+
+      '<input class="kcv-hoten kcv-sdt" value="'+esc(f.sdt||'')+'" placeholder="SĐT (nếu có)" oninput="kcvSDT('+i+',this.value)">'+
       '<button class="kcv-x" onclick="kcvRemove('+i+')" title="Bỏ"><i class="ti ti-x"></i></button></div>';
   }).join('')+'</div>';
   kcvValid();
@@ -383,7 +387,7 @@ async function kcvSubmit(){
     var items=[];
     for(var i=0;i<kcvFiles.length;i++){
       var b64=await readB64(kcvFiles[i].file);
-      items.push({ hoTen:String(kcvFiles[i].hoTen).trim(), email:String(kcvFiles[i].email||'').trim(), fileName:kcvFiles[i].file.name, mimeType:kcvFiles[i].file.type||'application/octet-stream', b64:b64 });
+      items.push({ hoTen:String(kcvFiles[i].hoTen).trim(), email:String(kcvFiles[i].email||'').trim(), gioiTinh:String(kcvFiles[i].gt||'').trim(), sdt:String(kcvFiles[i].sdt||'').trim(), fileName:kcvFiles[i].file.name, mimeType:kcvFiles[i].file.type||'application/octet-stream', b64:b64 });
     }
     var r=await fetch(API_URL,{ method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify({ key:API_KEY, viTri:vt, items:items }) });
     var d=await r.json();
