@@ -320,6 +320,83 @@ function hdRenderBody(){
   }).join('');
 }
 
+/* ============================================================
+   TAB: KHO CV — form upload CV → Drive + thêm dòng Tuyển dụng
+   ============================================================ */
+var API_KEY = 'bx-kho-cv-2026';
+var kcvFiles = []; // [{file, hoTen}]
+
+function kcvViTriOptions(){
+  var list = (HR.viTriList && HR.viTriList.length) ? HR.viTriList.slice() : [];
+  if(!list.length){ var seen={}; HR.tuyendung.forEach(function(c){ if(c.viTri && !seen[c.viTri]){seen[c.viTri]=1; list.push(c.viTri);} }); list.sort(); }
+  return list.map(function(v){return '<option value="'+esc(v)+'">'+esc(v)+'</option>';}).join('');
+}
+function renderKhoCV(){
+  if(HR.error) return errorBox();
+  if(!HR.loaded) return loadingBox();
+  setTimeout(kcvRenderList,0);
+  return ''+
+    '<div class="page-head"><div class="page-h1">Kho CV — Nạp hồ sơ ứng viên</div>'+
+    '<div class="page-lead">Chọn vị trí, tải CV lên → hệ tự lưu file vào Drive và thêm dòng vào file Tuyển dụng (Mã tự tăng · Ngày nộp hôm nay · Vị trí · Họ tên · Link CV). Vị trí lấy từ danh mục chuẩn nên không sai tên.</div></div>'+
+    '<div class="kcv-card">'+
+      '<div class="kcv-row"><label class="kcv-lbl">Vị trí nộp CV</label>'+
+        '<select id="kcv-vitri" class="kcv-select" onchange="kcvValid()"><option value="">— Chọn vị trí —</option>'+kcvViTriOptions()+'</select></div>'+
+      '<div class="kcv-row"><label class="kcv-lbl">File CV (PDF / ảnh / doc — chọn nhiều được)</label>'+
+        '<label class="kcv-drop"><input type="file" id="kcv-files" multiple accept=".pdf,.doc,.docx,.png,.jpg,.jpeg" onchange="kcvPick(event)" hidden><i class="ti ti-upload"></i> Bấm để chọn file CV</label></div>'+
+      '<div id="kcv-list"></div>'+
+      '<div class="kcv-actions"><button id="kcv-submit" class="btn-primary" onclick="kcvSubmit()" disabled><i class="ti ti-cloud-upload"></i> Nạp vào Tuyển dụng</button>'+
+        '<span id="kcv-status" class="kcv-status"></span></div>'+
+    '</div><div id="kcv-result"></div>';
+}
+function kcvPick(ev){
+  var fs=ev.target.files;
+  for(var i=0;i<fs.length;i++){ kcvFiles.push({ file:fs[i], hoTen:fs[i].name.replace(/\.[^.]+$/,'') }); }
+  ev.target.value='';
+  kcvRenderList();
+}
+function kcvRemove(i){ kcvFiles.splice(i,1); kcvRenderList(); }
+function kcvName(i,v){ if(kcvFiles[i]) kcvFiles[i].hoTen=v; kcvValid(); }
+function kcvRenderList(){
+  var el=document.getElementById('kcv-list'); if(!el) return;
+  if(!kcvFiles.length){ el.innerHTML=''; kcvValid(); return; }
+  el.innerHTML='<div class="kcv-files">'+kcvFiles.map(function(f,i){
+    return '<div class="kcv-file"><i class="ti ti-file-text"></i>'+
+      '<span class="kcv-fname" title="'+esc(f.file.name)+'">'+esc(f.file.name)+'</span>'+
+      '<input class="kcv-hoten" value="'+esc(f.hoTen)+'" placeholder="Họ tên ứng viên" oninput="kcvName('+i+',this.value)">'+
+      '<button class="kcv-x" onclick="kcvRemove('+i+')" title="Bỏ"><i class="ti ti-x"></i></button></div>';
+  }).join('')+'</div>';
+  kcvValid();
+}
+function kcvValid(){
+  var btn=document.getElementById('kcv-submit'); if(!btn) return;
+  var vt=(document.getElementById('kcv-vitri')||{}).value;
+  btn.disabled = !(vt && kcvFiles.length && kcvFiles.every(function(f){return String(f.hoTen).trim();}));
+}
+function readB64(file){ return new Promise(function(res,rej){ var r=new FileReader(); r.onload=function(){ res(String(r.result).split(',')[1]); }; r.onerror=rej; r.readAsDataURL(file); }); }
+async function kcvSubmit(){
+  var vt=document.getElementById('kcv-vitri').value;
+  var status=document.getElementById('kcv-status'), btn=document.getElementById('kcv-submit');
+  btn.disabled=true; status.textContent='Đang tải lên…';
+  try{
+    var items=[];
+    for(var i=0;i<kcvFiles.length;i++){
+      var b64=await readB64(kcvFiles[i].file);
+      items.push({ hoTen:String(kcvFiles[i].hoTen).trim(), fileName:kcvFiles[i].file.name, mimeType:kcvFiles[i].file.type||'application/octet-stream', b64:b64 });
+    }
+    var r=await fetch(API_URL,{ method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify({ key:API_KEY, viTri:vt, items:items }) });
+    var d=await r.json();
+    if(d.ok){
+      status.textContent='';
+      document.getElementById('kcv-result').innerHTML='<div class="kcv-ok"><i class="ti ti-circle-check"></i> Đã nạp '+d.added.length+' CV vào Tuyển dụng:</div>'+
+        '<div class="table-wrap" style="margin-top:10px;max-width:720px;"><table class="dt"><thead><tr><th>Mã UV</th><th>Họ tên</th><th>Vị trí</th><th>Link CV</th></tr></thead><tbody>'+
+        d.added.map(function(a){return '<tr><td class="dt-mono">'+esc(a.maUV)+'</td><td class="dt-name">'+esc(a.hoTen)+'</td><td>'+esc(a.viTri)+'</td><td><a href="'+esc(a.url)+'" target="_blank" rel="noopener">Mở CV</a></td></tr>';}).join('')+'</tbody></table></div>';
+      kcvFiles=[]; kcvRenderList();
+      loadData();
+    } else { status.innerHTML='<span style="color:var(--rust);">Lỗi: '+esc(d.error||'không rõ')+'</span>'; }
+  }catch(e){ status.innerHTML='<span style="color:var(--rust);">Lỗi kết nối: '+esc(e.message)+'</span>'; }
+  kcvValid();
+}
+
 /* ---- Router ---- */
 var currentTab = null;
 function go(id){
@@ -337,6 +414,7 @@ function go(id){
   var content=document.getElementById('content');
   if(id==='ho-so') content.innerHTML=renderHoSo();
   else if(id==='hop-dong') content.innerHTML=renderHopDong();
+  else if(id==='kho-cv') content.innerHTML=renderKhoCV();
   else content.innerHTML='<div class="page-head"><div class="page-h1">'+esc(item.label)+'</div><div class="page-lead">'+esc(item.lead||'')+'</div></div>'+emptyState(item, group);
   content.scrollTop=0;
 }
