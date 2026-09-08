@@ -81,7 +81,7 @@ function loadData(){
   fetch(API_URL)
     .then(function(r){ return r.json(); })
     .then(function(d){
-      HR.loaded=true; HR.updated=d.updated||''; HR.nhansu=d.nhansu||[]; HR.tuyendung=d.tuyendung||[];
+      HR.loaded=true; HR.updated=d.updated||''; HR.nhansu=d.nhansu||[]; HR.tuyendung=d.tuyendung||[]; HR.viTriList=d.viTriList||[];
       var up=document.getElementById('tb-note'); if(up) up.textContent = 'Cập nhật: '+HR.updated;
       if(currentTab) go(currentTab); // vẽ lại tab hiện tại khi data về
     })
